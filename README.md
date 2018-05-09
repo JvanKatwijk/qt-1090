@@ -41,6 +41,10 @@ If that fails as well, it is assumed that you will run the program with
 file input, a file selector will be presented.
 
 
+---------------------------------------------------------------------------
+GUI
+---------------------------------------------------------------------------
+
 The GUI contains:
 * a. A display showing the samples of the preamble. Touching the "preamble"
 button will show all preambles passing some elementary tests (red and green),
@@ -49,6 +53,22 @@ or only the preambles of messages passing a CRC test.
 that was detected in the input stream.
 * c. a list of numbers indicating statistics;
 * d. a list of buttons.
+
+----------------------------------------------------------------------------
+The preamble
+----------------------------------------------------------------------------
+
+The preamble of an ads-b message starts with a predefined sequence of
+pulses. Each pulse has a length of 0.5 micro seconds,
+
+	*      0   - 0.5 usec: first impulse.
+	*      1.0 - 1.5 usec: second impulse.
+	*      3.5 - 4   usec: third impulse.
+	*      4.5 - 5   usec: last impulse.
+
+---------------------------------------------------------------------------
+The Buttons
+----------------------------------------------------------------------------
 
 The buttons from left to right:
 * a	a push button switching the terminal output from "all messages" to "interactive". In the latter case, a list of planes as is shown, regularly updated;
