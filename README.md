@@ -52,8 +52,11 @@ intensive.
 * f	a push button switching between "all preambles shown" and "preambles with good crc" shown. The distinction is in the color, green is "crc ok".
 
 
-Credits
+Copyrights
 ---
 
 Dump1090 was written by Salvatore Sanfilippo <antirez@gmail.com> and is
-released under the BSD three clause license.
+released under the BSD three clause license. qt-1090 uses source code
+from Dump1090.
+Copyright of the modifications is J van Katwijk, Lazy Chair computing
+
