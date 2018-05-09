@@ -39,6 +39,15 @@ the program will start. If so configured it will try to run with an SDRplay
 device, if that is not found, it will try to run with an RTLSDR based dongle.
 If that fails as well,  a dummy input driver is initiated.
 
+----------------------------------------------------------------------------
+File input
+----------------------------------------------------------------------------
+
+Adding "--ifile xxxx" as command line parameter will cause the program
+to try to open the file, denoted here by xxxx. It is assumed that the file
+is created as raw file with elements of 2 * 8 bits.
+
+
 
 ---------------------------------------------------------------------------
 GUI
