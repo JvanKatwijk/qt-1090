@@ -1,7 +1,7 @@
-qt-1090
-===
+**qt-1090**
 
-qt-1090 is a variant of the Dump1090 program. The latter was
+
+**qt-1090** is a variant of the Dump1090 program. The latter was
 designed  as a command line utility for RTLSDR devices. 
 This  version supports SDRplay devices, as well as RTLSDR devices and
 is equipped with a simple GUI.
@@ -19,8 +19,19 @@ Installation
 * make
 * sudo make install
 
+---------------------------------------------------------------------------
+Devices
+---------------------------------------------------------------------------
+
+Support can be configured for either or both the SDRplay or RTLSDR based
+devices. If both devices are configured, the software will attempt to
+open the SDRplay, if that fails, an attempt is made to open an RTLSDR
+based device. If that fails, a default device - doing nothing - is
+selected.
+
+---------------------------------------------------------------------------
 Normal usage
----
+---------------------------------------------------------------------------
 
 Running
     ./qt-1090
@@ -50,6 +61,13 @@ is sent to port 8080 and a browser, listening to port 8080, will show a google m
 intensive.
 * e	a push button switching between metrics and non metrics data in interactive mode.
 * f	a push button switching between "all preambles shown" and "preambles with good crc" shown. The distinction is in the color, green is "crc ok".
+
+----------------------------------------------------------------------------
+Using google maps
+----------------------------------------------------------------------------
+
+The HTTP server assumes that the file "gmap.html" is stored in the same
+directory where the qt-1090 program resides
 
 
 Copyrights
