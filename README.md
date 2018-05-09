@@ -37,8 +37,7 @@ Running
     ./qt-1090
 the program will start. If so configured it will try to run with an SDRplay
 device, if that is not found, it will try to run with an RTLSDR based dongle.
-If that fails as well, it is assumed that you will run the program with
-file input, a file selector will be presented.
+If that fails as well,  a dummy input driver is initiated.
 
 
 ---------------------------------------------------------------------------
