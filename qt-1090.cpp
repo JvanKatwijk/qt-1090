@@ -1,10 +1,15 @@
-
+#
 /*
- *    Copyright (C) 2010, 2011, 2012
- *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair Programming
  *
- *    This file is part of the qt-1090 program
+ *      qt-1090 is based on and contains source code from dump1090
+ *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
+ *      all rights acknowledged.
+ *
+ *	Copyright (C) 2018
+ *	Jan van Katwijk (J.vanKatwijk@gmail.com)
+ *	Lazy Chair Computing
+ *
+ *	This file is part of the qt-1090
  *
  *    qt1090 is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
@@ -19,10 +24,6 @@
  *    You should have received a copy of the GNU General Public License
  *    along with qt1090; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- *      qt-1090 is based on and contains source code from dump1090
- *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
- *      all rights acknowledged.
  */
 
 #include	"device-handler.h"
@@ -34,8 +35,6 @@
 #include	"icao-cache.h"
 #include	"xclose.h"
 #include	"syncviewer.h"
-
-int     getTermRows (void);
 
 static
 void	*readerThreadEntryPoint (void *arg) {
@@ -71,7 +70,6 @@ int	i;
 	net		= false;
 	metric		= false;
 	interactive	= false;
-	interactive_rows	= getTermRows ();
 	interactive_ttl	= MODES_INTERACTIVE_TTL;
 
 //	Allocate the "working" vector
@@ -470,7 +468,7 @@ struct {
 };
 
 void 	qt1090::serverInit (void) {
-int j;
+int j = 0;
         modesNetServices [0]. socket = &https;
 	memset (clients, 0, sizeof (clients));
 	maxfd = -1;
@@ -495,7 +493,7 @@ int j;
  */
 void qt1090::AcceptClients (void) {
 int fd, port;
-unsigned int j;
+int j	=0;
 struct client *c;
 
 	while (true) {
@@ -607,23 +605,6 @@ int l;
 }
 
 
-/* ============================ Terminal handling  ========================== */
-
-/* Handle resizing terminal. */
-void	sigWinchCallback (void) {
-	signal (SIGWINCH, SIG_IGN);
-//	Modes. interactive_rows = getTermRows();
-//	interactiveShowData (&Modes);
-	signal(SIGWINCH, (__sighandler_t)sigWinchCallback);
-}
-
-/* Get the number of rows after the terminal changes size. */
-int	getTermRows (void) {
-	struct winsize w;
-	ioctl (STDOUT_FILENO, TIOCGWINSZ, &w);
-	return w. ws_row;
-}
-
 //	this slot is called upon the arrival of data
 void	qt1090::processData (void) {
 int16_t lbuf [MODES_DATA_LEN / 2];
@@ -645,7 +626,7 @@ int16_t lbuf [MODES_DATA_LEN / 2];
 	   if (interactive &&
 	      (mstime () - interactive_last_update) >
 	                             MODES_INTERACTIVE_REFRESH_TIME) {
-	      showPlanes (aircrafts, interactive_rows, metric);
+	      showPlanes (aircrafts, metric);
 	      interactive_last_update = mstime();
 	   }
 	}

@@ -1,10 +1,15 @@
 #
 /*
- *    Copyright (C) 2018
- *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair Computing
  *
- *    This file is part of the qt-1090
+ *      qt-1090 is based on and contains source code from dump1090
+ *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
+ *      all rights acknowledged.
+ *
+ *	Copyright (C) 2018
+ *	Jan van Katwijk (J.vanKatwijk@gmail.com)
+ *	Lazy Chair Computing
+ *
+ *	This file is part of the qt-1090
  *
  *    qt-1090 is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
@@ -20,9 +25,6 @@
  *    along with qt-1090; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *      qt-1090 is based on and contains source code from dump1090
- *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
- *      all rights acknowledged.
  */
 #include	"aircraft-handler.h"
 #include	"adsb-constants.h"
@@ -113,59 +115,6 @@ double cprDlonFunction (double lat, int isodd) {
     return 360.0 / cprNFunction (lat, isodd);
 }
 
-/* This algorithm comes from:
- * http://www.lll.lu/~edward/edward/adsb/DecodingADSBposition.html.
- *
- *
- * A few remarks:
- * 1) 131072 is 2^17 since CPR latitude and longitude are encoded in 17 bits.
- * 2) We assume that we always received the odd packet as last packet for
- *    simplicity. This may provide a position that is less fresh of a few
- *    seconds.
- */
-void	decodeCPR (aircraft *a) {
-const double AirDlat0 = 360.0 / 60;
-const double AirDlat1 = 360.0 / 59;
-double lat0 = a -> even_cprlat;
-double lat1 = a -> odd_cprlat;
-double lon0 = a -> even_cprlon;
-double lon1 = a -> odd_cprlon;
-
-/* Compute the Latitude Index "j" */
-	int j = floor(((59*lat0 - 60*lat1) / 131072) + 0.5);
-	double rlat0 = AirDlat0 * (cprModFunction(j,60) + lat0 / 131072);
-	double rlat1 = AirDlat1 * (cprModFunction(j,59) + lat1 / 131072);
-
-	if (rlat0 >= 270)
-	   rlat0 -= 360;
-	if (rlat1 >= 270)
-	   rlat1 -= 360;
-
-/* Check that both are in the same latitude zone, or abort. */
-	if (cprNLFunction(rlat0) != cprNLFunction(rlat1)) return;
-
-/* Compute ni and the longitude index m */
-	if (a -> even_cprtime > a -> odd_cprtime) {
-/* Use even packet. */
-	   int ni = cprNFunction (rlat0,0);
-	   int m = floor((((lon0 * (cprNLFunction(rlat0)-1)) -
-                        (lon1 * cprNLFunction(rlat0))) / 131072) + 0.5);
-	   a -> lon = cprDlonFunction(rlat0,0) *
-	                      (cprModFunction(m,ni)+lon0/131072);
-	   a -> lat = rlat0;
-	}
-	else {		/* Use odd packet. */
-	   int ni = cprNFunction(rlat1,1);
-	   int m = floor((((lon0 * (cprNLFunction(rlat1)-1)) -
-	                   (lon1 * cprNLFunction(rlat1))) / 131072.0) + 0.5);
-	   a -> lon = cprDlonFunction (rlat1,1) *
-	                           (cprModFunction (m, ni) + lon1 / 131072);
-	   a -> lat = rlat1;
-	}
-
-	if (a -> lon > 180)
-	   a->lon -= 360;
-}
 
 /*
  *	Return a new aircraft structure for the interactive mode linked list
@@ -273,7 +222,7 @@ void	aircraft::fillData (message *mm) {
 //	If the two data is less than 10 seconds apart, compute
 //	the position.
 	      if (abs (this -> even_cprtime - this -> odd_cprtime) <= 10000) {
-	         decodeCPR (this);
+	         decodeCPR ();
 	      }
 	   }	
 	   else
@@ -284,6 +233,61 @@ void	aircraft::fillData (message *mm) {
 	      }
 	   }
 	}
+}
+
+/* This algorithm comes from:
+ * http://www.lll.lu/~edward/edward/adsb/DecodingADSBposition.html.
+ *
+ *
+ * A few remarks:
+ * 1) 131072 is 2^17 since CPR latitude and longitude are encoded in 17 bits.
+ * 2) We assume that we always received the odd packet as last packet for
+ *    simplicity. This may provide a position that is less fresh of a few
+ *    seconds.
+ */
+void	aircraft::decodeCPR (void) {
+const double AirDlat0 = 360.0 / 60;
+const double AirDlat1 = 360.0 / 59;
+double lat0 = even_cprlat;
+double lat1 = odd_cprlat;
+double lon0 = even_cprlon;
+double lon1 = odd_cprlon;
+
+/* Compute the Latitude Index "j" */
+int j	= floor(((59 * lat0 - 60 * lat1) / 131072) + 0.5);
+double rlat0 = AirDlat0 * (cprModFunction (j, 60) + lat0 / 131072);
+double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
+
+	if (rlat0 >= 270)
+	   rlat0 -= 360;
+	if (rlat1 >= 270)
+	   rlat1 -= 360;
+
+/* Check that both are in the same latitude zone, or abort. */
+	if (cprNLFunction (rlat0) != cprNLFunction (rlat1))
+	   return;
+
+/* Compute ni and the longitude index m */
+	if (even_cprtime > odd_cprtime) {
+/* Use even packet. */
+	   int ni = cprNFunction (rlat0, 0);
+	   int m = floor ((((lon0 * (cprNLFunction (rlat0) - 1)) -
+                        (lon1 * cprNLFunction (rlat0))) / 131072) + 0.5);
+	   lon = cprDlonFunction (rlat0, 0) *
+	                      (cprModFunction (m, ni) + lon0 / 131072);
+	   lat = rlat0;
+	}
+	else {		/* Use odd packet. */
+	   int ni = cprNFunction (rlat1,1);
+	   int m = floor ((((lon0 * (cprNLFunction (rlat1) - 1)) -
+	                   (lon1 * cprNLFunction (rlat1))) / 131072.0) + 0.5);
+	   lon = cprDlonFunction (rlat1, 1) *
+	                           (cprModFunction (m, ni) + lon1 / 131072);
+	   lat = rlat1;
+	}
+
+	if (lon > 180)
+	   lon -= 360;
 }
 
 /* When in interactive mode If we don't receive new nessages within
@@ -311,14 +315,37 @@ time_t now = time(NULL);
     }
 }
 
-void	showPlanes (aircraft *aircrafts, int rows, bool metric) {
-int amount	= rows;
+void	aircraft::showPlane	(bool metric, time_t now) {
+int altitude	= this -> altitude;
+int speed	= this -> speed;
+
+//	Convert units to metric if --metric was specified. */
+	if (metric) {
+	   altitude /= 3.2828;
+	   speed *= 1.852;
+	}
+
+	printf ("%-6s %-8s %-9d %-7d %-7.03f   %-7.03f   %-3d   %-9ld %d sec\n",
+	        hexaddr, flight, altitude, speed,
+	        lat, lon, track, messages, (int)(now - seen));
+}
+
+
+static
+int     getTermRows (void) {
+        struct winsize w;
+        ioctl (STDOUT_FILENO, TIOCGWINSZ, &w);
+        return w. ws_row;
+}
+
+void	showPlanes (aircraft *aircrafts, bool metric) {
+int amount	= getTermRows ();
 time_t now	= time (NULL);
 char progress [4];
 int count = 0;
 
 	memset (progress, ' ', 3);
-	progress [time (NULL)%3] = '.';
+	progress [time (NULL) % 3] = '.';
 	progress [3] = '\0';
 
 	printf ("\x1b[H\x1b[2J");    /* Clear the screen */
@@ -329,19 +356,7 @@ int count = 0;
 
 	while (aircrafts != NULL && count < amount) {
 	   aircraft *a = aircrafts;
-	   int altitude	= a -> altitude;
-	   int speed	= a -> speed;
-
-//	Convert units to metric if --metric was specified. */
-           if (metric) {
-              altitude /= 3.2828;
-              speed *= 1.852;
-	   }
-
-	   printf ("%-6s %-8s %-9d %-7d %-7.03f   %-7.03f   %-3d   %-9ld %d sec\n",
-	           a -> hexaddr, a -> flight, altitude, speed,
-	           a -> lat, a -> lon, a -> track, a -> messages,
-	           (int)(now - a -> seen));
+	   a -> showPlane (metric, now);
 	   aircrafts = aircrafts -> next;
 	   count++;
 	}

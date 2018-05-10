@@ -1,10 +1,14 @@
 #
 /*
- *    Copyright (C) 2018
- *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair Computing
+ *      qt-1090 is based on and contains source code from dump1090
+ *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
+ *      all rights acknowledged.
  *
- *    This file is part of the qt-1090 program
+ *	Copyright (C) 2018
+ *	Jan van Katwijk (J.vanKatwijk@gmail.com)
+ *	Lazy Chair Computing
+ *
+ *	This file is part of the qt-1090
  *
  *    qt-1090 is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
@@ -20,10 +24,6 @@
  *    along with qt-1090; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *      qt-1090 is based on and contains source code from the dump1090 program 
- *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
- *      all rights acknowledged.
-
  */
 
 #ifndef	__AIRCRAFT_HANDLER__
@@ -55,17 +55,17 @@ public:
 	int odd_cprlon;
 	int even_cprlat;
 	int even_cprlon;
-	double lat, lon;    /* Coordinated obtained from CPR encoded data. */
+	double lat, lon;	/* Coordinated obtained from CPR encoded data. */
 	long long odd_cprtime, even_cprtime;
-	 aircraft *next; /* Next aircraft in our linked list. */
+	 aircraft *next;	/* Next aircraft in our linked list. */
 	void    fillData	(message *mm);
+	void	decodeCPR	(void);
+	void	showPlane	(bool metric, time_t now);
 };
 
-struct message;
-
-aircraft *interactiveReceiveData (qt1090 *st, struct message *mm);
+aircraft *interactiveReceiveData (qt1090 *st, message *mm);
 void    interactiveRemoveStaleAircrafts (qt1090 *st);
-void	showPlanes	(aircraft *, int, bool);
+void	showPlanes	(aircraft *, bool);
 
 #endif
 
