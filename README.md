@@ -35,9 +35,12 @@ Normal usage
 
 Running
     ./qt-1090
-the program will start. If so configured it will try to run with an SDRplay
-device, if that is not found, it will try to run with an RTLSDR based dongle.
+the program will start. As said above, if so configured the program will try to connect to an SDRplay
+device, if that is not found, it will try to connect to an RTLSDR based dongle.
 If that fails as well,  a dummy input driver is initiated.
+
+If a device  is found and initialized, two widgets appear, one with the GUI and one for
+control of the device. With the latter, gain, autogain and ppm offset can be set.
 
 ----------------------------------------------------------------------------
 File input
@@ -45,7 +48,8 @@ File input
 
 Adding "--ifile xxxx" as command line parameter will cause the program
 to try to open the file, denoted here by xxxx. It is assumed that the file
-is created as raw file with elements of 2 * 8 bits.
+is created as raw file with elements of 2 * 8 bits. Such a file can be created
+with various rtlsdr based tools.
 
 
 
@@ -59,7 +63,7 @@ button will show all preambles passing some elementary tests (red and green),
 or only the preambles of messages passing a CRC test.
 * b. A table with a count of the number of occurrences for each type of message
 that was detected in the input stream.
-* c. a list of numbers indicating statistics;
+* c. a list of numbers indicating statistics.
 * d. a list of buttons.
 
 ----------------------------------------------------------------------------
@@ -74,20 +78,26 @@ pulses. Each pulse has a length of 0.5 micro seconds,
 	*      3.5 - 4   usec: third impulse.
 	*      4.5 - 5   usec: last impulse.
 
+The GUI shows the first 16 samples of a message, each sample represented as a bar. With the "preamble" button
+on selects what is shown: either all preambles that passed the checks to determine whether it seems a reasonable
+preamble, or only those preambles of messages that passed a CRC test. The preambles of messages that passed the CRC
+test are represented in green, those of messages that did not pass the CRC test in red.
+
+
 ---------------------------------------------------------------------------
 The Buttons
 ----------------------------------------------------------------------------
 
 The buttons from left to right:
 * a	a push button switching the terminal output from "all messages" to "interactive". In the latter case, a list of planes as is shown, regularly updated;
-* b	a spinbox, with which the 
+* b	a spinbox, with which the ttl can be set, the number of seconds within which a description of a plane has to be seen again in order to maintain it on the list of planes;
 * c	a puhsbutton to switch http output. If selected, the output
-is sent to port 8080 and a browser, listening to port 8080, will show a google map with planes.
+is sent to port 8080 and a browser, listening to port 8080, will show a google map with planes;
 * d.	a combobox for selecting the degree of error correction. Options are 
 "no correction", "normal correction" (i.e. single bit), or "strong correction"
 (i.e. 2 bit correction). It goes without saying that the latter is pretty cpu
-intensive.
-* e	a push button switching between metrics and non metrics data in interactive mode.
+intensive;
+* e	a push button switching between metrics and non metrics data in interactive mode;
 * f	a push button switching between "all preambles shown" and "preambles with good crc" shown. The distinction is in the color, green is "crc ok".
 
 ----------------------------------------------------------------------------
