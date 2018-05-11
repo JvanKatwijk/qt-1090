@@ -1,5 +1,6 @@
 **qt-1090**
 
+----------------------------------------------------------------------------
 
 **qt-1090** is a variant of the Dump1090 program. The latter was
 designed  as a command line utility for RTLSDR devices. 
@@ -58,8 +59,8 @@ GUI
 ---------------------------------------------------------------------------
 
 The GUI contains:
-* a. A display showing the samples of the preamble. Touching the "preamble"
-button will show all preambles passing some elementary tests (red and green),
+* a. A display showing samples, starting with the preamble.
+Touching the "preamble" button will show all preambles passing some elementary tests (red and green),
 or only the preambles of messages passing a CRC test.
 * b. A table with a count of the number of occurrences for each type of message
 that was detected in the input stream.
@@ -78,9 +79,12 @@ pulses. Each pulse has a length of 0.5 micro seconds,
 	*      3.5 - 4   usec: third impulse.
 	*      4.5 - 5   usec: last impulse.
 
-The GUI shows the first 16 samples of a message, each sample represented as a bar. With the "preamble" button
-on selects what is shown: either all preambles that passed the checks to determine whether it seems a reasonable
-preamble, or only those preambles of messages that passed a CRC test. The preambles of messages that passed the CRC
+The GUI shows the first samples of a message,
+each sample represented as a bar. The "preamble" button
+selects what is shown: either the start of a message where the preamble
+passed some checks to determine whether it seems a reasonable
+preamble, or the start of a message that 
+also passed a CRC test. The messages that passed the CRC
 test are represented in green, those of messages that did not pass the CRC test in red.
 
 

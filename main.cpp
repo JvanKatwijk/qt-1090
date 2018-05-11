@@ -40,9 +40,6 @@
 #ifdef	__HAVE_SDRPLAY__
 #include	"sdrplay-handler.h"
 #endif
-#ifdef	__HAVE_AIRSPY__
-#include	"airspy-handler.h"
-#endif
 #include	"file-handler.h"
 #define DEFAULT_INI     ".qt-1090.ini"
 

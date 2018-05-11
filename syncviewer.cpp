@@ -24,13 +24,27 @@
 #include	"syncviewer.h"
 
 
-	syncViewer::syncViewer (QwtPlot           *scope,
+	syncViewer::syncViewer (QwtPlot           *plot,
 	                        uint16_t          displaysize) {
-        plotgrid	= scope;
+        plotgrid	= plot;
         displaySize	= displaysize + 1;
-	plotgrid     -> setCanvasBackground (QColor (QString ("blue")));
+	plotgrid	-> setCanvasBackground (Qt::black);
+	grid		= new QwtPlotGrid;
 	X_AXIS		= new double [displaySize];
 	Y_AXIS		= new double [displaySize];
+#if defined QWT_VERSION && ((QWT_VERSION >> 8) < 0x0601)
+	grid	-> setMajPen (QPen(Qt::white, 0, Qt::DotLine));
+#else
+	grid	-> setMajorPen (QPen(Qt::white, 0, Qt::DotLine));
+#endif
+	grid	-> enableXMin (true);
+	grid	-> enableYMin (true);
+#if defined QWT_VERSION && ((QWT_VERSION >> 8) < 0x0601)
+	grid	-> setMinPen (QPen(Qt::white, 0, Qt::DotLine));
+#else
+	grid	-> setMinorPen (QPen(Qt::white, 0, Qt::DotLine));
+#endif
+	grid	-> attach (plotgrid);
 	SpectrumCurve   = new QwtPlotCurve ("");
         SpectrumCurve   -> setPen (QPen(Qt::white));
 //      SpectrumCurve   -> setStyle     (QwtPlotCurve::Sticks);
@@ -51,16 +65,16 @@ void	syncViewer::Display (uint16_t *mag, bool flag) {
 int i, j;
 double mmax	= 0;
 
-	for (i = 0; i < 16; i ++)
+	for (i = 0; i < 64; i ++)
 	   if (mag [i] > mmax)
 	      mmax = mag [i];
 
 	SpectrumCurve -> setPen (flag ? QPen (Qt::green) : QPen (Qt::red));
         SpectrumCurve   -> setBrush (flag ? *greenBrush : *redBrush);
-	for (i = 0; i < 16; i ++) {
-	   for (j = 0; j < displaySize / 16; j ++) {
-	      X_AXIS [i * displaySize / 16 + j] = (float)i + (float)j / (displaySize / 16);
-	      Y_AXIS [i * displaySize / 16 + j] = mag [i];
+	for (i = 0; i < 64; i ++) {
+	   for (j = 0; j < displaySize / 64; j ++) {
+	      X_AXIS [i * displaySize / 64 + j] = (float)i + (float)j / (displaySize / 64);
+	      Y_AXIS [i * displaySize / 64 + j] = mag [i];
 	   }
 	}
 

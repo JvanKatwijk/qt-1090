@@ -1,6 +1,5 @@
 #
 /*
- *
  *      qt-1090 is based on and contains source code from dump1090
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
  *      all rights acknowledged.
@@ -63,7 +62,7 @@ int	i;
 
 	for (i = 0; i < 32; i ++)
 	   table [i] = 0;
-	viewer		= new syncViewer (dumpview, 96);
+	viewer		= new syncViewer (dumpview, 128);
 	show_preambles	= false;
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;
@@ -565,45 +564,38 @@ int hexDigitVal (int c) {
 /* Return a description of planes in json. */
 char 	*qt1090::aircraftsToJson (int *len) {
 aircraft *plane	= aircrafts;
-int buflen = 1024; /* The initial buffer is incremented as needed. */
-char *buf = (char *)malloc (buflen), *p = buf;
+char buf [512];
 int l;
-
-	l = snprintf (p, buflen,"[\n");
-	p += l; buflen -= l;
+std::string Jsontxt;
+	Jsontxt.append ("[\n");
 	while (plane != NULL) {
-
 	   if (plane -> lat != 0 && plane -> lon != 0) {
-              l = snprintf (p, buflen,
+              l = snprintf (buf, 512,
                 "{\"hex\":\"%s\", \"flight\":\"%s\", \"lat\":%f, "
                 "\"lon\":%f, \"altitude\":%d, \"track\":%d, "
                 "\"speed\":%d},\n",
                 plane -> hexaddr, plane -> flight, plane -> lat, plane -> lon,
 	        plane -> altitude, plane -> track, plane -> speed);
-	      p += l; buflen -= l;
+	      Jsontxt. append (buf);
 //	Resize if needed. */
-	      if (buflen < 256) {
-	         int used = p - buf;
-	         buflen += 1024; /* Our increment. */
-	         buf = (char *)realloc (buf, used + buflen);
-	         p = buf + used;
-	      }
 	   }
 	   plane = plane -> next;
 	}
 //	Remove the final comma if any, and closes the json array. */
-	if (*(p - 2) == ',') {
-	   *(p - 2) = '\n';
-	   p--;
-	   buflen++;
+	if (Jsontxt. at (Jsontxt. length () - 2) == ',') {
+	   Jsontxt. pop_back ();
+	   Jsontxt. pop_back ();
+	   Jsontxt. push_back ('\n');
 	}
-	l = snprintf (p, buflen,"]\n");
-	p += l; buflen -= l;
-
-	*len = p - buf;
-	return buf;
+	Jsontxt. append ("]\n");
+	char * res = new char [strlen (Jsontxt. c_str ())];
+	for (int i = 0; i < strlen (Jsontxt. c_str ()); i ++)
+	   res [i] = Jsontxt. c_str () [i];
+	*len	= strlen (Jsontxt. c_str ());
+	return res;
 }
 
+//////////////////////////////////////////////////////////////////////////
 
 //	this slot is called upon the arrival of data
 void	qt1090::processData (void) {
@@ -686,32 +678,30 @@ char *ctype;
  *	"/data.json" -> Our ajax request to update planes.
  */
 	if (strstr (url, "/data.json")) {
-	   content = context -> aircraftsToJson (&clen);
+	   content = (char *)context -> aircraftsToJson (&clen);
 	   ctype = (char *)MODES_CONTENT_TYPE_JSON;
 	}
 	else {
 	   struct stat sbuf;
-	   int fd = -1;
+	   FILE	*fd;
 
 	   if (stat ("gmap.html", &sbuf) != -1 &&
-	       (fd = open ("gmap.html",O_RDONLY)) != -1) {
-	      content = (char *)malloc (sbuf. st_size);
-	      if (read (fd, content, sbuf.st_size) == -1) {
+	       (fd = fopen ("gmap.html", "r")) != NULL) {
+	      content = new char [sbuf. st_size];
+	      if (fread (content, 1, sbuf.st_size, fd) < sbuf. st_size) {
 	         snprintf (content, sbuf.st_size,
 	                      "Error reading from file: %s",
 	                                              strerror(errno));
 	      }
+	      if (fd != NULL)
+	         fclose (fd);
 	      clen = sbuf.st_size;
 	   }
 	   else {
-	      char buf [128];
-	      clen = snprintf (buf, sizeof (buf),
+	      content	= new char [128];
+	      clen = snprintf (content, 128,
 	                   "Error opening HTML file: %s", strerror(errno));
-	      content = strdup (buf);
 	   }
-
-	   if (fd != -1)
-	     close (fd);
 	   ctype = (char *)MODES_CONTENT_TYPE_HTML;
 	}
 /*
