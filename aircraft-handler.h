@@ -32,7 +32,6 @@
 #include	"stdint.h"
 #include	<sys/time.h>
 
-class	qt1090;
 class	message;
 
 /* Structure used to describe an aircraft in iteractive mode. */
@@ -63,9 +62,9 @@ public:
 	void	showPlane	(bool metric, time_t now);
 };
 
-aircraft *interactiveReceiveData (qt1090 *st, message *mm);
-void    interactiveRemoveStaleAircrafts (qt1090 *st);
-void	showPlanes	(aircraft *, bool);
+aircraft *interactiveReceiveData		(aircraft *, message *);
+aircraft *interactiveRemoveStaleAircrafts	(aircraft *, int);
+void	showPlanes				(aircraft *, bool);
 
 #endif
 

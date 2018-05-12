@@ -4,18 +4,18 @@
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
  *      all rights acknowledged.
  *
- *	Copyright (C) 2018
+ *	qt-1090 Copyright (C) 2018
  *	Jan van Katwijk (J.vanKatwijk@gmail.com)
  *	Lazy Chair Computing
  *
  *	This file is part of the qt-1090
  *
- *    qt1090 is free software; you can redistribute it and/or modify
+ *    qt-1090 is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation; either version 2 of the License, or
  *    (at your option) any later version.
  *
- *    qt1090 is distributed in the hope that it will be useful,
+ *    qt-1090 is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *    GNU General Public License for more details.
@@ -60,7 +60,7 @@ int	i;
 	   tableWidget     -> setItem (i, i, item0);
 	}
 
-	for (i = 0; i < 32; i ++)
+	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
 	viewer		= new syncViewer (dumpview, 128);
 	show_preambles	= false;
@@ -138,8 +138,9 @@ void	qt1090::finalize	(void) {
 int	detectOutOfPhase (uint16_t *m) {
 	if (m [3] > m [2] / 3) return 1;
 	if (m [10] > m [9] / 3) return 1;
-	if (m [6] > m [7]/3) return -1;
-	if (m [-1] > m[1]/3) return -1;
+	if (m [6] > m [7] / 3) return -1;
+	if (m [-1] > m [0] / 3) return -1;
+//	if (m [-1] > m [1] / 3) return -1;
 	return 0;
 }
 
@@ -190,7 +191,7 @@ int j;
 }
 
 //	Decode all the next 112 bits, regardless of the actual message
-//	size. We'll check the actual message type later. */
+//	size, we do not know the actual size yet.
 int	qt1090::decodeBits (uint8_t *bits, uint16_t *m) {
 int	errors = 0;
 int	i;
@@ -241,7 +242,7 @@ uint8_t bits	[MODES_LONG_MSG_BITS];
 uint8_t	msg 	[MODES_LONG_MSG_BITS / 8];
 uint16_t aux 	[MODES_LONG_MSG_BITS * 2];
 uint32_t j, k;
-bool	use_correction =  false;
+bool	apply_phasecorrection =  false;
 double	correlation;
 int	high;
 /*
@@ -271,7 +272,7 @@ int	high;
 	for (j = 0; j < mlen - MODES_FULL_LEN * 2; j++) {
 	   int  delta, i, errors;
 	   bool good_message = false;
-	   if (use_correction)
+	   if (apply_phasecorrection)
 	      goto good_preamble; /* We already checked it. */
 
 	   correlation = 0;
@@ -317,7 +318,7 @@ int	high;
 good_preamble:
 //	If the previous attempt with this message failed, retry using
 //	magnitude correction. 
-	   if (use_correction) {
+	   if (apply_phasecorrection) {
 	      memcpy (aux, &m [j + MODES_PREAMBLE_US * 2], sizeof(aux));
               if (j && detectOutOfPhase (& m [j])) {
 	         applyPhaseCorrection (& m [j]);
@@ -354,10 +355,11 @@ good_preamble:
  *	with a Mode S message in our hands, but it may still be broken
  *	and CRC may not be correct. This is handled by the next layer.
  */
-	   if (errors == 0 || ((handle_errors == STRONG_ERRORFIX) && errors < 3)) {
+	   if (errors == 0 ||
+	           ((handle_errors == STRONG_ERRORFIX) && errors < 3)) {
 	      message mm (handle_errors, icao_cache, msg);
 
-	      if (mm. is_crcok () || use_correction) {
+	      if (mm. is_crcok () || apply_phasecorrection) {
 	         if (errors == 0)
 	            stat_demodulated++;
 	         if (mm. errorbit == -1) {
@@ -385,7 +387,7 @@ good_preamble:
 	         update_view (&m [j], true);
 	         j += (MODES_PREAMBLE_US + (msglen * 8)) * 2;
 	         good_message = true;
-	         if (use_correction) {
+	         if (apply_phasecorrection) {
 	            stat_phase_corrected ++;
 	            phase_corrected -> display ((int)stat_phase_corrected);
 	         }
@@ -394,6 +396,7 @@ good_preamble:
 	         table [msgtype & 0x1F] ++;	
 	         update_table (msgtype & 0x1F, table [msgtype & 0x1F]);
 	         useModesMessage (&mm);
+	         apply_phasecorrection = false;
 	      }
 	      else
 	      if (show_preambles)
@@ -404,12 +407,12 @@ good_preamble:
 	   }
 
 //	Retry with phase correction if possible. */
-	   if (!good_message && !use_correction) {
+	   if (!good_message && !apply_phasecorrection) {
 	      j--;
-	      use_correction = true;
+	      apply_phasecorrection = true;
 	   }
 	   else {
-	      use_correction = false;
+	      apply_phasecorrection = false;
 	   }
 	}
 }
@@ -431,7 +434,7 @@ void	qt1090::useModesMessage (message *mm) {
  *	interface is enabled.
  */
 	   if (interactive || (stat_http_requests > 0)) {
-	      (void) interactiveReceiveData (this, mm);
+	      aircrafts = interactiveReceiveData (aircrafts, mm);
 	   }
 /*
  *	In non-interactive way, display messages on standard output.
@@ -609,7 +612,8 @@ int16_t lbuf [MODES_DATA_LEN / 2];
 	           lbuf, MODES_DATA_LEN / 2 * sizeof (int16_t));
 
 	   detectModeS (magnitudeVector, data_len / 2);
-	   interactiveRemoveStaleAircrafts (this);
+	   aircrafts	= interactiveRemoveStaleAircrafts (aircrafts,
+	                                                   interactive_ttl);
 //	Refresh screen when in interactive mode. */
 	   if (net) {
 	      AcceptClients ();

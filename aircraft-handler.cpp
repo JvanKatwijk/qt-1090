@@ -1,11 +1,10 @@
 #
 /*
- *
  *      qt-1090 is based on and contains source code from dump1090
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
  *      all rights acknowledged.
  *
- *	Copyright (C) 2018
+ *	qt-1090 Copyright (C) 2018
  *	Jan van Katwijk (J.vanKatwijk@gmail.com)
  *	Lazy Chair Computing
  *
@@ -29,7 +28,6 @@
 #include	"aircraft-handler.h"
 #include	"adsb-constants.h"
 #include	"message-handling.h"
-#include	"qt-1090.h"
 
 /* Always positive MOD operation, used for CPR decoding. */
 static inline
@@ -156,45 +154,55 @@ aircraft *findAircraft (aircraft *a, uint32_t addr) {
 }
 
 /* Receive new messages and populate the interactive mode with more info. */
-aircraft *interactiveReceiveData (qt1090 *st, message *mm) {
+aircraft *interactiveReceiveData (aircraft *list, message *mm) {
 uint32_t addr;
-aircraft *a, *aux;
+aircraft *thePlane, *aux;
 
-	if (st -> check_crc && mm -> is_crcok () == 0)
-	   return NULL;
 	addr	= mm -> getAddr ();
 
 //	Lookup our aircraft or create a new one. */
-	a = findAircraft (st -> aircrafts, addr);
-	if (a == NULL) {
-	   a = new aircraft (addr);
-	   a -> next = st -> aircrafts;
-	   st -> aircrafts = a;
-	} else {
+	thePlane = findAircraft (list, addr);
+	if (thePlane == NULL) {
+	   thePlane = new aircraft (addr);
+	   thePlane -> next = list;
+	   list = thePlane;
+	}
+
+	thePlane -> fillData (mm);
+
+	if (list == thePlane) { // it is the first one on the list
+	   return list;
+	}
+
         /* If it is an already known aircraft, move it on head
          * so we keep aircrafts ordered by received message time.
          * However move it on head only if at least one second elapsed
          * since the aircraft that is currently on head sent a message,
-         * othewise with multiple aircrafts at the same time we have an
-         * useless shuffle of positions on the screen. */
-	   if (0 && st -> aircrafts != a && (time(NULL) - a -> seen) >= 1) {
-	      aux = st -> aircrafts;
-	      while (aux -> next != a)
-	         aux = aux -> next;
-//	Now we are a node before the aircraft to remove. */
-	      aux -> next = aux -> next -> next; /* removed. */
-//	Add on head */
-	      a -> next = st -> aircrafts;
-	      st -> aircrafts = a;
-	   }
+         * otherwise with multiple aircrafts at the same time we have an
+         * useless shuffle of positions on the screen.
+	 */
+	aux = list;
+	if ((time (NULL) - aux -> seen) < 1) 
+	   return list;
+//
+//	at this point, aux cannot be NULL
+//	OK, we have to reorder the list
+	while (aux -> next != thePlane) {
+	   aux = aux -> next;
+	   if (aux == NULL)	// should not happen, the plane is there
+	      break;
 	}
+//	Now we are a node before the aircraft to remove. */
+	aux -> next = aux -> next -> next; /* unlinked. */
+//	Add on head */
+	thePlane -> next = list;
+	list = thePlane;
 
-	a -> fillData (mm);
-	return a;
+	return list;
 }
 
 void	aircraft::fillData (message *mm) {
-	this -> seen = time(NULL);
+	this -> seen = time (NULL);
 	this ->  messages++;
 
 	if (mm -> msgtype == 0 ||
@@ -291,28 +299,30 @@ double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
 }
 
 /* When in interactive mode If we don't receive new nessages within
- * MODES_INTERACTIVE_TTL seconds we remove the aircraft from the list. */
-void	interactiveRemoveStaleAircrafts (qt1090 *st) {
-aircraft *a = st -> aircrafts;
+ * MODES_INTERACTIVE_TTL seconds we remove the aircraft from the list.
+ */
+aircraft *interactiveRemoveStaleAircrafts (aircraft *list, int wtime) {
+aircraft *currentPlane = list;
 aircraft *prev = NULL;
 time_t now = time(NULL);
 
-	while (a != NULL) {
-	   if ((now - a -> seen) > st -> interactive_ttl) {
-            aircraft *next = a->next;
+	while (currentPlane != NULL) {
+	   if ((now - currentPlane -> seen) > wtime ) {
+	      aircraft *next = currentPlane -> next;
 //	Remove the element from the linked list, be careful
 //	when removing the first element. */
-            delete a;
-            if (!prev)
-                st -> aircrafts = next;
-            else
-                prev -> next = next;
-            a = next;
-        } else {
-            prev = a;
-            a = a -> next;
-        }
-    }
+	      delete currentPlane;
+	      if (prev == NULL)
+	         list = next;
+	      else
+	         prev -> next = next;
+	      currentPlane = next;
+	   } else {
+	      prev = currentPlane;
+	      currentPlane = currentPlane -> next;
+	   }
+	}
+	return list;
 }
 
 void	aircraft::showPlane	(bool metric, time_t now) {
