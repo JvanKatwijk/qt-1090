@@ -71,7 +71,7 @@ LIBS            += -lqwt-qt5 -lusb-1.0 -ldl
 #	the devices:
 #	for the "standard" rtlsdr library use:
 dabstick {
-	DEFINES		+= __HAVE_DABSTICK__
+	DEFINES		+= __HAVE_RTLSDR__
 	FORMS		+= ./devices/rtlsdr-handler/rtlsdr-widget.ui
 	INCLUDEPATH	+= ./devices/rtlsdr-handler
 	DEPENDPATH	+= ./devices/rtlsdr-handler

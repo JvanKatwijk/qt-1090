@@ -65,16 +65,16 @@ void	syncViewer::Display (uint16_t *mag, bool flag) {
 int i, j;
 double mmax	= 0;
 
-	for (i = 0; i < 64; i ++)
+	for (i = 0; i < 16 + 52; i ++)
 	   if (mag [i] > mmax)
 	      mmax = mag [i];
 
 	SpectrumCurve -> setPen (flag ? QPen (Qt::green) : QPen (Qt::red));
         SpectrumCurve   -> setBrush (flag ? *greenBrush : *redBrush);
-	for (i = 0; i < 64; i ++) {
-	   for (j = 0; j < displaySize / 64; j ++) {
-	      X_AXIS [i * displaySize / 64 + j] = (float)i + (float)j / (displaySize / 64);
-	      Y_AXIS [i * displaySize / 64 + j] = mag [i];
+	for (i = 0; i < 16 + 52; i ++) {
+	   for (j = 0; j < displaySize / 68; j ++) {
+	      X_AXIS [i * displaySize / 68 + j] = (float)i + (float)j / (displaySize / 68);
+	      Y_AXIS [i * displaySize / 68 + j] = mag [i] / mmax * 100;
 	   }
 	}
 
@@ -82,7 +82,7 @@ double mmax	= 0;
                                          (double)X_AXIS [0],
                                          X_AXIS [displaySize - 2]);
         plotgrid        -> enableAxis (QwtPlot::xBottom);
-        plotgrid        -> setAxisScale (QwtPlot::yLeft, 0, mmax);
+        plotgrid        -> setAxisScale (QwtPlot::yLeft, 0, 100);
 
 	Y_AXIS [0]	= 0;
 	Y_AXIS [displaySize - 2] = 0;

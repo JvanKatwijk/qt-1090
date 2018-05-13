@@ -38,8 +38,9 @@ int res = a % b;
 
 /* The NL function uses the precomputed table from 1090-WP-9-14 */
 static
-int	cprNLFunction(double lat) {
-	if (lat < 0) lat = -lat; /* Table is symmetric about the equator. */
+int	cprNLFunction (double lat) {
+	if (lat < 0)
+	   lat = -lat; /* Table is symmetric about the equator. */
 	if (lat < 10.47047130) return 59;
 	if (lat < 14.82817437) return 58;
 	if (lat < 18.18626357) return 57;
@@ -262,7 +263,7 @@ double lon0 = even_cprlon;
 double lon1 = odd_cprlon;
 
 /* Compute the Latitude Index "j" */
-int j	= floor(((59 * lat0 - 60 * lat1) / 131072) + 0.5);
+int j	= floor (((59 * lat0 - 60 * lat1) / 131072) + 0.5);
 double rlat0 = AirDlat0 * (cprModFunction (j, 60) + lat0 / 131072);
 double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
 
@@ -299,7 +300,7 @@ double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
 }
 
 /* When in interactive mode If we don't receive new nessages within
- * MODES_INTERACTIVE_TTL seconds we remove the aircraft from the list.
+ * wtime seconds we remove the aircraft from the list.
  */
 aircraft *interactiveRemoveStaleAircrafts (aircraft *list, int wtime) {
 aircraft *currentPlane = list;

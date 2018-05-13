@@ -84,7 +84,7 @@ public:
 		~message	(void);
 void		displayMessage	(bool);
 uint32_t	getAddr		(void);
-bool	is_crcok		(void);
+bool		is_crcok	(void);
 private:
 
 bool    bruteForceAP			(uint8_t *msg);

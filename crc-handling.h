@@ -32,8 +32,8 @@
 #include	"adsb-constants.h"
 
 uint32_t computeChecksum	(uint8_t *msg, int bits);
-int fixSingleBitErrors	(uint8_t *msg, int bits);
-int fixTwoBitsErrors	(uint8_t *msg, int bits);
+int fixSingleBitErrors		(uint8_t *msg, int bits);
+int fixTwoBitsErrors		(uint8_t *msg, int bits);
 
 #endif
 

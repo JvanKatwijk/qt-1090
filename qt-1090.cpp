@@ -51,18 +51,9 @@ int	i;
 
 	setupUi (this);
 
-	tableWidget	= new QTableWidget (0, 1);
-	messageWidget	-> setWidget (tableWidget);
-	for (i = 0; i < 31; i ++) {
-	   tableWidget	-> insertRow (i);
-	   QTableWidgetItem *item0 = new QTableWidgetItem (QString ("    "));
-	   item0     -> setTextAlignment (Qt::AlignRight |Qt::AlignVCenter);
-	   tableWidget     -> setItem (i, i, item0);
-	}
-
 	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
-	viewer		= new syncViewer (dumpview, 128);
+	viewer		= new syncViewer (dumpview, 2 * (16 + 52));
 	show_preambles	= false;
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;
@@ -135,12 +126,11 @@ void	qt1090::finalize	(void) {
  * Note: this function will access m [-1], so the caller should make sure to
  * call it only if we are not at the start of the current buffer.
  */
-int	detectOutOfPhase (uint16_t *m) {
-	if (m [3] > m [2] / 3) return 1;
-	if (m [10] > m [9] / 3) return 1;
-	if (m [6] > m [7] / 3) return -1;
-	if (m [-1] > m [0] / 3) return -1;
-//	if (m [-1] > m [1] / 3) return -1;
+int	detectOutOfPhase (uint16_t *m, int offset) {
+	if (m [offset + 3 ] > m [offset + 2] / 3) return 1;
+	if (m [offset + 10] > m [offset + 9] / 3) return 1;
+	if (m [offset + 6 ] > m [offset + 7] / 3) return -1;
+	if (m [offset - 1 ] > m [offset + 0] / 3) return -1;
 	return 0;
 }
 
@@ -163,7 +153,7 @@ int	detectOutOfPhase (uint16_t *m) {
  *	is mixed in the low part, so that it is hard to distinguish if it is
  *	a zero or a one.
  *
- *	However when the message is out of phase passing from 0 to 1 or from
+ *	However when the message is out of phase, passing from 0 to 1 or from
  *	1 to 0 happens in a very recognizable way, for instance in the 0 -> 1
  *	transition, magnitude goes low, high, high, low, and one of of the
  *	two middle samples the high will be *very* high as part of the previous
@@ -175,17 +165,17 @@ int	detectOutOfPhase (uint16_t *m) {
  *	In this way similar levels will be interpreted more likely in the
  *	correct way.
  */
-void applyPhaseCorrection (uint16_t *m) {
+void applyPhaseCorrection (uint16_t *m, int offset) {
 int j;
 
-	m += 16; /* Skip preamble. */
+	offset += 16; /* Skip preamble. */
 	for (j = 0; j < (MODES_LONG_MSG_BITS-1) * 2; j += 2) {
-	   if (m [j] > m [j + 1]) {
+	   if (m [offset + j] > m [offset + j + 1]) {
             /* One */
-	      m [j + 2] = (m [j + 2] * 5) / 4;
+	      m [offset + j + 2] = (m [offset + j + 2] * 5) / 4;
 	   } else {
 	    /* Zero */
-	      m [j + 2] = (m [j + 2] * 4) / 5;
+	      m [offset + j + 2] = (m [offset + j + 2] * 4) / 5;
 	   }
 	}
 }
@@ -200,15 +190,8 @@ int	delta, first, second;
 	for (i = 0; i < MODES_LONG_MSG_BITS * 2; i += 2) {
 	   first	=  m [i];
 	   second	=  m [i + 1];
-	   delta	= first - second;
-	   if (delta < 0)
-              delta = -delta;
 
-//         if (delta < 256) {
-//            bits [i / 2] = bits [i / 2 - 1];
-//         }
-//         else
-           if (first == second) {
+           if ((0.85 * first <= second) && (second <= 1.15 * first)) {
                 /* Checking if two adjacent samples have the same magnitude
                  * is an effective way to detect if it's just random noise
                  * that was detected as a valid preamble. */
@@ -286,11 +269,9 @@ int	high;
 	      continue;
 	   }
 
-	   if (correlation < 2.5 * avg_corr)
+	   if (correlation < 2 * avg_corr)
 	      continue;
 
-	   if (m [j    ] < 2.5 * avgValue)
-	      continue;
 	   if (!(m [j]   > m [j+1] &&
 	         m [j+1] < m [j+2] &&
 	         m [j+2] > m[ j+3] &&
@@ -303,7 +284,7 @@ int	high;
 	         m [j+9] > m [j+6]))
 	      continue;
 
-	   high = (m [j] + m [j+2] + m [j+7] + m [j+9]) / 6;
+	   high = (m [j] + m [j + 2] + m [j + 7] + m [j + 9]) / 6;
 	   if (m [j + 4] >= high || m [j + 5] >= high)
 	      continue;
 	   if (m [j + 11] >= high ||
@@ -318,10 +299,10 @@ int	high;
 good_preamble:
 //	If the previous attempt with this message failed, retry using
 //	magnitude correction. 
-	   if (apply_phasecorrection) {
+	   if (apply_phasecorrection && (j > 0)) {
 	      memcpy (aux, &m [j + MODES_PREAMBLE_US * 2], sizeof(aux));
-              if (j && detectOutOfPhase (& m [j])) {
-	         applyPhaseCorrection (& m [j]);
+              if (detectOutOfPhase (m , j)) {
+	         applyPhaseCorrection (m, j);
 	         stat_out_of_phase++;
 	      }
 //	Restore the original message if we used magnitude correction. 
@@ -351,8 +332,8 @@ good_preamble:
 	   delta /= msglen * 4;
 
 //
-/*	If we reached this point, and error is zero, we are very likely
- *	with a Mode S message in our hands, but it may still be broken
+/*	If we reached this point, and error is zero, it is possible that we
+ *	have a Mode S message in our hands, but it may still be broken
  *	and CRC may not be correct. This is handled by the next layer.
  */
 	   if (errors == 0 ||
@@ -382,7 +363,6 @@ good_preamble:
 	         }
 	      }
 
-//	Skip this message if we are sure it's fine. */
 	      if (mm. is_crcok ()) {
 	         update_view (&m [j], true);
 	         j += (MODES_PREAMBLE_US + (msglen * 8)) * 2;
@@ -462,9 +442,9 @@ void	qt1090::useModesMessage (message *mm) {
 #define NET_SERVICE_HTTP	0
 #define	NUMBER_OF_SERVICES	1
 struct {
-    const char *descr;
-    int *socket;
-    int port;
+	const char *descr;
+	int *socket;
+	int port;
 }	modesNetServices [NUMBER_OF_SERVICES] = {
 	{"HTTP server",    NULL, MODES_NET_HTTP_PORT},
 };
@@ -854,12 +834,35 @@ void	qt1090::handle_errorhandlingCombo (const QString &s) {
 }
 
 void	qt1090::update_table	(int16_t index, int newval) {
-	index = index & 0x1F;
-	QString name = "DF";
-	name. append (QString::number (index));
-	name. append (":  ");
-	name. append (QString::number (newval));
-	tableWidget -> setItem (index, 1, new QTableWidgetItem (name));
+	switch (index) {
+	   case 0:
+	      DF0	-> display (newval);
+	      break;
+	   case 4:
+	      DF4	-> display (newval);
+	      break;
+	   case 5:
+	      DF5	-> display (newval);
+	      break;
+	   case 11:
+	      DF11	-> display (newval);
+	      break;
+	   case 16:
+	      DF16	-> display (newval);
+	      break;
+	   case 17:
+	      DF17	-> display (newval);
+	      break;
+	   case 20:
+	      DF20	-> display (newval);
+	      break;
+	   case 21:
+	      DF21	-> display (newval);
+	      break;
+	   default:
+	      fprintf (stderr, "DF%d -> %d\n", index, newval);
+	      break;
+	}
 }
 
 void	qt1090::handle_show_preamblesButton (void) {

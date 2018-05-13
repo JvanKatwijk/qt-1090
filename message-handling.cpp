@@ -128,7 +128,7 @@ uint32_t crc2;
  *	from 0 to 7.
  *
  *	The actual meaning is just 4 octal digits, but we convert it
- *	into a base ten number tha happens to represent the four
+ *	into a base ten number that happens to represent the four
  *	octal numbers.
  *
  *	For more info: http://en.wikipedia.org/wiki/Gillham_code

@@ -1,7 +1,10 @@
 
 #include	"crc-handling.h"
 
-/* Parity table for MODE S Messages.
+/*
+ *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
+ *
+ * Parity table for MODE S Messages.
  * The table contains 112 elements, every element corresponds to a bit set
  * in the message, starting from the first bit of actual data after the
  * preamble.
@@ -57,36 +60,32 @@ int j;
 
 /*
  *	Try to fix single bit errors using the checksum.
- *	On success modify the original buffer with the
- *	fixed version, and return the position
+ *	and return the position
  *	of the error bit.
  *	Otherwise if fixing failed -1 is returned.
  */
 int	fixSingleBitErrors (uint8_t *msg, int bits) {
 int j;
-uint8_t aux [MODES_LONG_MSG_BITS / 8];
 int	nbytes	= bits / 8;
 
 	for (j = 0; j < bits; j++) {
 	   int byte = j / 8;
 	   int bitmask	= maskTable [j % 8];
 	   uint32_t crc1, crc2;
+	   int testBit	= msg [byte] & bitmask;
+	   msg [byte] ^= bitmask; /* Flip j-th bit. */
 
-	   memcpy (aux, msg, nbytes);
-	   aux [byte] ^= bitmask; /* Flip j-th bit. */
-
-	   crc1 = ((uint32_t)aux [(bits / 8) - 3] << 16) |
-	          ((uint32_t)aux [(bits / 8) - 2] << 8) |
-	           (uint32_t)aux [(bits / 8) - 1];
-	   crc2 = computeChecksum (aux, bits);
+	   crc1 = ((uint32_t)msg [(bits / 8) - 3] << 16) |
+	          ((uint32_t)msg [(bits / 8) - 2] << 8) |
+	           (uint32_t)msg [(bits / 8) - 1];
+	   crc2 = computeChecksum (msg, bits);
 
 	   if (crc1 == crc2) {
-/*
- *	The error seems fixed. Overwrite the original buffer with
- *	the corrected sequence, and return the error bit position.
- */
-	      memcpy (msg, aux, bits / 8);
 	      return j;
+	   }
+	   else {
+	      msg [byte] &= ~bitmask;
+	      msg [byte] |= testBit;
 	   }
 	}
 	return -1;
@@ -105,7 +104,6 @@ unsigned char aux [MODES_LONG_MSG_BITS / 8];
 
 	for (j = 0; j < bits; j++) {
 	   int byte1 = j / 8;
-//	   int bitmask1 = 1 << (7 - (j % 8));
 	   int bitmask1 = maskTable [j % 8];
 
 //	Don't check the same pairs multiple times, so i starts from j+1

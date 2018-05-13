@@ -1,10 +1,16 @@
 #
 /*
- *    Copyright (C) 2018
- *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair Programming
  *
- *    This file is part of the qt-1090 program
+ *      qt-1090 is based on  and contains source code from the
+ *	dump1090 program 
+ *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
+ *      all rights acknowledged.
+ *
+ *	qt-1090 Copyright (C) 2018
+ *	Jan van Katwijk (J.vanKatwijk@gmail.com)
+ *	Lazy Chair Programming
+ *
+ *	This file is part of the qt-1090 program
  *
  *    qt-1090 is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
@@ -20,9 +26,6 @@
  *    along with qt-1090; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *      qt-1090 is based on  and contains source code from the dump1090 program 
- *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
- *      all rights acknowledged.
 
  */
 
