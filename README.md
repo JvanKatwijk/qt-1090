@@ -59,13 +59,12 @@ GUI
 ---------------------------------------------------------------------------
 
 The GUI contains:
-* a. A display showing samples, starting with the preamble.
+* a. A display showing samples, starting with the preamble, with thel length of a short message;
 Touching the "preamble" button will show all preambles passing some elementary tests (red and green),
-or only the preambles of messages passing a CRC test.
-* b. A table with a count of the number of occurrences for each type of message
-that was detected in the input stream.
-* c. a list of numbers indicating statistics.
-* d. a list of buttons.
+or only the preambles of messages passing a CRC test (green);
+* b. For the different message types the number of occurrences, detected in the input stream;
+* c. a list of numbers indicating statistics, such as the number of messages with a preamble passing the preamble test, and the number of messages passing the crc check;
+* d. a row buttons.
 
 ----------------------------------------------------------------------------
 The preamble
