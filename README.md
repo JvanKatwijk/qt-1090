@@ -83,10 +83,10 @@ or only the preambles of messages passing a CRC test (green);
 * d. a row buttons.
 
 ----------------------------------------------------------------------------
-The preamble
+What is shown
 ----------------------------------------------------------------------------
 
-The preamble of an ads-b message starts with a predefined sequence of
+The preamble of an ads-b message starts with 16
 pulses. Each pulse has a length of 0.5 micro seconds,
 
 	*      0   - 0.5 usec: first impulse.
@@ -94,16 +94,20 @@ pulses. Each pulse has a length of 0.5 micro seconds,
 	*      3.5 - 4   usec: third impulse.
 	*      4.5 - 5   usec: last impulse.
 
-The GUI shows the first samples of a message. A short message takes
-16 + 52 bits, the samples for these bits are shown.
-Each sample  is represented as a bar. The "preamble" button
-selects what is shown: either the start of a message where the preamble
-passed some checks to determine whether it seems a reasonable
-preamble, or the start of a message that 
-also passed a CRC test. The messages that passed the CRC
-test are represented in green, those of messages that did not pass the CRC test in red.
+
+The display on the GUI shows samples comprising a preamble (with on the
+X axis -16 .. 0, and a user specified amount of samples from the accompanying
+message. 
+In normal use, the bars on the display are green, indicating that the message
+these values were taken from passed a CRC check. Switching the pushbutton
+labeled "preambles" causes all messages, passing some elementary checks
+on the preamble, to be shown. In that case the bars are green for a message
+passing the CRC check, red otherwise,
 
 
+The amount of bits of the message shown is default 16, it can be changed by
+setting the value for "bitstoShow" in the ini file. This ini file is to be
+found "~/.qt-1090.ini".
 ---------------------------------------------------------------------------
 The Buttons
 ----------------------------------------------------------------------------

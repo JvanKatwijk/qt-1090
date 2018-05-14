@@ -52,10 +52,10 @@ int	i;
 	setupUi (this);
 
 	httpPort	= dumpSettings	-> value ("http_port", 8080). toInt ();
-
+	bitstoShow	= dumpSettings	-> value ("bitstoShow", 16). toInt ();
 	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
-	viewer		= new syncViewer (dumpview, 4 * (16 + 52));
+	viewer		= new syncViewer (dumpview, bitstoShow);
 	show_preambles	= false;
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;

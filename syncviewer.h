@@ -52,6 +52,8 @@ private:
 	QBrush          *redBrush;
 	double		*X_AXIS;
 	double		*Y_AXIS;
+	int		samplestoShow;
+	int		bitstoShow;
 };
 
 #endif

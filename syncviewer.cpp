@@ -24,10 +24,12 @@
 #include	"syncviewer.h"
 
 
-	syncViewer::syncViewer (QwtPlot           *plot,
-	                        uint16_t          displaysize) {
+	syncViewer::syncViewer (QwtPlot		*plot,
+	                        uint16_t	bitstoShow) {
         plotgrid	= plot;
-        displaySize	= displaysize + 1;
+	this	-> bitstoShow	= bitstoShow;
+	samplestoShow	= 16 + 2 * bitstoShow;
+        displaySize	= 8 * samplestoShow;
 	plotgrid	-> setCanvasBackground (Qt::black);
 	grid		= new QwtPlotGrid;
 	X_AXIS		= new double [displaySize];
@@ -65,16 +67,16 @@ void	syncViewer::Display (uint16_t *mag, bool flag) {
 int i, j;
 double mmax	= 0;
 
-	for (i = 0; i < 16 + 52; i ++)
+	for (i = 0; i < 16 + 104; i ++)
 	   if (mag [i] > mmax)
 	      mmax = mag [i];
 
 	SpectrumCurve -> setPen (flag ? QPen (Qt::green) : QPen (Qt::red));
         SpectrumCurve   -> setBrush (flag ? *greenBrush : *redBrush);
-	for (i = 0; i < 16 + 52; i ++) {
-	   for (j = 0; j < displaySize / 68; j ++) {
-	      X_AXIS [i * displaySize / 68 + j] = (float)i + (float)j / (displaySize / 68);
-	      Y_AXIS [i * displaySize / 68 + j] = mag [i] / mmax * 100;
+	for (i = -16; i < 2 * bitstoShow; i ++) {
+	   for (j = 0; j < 8; j ++) {
+	      X_AXIS [8 * (i + 16) + j] = (float)i  + (float)j / 8;
+	      Y_AXIS [8 * (i + 16) + j] = mag [i] / mmax * 100;
 	   }
 	}
 

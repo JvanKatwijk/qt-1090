@@ -80,6 +80,7 @@ private:
 	int		correlationCounter;
 	QTableWidget	*tableWidget;
 	bool		show_preambles;
+	int		bitstoShow;
 public:
 	icaoCache	*icao_cache;
 	bool		check_crc;	/* Only display messages with good CRC. */
