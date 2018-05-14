@@ -56,9 +56,9 @@ int16_t localBuf [numSamples];
 void    sdrplay_changeCallback (uint32_t  gRdB,
                                 uint32_t  lnaGRdB,
                                 void      *cbContext) {
-	fprintf (stderr, "gain reduction set to %d\n", gRdB);
-        fprintf (stderr, "lna reduction set to %d\n",lnaGRdB);
-        (void)cbContext;
+//	fprintf (stderr, "gain reduction set to %d\n", gRdB);
+//	fprintf (stderr, "lna reduction set to %d\n",lnaGRdB);
+	(void)cbContext;
 }
 
 	sdrplayHandler::sdrplayHandler (QSettings *sdrplaySettings,
@@ -150,7 +150,7 @@ int   err;
 int	samplesPerPacket;
 
 	err  = mir_sdr_StreamInit (&localGRed,
-                                   (double)(MODES_DEFAULT_RATE) / 1000000.0,
+                                   (double)(2000000) / 1000000.0,
                                    (double)(freq) / 1000000.0,
                                    mir_sdr_BW_5_000,
                                    mir_sdr_IF_Zero,

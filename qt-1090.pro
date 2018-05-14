@@ -6,17 +6,19 @@
 
 TEMPLATE	= app
 TARGET          = qt-1090
-QT		+= widgets 
+QT		+= widgets network
 CONFIG		+= console
-#QMAKE_CFLAGS	+= -flto -ffast-math
-#QMAKE_CXXFLAGS	+= -flto -ffast-math
-#QMAKE_LFLAGS	+= -flto
-QMAKE_CFLAGS	+= -g
-QMAKE_CXXFLAGS	+= -g
-QMAKE_LFLAGS	+= -g
+QMAKE_CFLAGS	+= -flto -ffast-math
+QMAKE_CXXFLAGS	+= -flto -ffast-math
+QMAKE_LFLAGS	+= -flto
+#QMAKE_CFLAGS	+= -g
+#QMAKE_CXXFLAGS	+= -g
+#QMAKE_LFLAGS	+= -g
 
 CONFIG	+= sdrplay
 CONFIG	+= dabstick
+
+TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
 
 DEPENDPATH += . \
 	      ./devices \
@@ -37,8 +39,8 @@ HEADERS += ./xclose.h \
            ./message-handling.h \
            ./device-handler.h \
            ./devices/file-handler/file-handler.h \
-           ./anet.h \
-           ./syncviewer.h
+           ./syncviewer.h \
+	   ./responder.h
 
 FORMS	+= ./qt-1090.ui
 
@@ -51,21 +53,36 @@ SOURCES += ./xclose.cpp   \
            ./message-handling.cpp   \
            ./device-handler.cpp   \
            ./devices/file-handler/file-handler.cpp   \
-           ./anet.cpp   \
-           ./syncviewer.cpp
+           ./syncviewer.cpp \
+	   ./responder.cpp
 #
 # for windows32 we use:
 win32 {
 DESTDIR	= ../../windows-bin
+INCLUDEPATH += /usr/i686-w64-mingw32/sys-root/mingw/include
+INCLUDEPATH     += /mingw32/include
+INCLUDEPATH     += /mingw32/include/qwt
+LIBS            += -L/usr/i686-w64-mingw32/sys-root/mingw/lib
 }
 #
 #for fedora and ubuntu  and the rpi we use
 unix { 
+exists ("./.git") {
+   GITHASHSTRING = $$system(git rev-parse --short HEAD)
+   !isEmpty(GITHASHSTRING) {
+       message("Current git hash = $$GITHASHSTRING")
+       DEFINES += GITHASH=\\\"$$GITHASHSTRING\\\"
+   }
+}
+isEmpty(GITHASHSTRING) {
+    DEFINES += GITHASH=\\\"------\\\"
+}
+
 DESTDIR		= ./linux-bin
 LIBS            += -L/usr/lib64
 LIBS            += -L/lib64
 INCLUDEPATH     += /usr/include/qt5/qwt
-LIBS            += -lqwt-qt5 -lusb-1.0 -ldl
+LIBS            += -lqwt-qt5 -lqhttpserver -lusb-1.0 -ldl
 }
 
 #	the devices:

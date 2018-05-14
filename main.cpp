@@ -83,10 +83,10 @@ char	*fileName	= NULL;
 int	deviceIndex	= 0;
 int	freq		= 1090000000;
 
-	QCoreApplication::setOrganizationName ("Lazy Chair Computing");
+	QCoreApplication::setOrganizationName	("Lazy Chair Computing");
 	QCoreApplication::setOrganizationDomain ("Lazy Chair Computing");
-	QCoreApplication::setApplicationName ("qt-1090");
-//	QCoreApplication::setApplicationVersion (QString (CURRENT_VERSION) + " Git: " + GITHASH);
+	QCoreApplication::setApplicationName	("qt-1090");
+	QCoreApplication::setApplicationVersion (QString (CURRENT_VERSION) + " Git: " + GITHASH);
 
 //	Parse the command line options */
 	for (j = 1; j < argc; j++) {
@@ -100,7 +100,7 @@ int	freq		= 1090000000;
 	   } else
 	   if (!strcmp (argv [j],"--ifile") && more) {
 	       fileName = strdup (argv[++j]);
-	   } else if (!strcmp(argv[j],"--help")) {
+	   } else if (!strcmp (argv[j],"--help")) {
 	      showHelp ();
 	      exit (0);
 	   } else {

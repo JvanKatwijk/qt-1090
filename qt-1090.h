@@ -1,6 +1,5 @@
 #
 /*
- *
  *      qt-1090 is based on and contains source code from dump1090
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
  *      all rights acknowledged.
@@ -36,19 +35,15 @@
 #include	<QMessageBox>
 #include	<QCloseEvent>
 #include	<QTableWidget>
+#include	"qhttpserverfwd.h"
+#include	<qhttpserver.h>
+#include	<qhttprequest.h>
+#include	<qhttpresponse.h>
 #include	"message-handling.h"
 #include	"ui_qt-1090.h"
 
 class	deviceHandler;
 class	syncViewer;
-
-/* Structure used to describe a networking client. */
-struct client {
-        int fd;                 /* File descriptor. */
-        int service;            /* TCP port the client is connected to. */
-        char buf [CLIENT_BUF_SIZE+1];    /* Read buffer. */
-        int buflen;             /* Amount of data on buffer. */
-};
 
 
 class	qt1090: public QMainWindow, private Ui_mainwindow {
@@ -56,23 +51,16 @@ Q_OBJECT
 public:
 	qt1090		(QSettings *, deviceHandler *);
 	~qt1090		(void);
-	char		*aircraftsToJson (int *len);
 private:
 	void		finalize	(void);
 	void		closeEvent	(QCloseEvent *event);
 	int		decodeBits	(uint8_t *bits, uint16_t *m);
 	void		detectModeS	(uint16_t *m, uint32_t mlen);
 	void		useModesMessage (message *mm);
-	void		serverInit	(void);
-	void		AcceptClients	(void);
-	void		FreeClient	(int fd);
-	void		ReadFromClient	(struct client *c,
-                                       char *sep,
-                                       int(*handler)(void *, struct client *));
-	void		ReadFromClients (void);
 	void		update_view (uint16_t *m, bool);
 	void		update_table (int16_t, int);
 	int		table [32];
+	QHttpServer	*httpServer;
 public slots:
 	void		processData (void);
 private:
@@ -81,16 +69,8 @@ private:
 	QSettings	*dumpSettings;
 	uint16_t	*magnitudeVector;
 	uint32_t	data_len;	/* Buffer length. */
-
+	int		httpPort;
 	syncViewer	*viewer;
-//	Networking */
-	char		aneterr		[ANET_ERR_LEN];
-	struct client	*clients [MODES_NET_MAX_FD]; /* Our clients. */
-	int		maxfd;		/* Greatest fd currently active. */
-	int		sbsos;          /* SBS output listening socket. */
-        int		ros;            /* Raw output listening socket. */
-        int		ris;            /* Raw input listening socket. */
-        int		https;          /* HTTP listening socket. */
 
 //	Configuration */
 	bool		net;		/* Enable networking. */
@@ -131,6 +111,9 @@ private slots:
 	void	set_ttl			(int);
 	void	handle_show_preamblesButton (void);
 	void	handle_metricButton	(void);
+	void	handleRequest		(QHttpRequest *,
+	                                        QHttpResponse *);
+
 };
 
 #endif

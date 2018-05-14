@@ -11,14 +11,30 @@ is equipped with a simple GUI.
 
 =============================================================================
 
+-----------------------------------------------------------------------------
 Installation
----
+-----------------------------------------------------------------------------
 
-* mkdir build
-* cd build
-* cmake .. -DXXX=ON (where XXX is SDRPLAY, RTLSDR)
+First of all, you should have C++ and Qt5 installed.
+The current version of qt-1090 uses the qhttpserver library,
+the sources of this library are included.
+Making a lib and installing:
+
+* cd qhttpserver
+* qmake-qt5
 * make
 * sudo make install
+
+* cd ..			/* back in the qt-1090 directory
+ 
+# edit qt-1090.pro to select your device(s) by commenting out or uncommenting
+
+	CONFIG  += sdrplay
+	CONFIG  += dabstick
+
+* qmake-qt5
+* make
+# the created qt-1090 executable is in ./linux-bin
 
 ---------------------------------------------------------------------------
 Devices
@@ -53,7 +69,6 @@ is created as raw file with elements of 2 * 8 bits. Such a file can be created
 with various rtlsdr based tools.
 
 
-
 ---------------------------------------------------------------------------
 GUI
 ---------------------------------------------------------------------------
@@ -78,8 +93,9 @@ pulses. Each pulse has a length of 0.5 micro seconds,
 	*      3.5 - 4   usec: third impulse.
 	*      4.5 - 5   usec: last impulse.
 
-The GUI shows the first samples of a message,
-each sample represented as a bar. The "preamble" button
+The GUI shows the first samples of a message. A short message takes
+16 + 52 bits, the samples for these bits are shown.
+Each sample  is represented as a bar. The "preamble" button
 selects what is shown: either the start of a message where the preamble
 passed some checks to determine whether it seems a reasonable
 preamble, or the start of a message that 
@@ -95,7 +111,8 @@ The buttons from left to right:
 * a	a push button switching the terminal output from "all messages" to "interactive". In the latter case, a list of planes as is shown, regularly updated;
 * b	a spinbox, with which the ttl can be set, the number of seconds within which a description of a plane has to be seen again in order to maintain it on the list of planes;
 * c	a puhsbutton to switch http output. If selected, the output
-is sent to port 8080 and a browser, listening to port 8080, will show a google map with planes;
+is sent to a predefined port. A a browser, listening to this port,
+will show a google map with planes (i.e. a "flight plane radar").
 * d.	a combobox for selecting the degree of error correction. Options are 
 "no correction", "normal correction" (i.e. single bit), or "strong correction"
 (i.e. 2 bit correction). It goes without saying that the latter is pretty cpu
@@ -107,15 +124,32 @@ intensive;
 Using google maps
 ----------------------------------------------------------------------------
 
+On pressing the button to switch on http, 
 The HTTP server assumes that the file "gmap.html" is stored in the same
-directory where the qt-1090 program resides
+directory where the qt-1090 program resides. Note that the browser should
+listen to the port specified in the field next to that button.
+The port can be set (changed) in the ini file, default is 8080.
 
 
+--------------------------------------------------------------------------
+TODO
+--------------------------------------------------------------------------
+
+A major reason to use a different http library is the plan to make
+the software available under Windows.
+On the todo list:
+
+* a. Make the software available under Windows
+* b. Generate an AppImage for use under Linux (x64) and the RPI 2/3
+
+---------------------------------------------------------------------------
 Copyrights
----
+---------------------------------------------------------------------------
+
 
 Dump1090 was written by Salvatore Sanfilippo <antirez@gmail.com> and is
 released under the BSD three clause license. qt-1090 uses source code
 from Dump1090.
+Copyright of the httplibrary Nikhil Marathe <nsm.nikhil@gmail.com>
 Copyright of the modifications is J van Katwijk, Lazy Chair computing
 

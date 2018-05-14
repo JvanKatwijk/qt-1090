@@ -28,7 +28,10 @@
 #include	"aircraft-handler.h"
 #include	"adsb-constants.h"
 #include	"message-handling.h"
+#include	<string>
+#include	<mutex>
 
+static	std::mutex	locker;
 /* Always positive MOD operation, used for CPR decoding. */
 static inline
 int cprModFunction (int a, int b) {
@@ -103,13 +106,13 @@ int	cprNLFunction (double lat) {
 	   return 1;
 }
 
-static
+static inline
 int cprNFunction (double lat, int isodd) {
 int nl = cprNLFunction (lat) - isodd;
     return (nl < 1) ? 1 : nl;
 }
 
-static
+static inline
 double cprDlonFunction (double lat, int isodd) {
     return 360.0 / cprNFunction (lat, isodd);
 }
@@ -162,6 +165,7 @@ aircraft *thePlane, *aux;
 	addr	= mm -> getAddr ();
 
 //	Lookup our aircraft or create a new one. */
+	locker. lock ();
 	thePlane = findAircraft (list, addr);
 	if (thePlane == NULL) {
 	   thePlane = new aircraft (addr);
@@ -172,6 +176,7 @@ aircraft *thePlane, *aux;
 	thePlane -> fillData (mm);
 
 	if (list == thePlane) { // it is the first one on the list
+	   locker. unlock ();
 	   return list;
 	}
 
@@ -183,8 +188,10 @@ aircraft *thePlane, *aux;
          * useless shuffle of positions on the screen.
 	 */
 	aux = list;
-	if ((time (NULL) - aux -> seen) < 1) 
+	if ((time (NULL) - aux -> seen) < 2) {
+	   locker. unlock ();
 	   return list;
+	}
 //
 //	at this point, aux cannot be NULL
 //	OK, we have to reorder the list
@@ -198,7 +205,7 @@ aircraft *thePlane, *aux;
 //	Add on head */
 	thePlane -> next = list;
 	list = thePlane;
-
+	locker. unlock ();
 	return list;
 }
 
@@ -302,7 +309,7 @@ double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
 /* When in interactive mode If we don't receive new nessages within
  * wtime seconds we remove the aircraft from the list.
  */
-aircraft *interactiveRemoveStaleAircrafts (aircraft *list, int wtime) {
+aircraft *removeStaleAircrafts (aircraft *list, int wtime) {
 aircraft *currentPlane = list;
 aircraft *prev = NULL;
 time_t now = time(NULL);
@@ -371,4 +378,44 @@ int count = 0;
 	   aircrafts = aircrafts -> next;
 	   count++;
 	}
+}
+
+
+std::string	aircraft::toJson (void) {
+std::string result;
+char buf [512];
+int	l;
+
+	l = snprintf (buf, 512,
+	              "{\"hex\":\"%s\", \"flight\":\"%s\", \"lat\":%f, "
+	              "\"lon\":%f, \"altitude\":%d, \"track\":%d, "
+	              "\"speed\":%d},\n",
+	              hexaddr, flight, lat, lon,
+	              altitude, track, speed);
+	result	= std::string (buf);
+	return result;
+}
+
+/* Return a description of planes in json. */
+std::string	aircraftsToJson (aircraft *list) {
+aircraft *plane	= list;
+std::string Jsontxt;
+
+	Jsontxt.append ("[\n");
+	locker. lock ();
+	while (plane != NULL) {
+	   if (plane -> lat != 0 && plane -> lon != 0) {
+	      Jsontxt. append (plane -> toJson ());
+	   }
+	   plane = plane -> next;
+	}
+	locker. unlock ();
+//	Remove the final comma if any, and closes the json array. */
+	if (Jsontxt. at (Jsontxt. length () - 2) == ',') {
+	   Jsontxt. pop_back ();
+	   Jsontxt. pop_back ();
+	   Jsontxt. push_back ('\n');
+	}
+	Jsontxt. append ("]\n");
+	return Jsontxt;
 }

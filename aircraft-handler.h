@@ -31,6 +31,7 @@
 
 #include	"stdint.h"
 #include	<sys/time.h>
+#include	<string>
 
 class	message;
 
@@ -56,15 +57,16 @@ public:
 	int even_cprlon;
 	double lat, lon;	/* Coordinated obtained from CPR encoded data. */
 	long long odd_cprtime, even_cprtime;
-	 aircraft *next;	/* Next aircraft in our linked list. */
+	aircraft *next;		/* Next aircraft in our linked list. */
 	void    fillData	(message *mm);
 	void	decodeCPR	(void);
 	void	showPlane	(bool metric, time_t now);
+	std::string	toJson		(void);
 };
 
-aircraft *interactiveReceiveData		(aircraft *, message *);
-aircraft *interactiveRemoveStaleAircrafts	(aircraft *, int);
-void	showPlanes				(aircraft *, bool);
-
+aircraft *interactiveReceiveData	(aircraft *, message *);
+aircraft *removeStaleAircrafts		(aircraft *, int);
+void	showPlanes			(aircraft *, bool);
+std::string aircraftsToJson		(aircraft *list);
 #endif
 

@@ -26,7 +26,6 @@
  */
 
 #include	"device-handler.h"
-#include	"anet.h"
 #include	"adsb-constants.h"
 #include	"aircraft-handler.h"
 #include	"crc-handling.h"
@@ -34,6 +33,7 @@
 #include	"icao-cache.h"
 #include	"xclose.h"
 #include	"syncviewer.h"
+#include	"responder.h"
 
 static
 void	*readerThreadEntryPoint (void *arg) {
@@ -51,9 +51,11 @@ int	i;
 
 	setupUi (this);
 
+	httpPort	= dumpSettings	-> value ("http_port", 8080). toInt ();
+
 	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
-	viewer		= new syncViewer (dumpview, 2 * (16 + 52));
+	viewer		= new syncViewer (dumpview, 4 * (16 + 52));
 	show_preambles	= false;
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;
@@ -79,11 +81,11 @@ int	i;
 	stat_single_bit_fix	= 0;
 	stat_two_bits_fix	= 0;
 	stat_http_requests	= 0;
-//	stat_sbs_connections	= 0;
 	stat_out_of_phase	= 0;
 	stat_phase_corrected	= 0;
 //
 	ttl_selector	-> setValue (MODES_INTERACTIVE_TTL);
+
 //	connect the device
 	connect (device, SIGNAL (dataAvailable (void)),
 	         this, SLOT (processData (void)));
@@ -99,13 +101,20 @@ int	i;
 	         this, SLOT (handle_metricButton (void)));
 	connect (show_preamblesButton, SIGNAL (clicked (void)),
 		 this, SLOT (handle_show_preamblesButton (void)));
+
 	pthread_create (&reader_thread,
 	                NULL,
 	                readerThreadEntryPoint,
 	                (void *)(device));
-	serverInit ();		// init http server
 	avg_corr		= 0;
 	correlationCounter	= 0;
+//	display the version
+        QString v = "qt-1090 -" + QString (CURRENT_VERSION);
+        QString versionText = "qt-1090 version: " + QString(CURRENT_VERSION);
+        versionText += " Build on: " + QString(__TIMESTAMP__) + QString (" ") + QString (GITHASH);
+        versionName     -> setText (v);
+        versionName     -> setToolTip (versionText);
+
 }
 
 	qt1090::~qt1090	(void) {
@@ -427,108 +436,6 @@ void	qt1090::useModesMessage (message *mm) {
 }
 
 //
-/* ============================= Networking =================================
- * Note: here we disregard any kind of good coding practice in favor of
- * extreme simplicity, that is:
- *
- * 1) We only rely on the kernel buffers for our I/O without any kind of
- *    user space buffering.
- * 2) We don't register any kind of event handler, from time to time a
- *    function gets called and we accept new connections. All the rest is
- *    handled via non-blocking I/O and manually pulling clients to see if
- *    they have something new to share with us when reading is needed.
- */
-
-#define NET_SERVICE_HTTP	0
-#define	NUMBER_OF_SERVICES	1
-struct {
-	const char *descr;
-	int *socket;
-	int port;
-}	modesNetServices [NUMBER_OF_SERVICES] = {
-	{"HTTP server",    NULL, MODES_NET_HTTP_PORT},
-};
-
-void 	qt1090::serverInit (void) {
-int j = 0;
-        modesNetServices [0]. socket = &https;
-	memset (clients, 0, sizeof (clients));
-	maxfd = -1;
-
-	int s = anetTcpServer (aneterr, modesNetServices [j] .port, NULL);
-	if (s == -1) {
-	   fprintf (stderr,
-	            "Error opening the listening port %d (%s): %s\n",
-	            modesNetServices [j]. port,
-	            modesNetServices [j]. descr,
-	            strerror (errno) );
-	   exit (1);
-	}
-
-	anetNonBlock (aneterr, s);
-	*modesNetServices [j]. socket = s;
-	signal (SIGPIPE, SIG_IGN);
-}
-
-/*
- *	This function gets called when new data is arriving.
- */
-void qt1090::AcceptClients (void) {
-int fd, port;
-int j	=0;
-struct client *c;
-
-	while (true) {
-	   fd = anetTcpAccept (aneterr, *modesNetServices[j].socket,
-	                                                      NULL, &port);
-	   if (fd == -1) {
-	      if (errno != EAGAIN)
-	         printf ("Accept %d: %s\n", *modesNetServices[j].socket,
-	                                                  strerror (errno));
-	      return;
-	   }
-
-	   if (fd >= MODES_NET_MAX_FD) {
-	      xclose (fd);
-	      return; /* Max number of clients reached. */
-	   }
-
-	   anetNonBlock (aneterr, fd);
-	   c =  (struct client *)malloc (sizeof (*c));
-	   c -> service = *modesNetServices [j].socket;
-	   c -> fd = fd;
-	   c -> buflen = 0;
-	   clients [fd] = c;
-	   anetSetSendBuffer (aneterr, fd, MODES_NET_SNDBUF_SIZE);
-
-	   if (maxfd < fd)
-	      maxfd = fd;
-	}
-}
-
-/* On error free the client, collect the structure, adjust maxfd if needed. */
-void	qt1090::FreeClient (int fd) {
-	xclose (fd);
-	free (clients [fd]);
-	clients [fd] = NULL;
-
-//	printf ("Closing client %d\n", fd);
-
-//	If this was our maxfd, scan the clients array to find the new max.
-//	Note that we are sure there is no active fd greater than the closed
-//	fd, so we scan from fd-1 to 0. */
-	if (maxfd == fd) {
-        int j;
-
-           maxfd = -1;
-           for (j = fd - 1; j >= 0; j--) {
-	      if (clients [j]) {
-	         maxfd = j;
-	         break;
-	      }
-           }
-	}
-}
 
 /* Turn an hex digit into its 4 bit decimal value.
  * Returns -1 if the digit is not in the 0-F range. */
@@ -544,40 +451,6 @@ int hexDigitVal (int c) {
 }
 
 
-/* Return a description of planes in json. */
-char 	*qt1090::aircraftsToJson (int *len) {
-aircraft *plane	= aircrafts;
-char buf [512];
-int l;
-std::string Jsontxt;
-	Jsontxt.append ("[\n");
-	while (plane != NULL) {
-	   if (plane -> lat != 0 && plane -> lon != 0) {
-              l = snprintf (buf, 512,
-                "{\"hex\":\"%s\", \"flight\":\"%s\", \"lat\":%f, "
-                "\"lon\":%f, \"altitude\":%d, \"track\":%d, "
-                "\"speed\":%d},\n",
-                plane -> hexaddr, plane -> flight, plane -> lat, plane -> lon,
-	        plane -> altitude, plane -> track, plane -> speed);
-	      Jsontxt. append (buf);
-//	Resize if needed. */
-	   }
-	   plane = plane -> next;
-	}
-//	Remove the final comma if any, and closes the json array. */
-	if (Jsontxt. at (Jsontxt. length () - 2) == ',') {
-	   Jsontxt. pop_back ();
-	   Jsontxt. pop_back ();
-	   Jsontxt. push_back ('\n');
-	}
-	Jsontxt. append ("]\n");
-	char * res = new char [strlen (Jsontxt. c_str ())];
-	for (int i = 0; i < strlen (Jsontxt. c_str ()); i ++)
-	   res [i] = Jsontxt. c_str () [i];
-	*len	= strlen (Jsontxt. c_str ());
-	return res;
-}
-
 //////////////////////////////////////////////////////////////////////////
 
 //	this slot is called upon the arrival of data
@@ -592,13 +465,7 @@ int16_t lbuf [MODES_DATA_LEN / 2];
 	           lbuf, MODES_DATA_LEN / 2 * sizeof (int16_t));
 
 	   detectModeS (magnitudeVector, data_len / 2);
-	   aircrafts	= interactiveRemoveStaleAircrafts (aircrafts,
-	                                                   interactive_ttl);
-//	Refresh screen when in interactive mode. */
-	   if (net) {
-	      AcceptClients ();
-	      ReadFromClients ();
-	   }
+	   aircrafts	= removeStaleAircrafts (aircrafts, interactive_ttl);
 	   if (interactive &&
 	      (mstime () - interactive_last_update) >
 	                             MODES_INTERACTIVE_REFRESH_TIME) {
@@ -607,184 +474,10 @@ int16_t lbuf [MODES_DATA_LEN / 2];
 	   }
 	}
 }
-//
-/////////////////////////////////////////////////////////////////////////
-//	http handling
 /////////////////////////////////////////////////////////////////////////
 
 #define MODES_CONTENT_TYPE_HTML "text/html;charset=utf-8"
 #define MODES_CONTENT_TYPE_JSON "application/json;charset=utf-8"
-
-/*
- *	Get an HTTP request header and write the response to the client.
- *	Again here we assume that the socket buffer is enough without doing
- *	any kind of userspace buffering.
- *
- *	Returns 1 on error to signal the caller the client connection should
- *	be closed.
- */
-static
-int	handleHTTPRequest (void *ctx, struct client *c) {
-qt1090 *context = static_cast <qt1090 *> (ctx);
-char hdr [512];
-int clen, hdrlen;
-int httpver, keepalive;
-char *p, *url, *content;
-char *ctype;
-
-//	printf ("\nHTTP request: %s\n", c -> buf);
-
-/*	Minimally parse the request. */
-	httpver = (strstr (c -> buf, "HTTP/1.1") != NULL) ? 11 : 10;
-	if (httpver == 10) {
-/*	HTTP 1.0 defaults to close, unless otherwise specified. */
-	   keepalive = strstr (c -> buf, "Connection: keep-alive") != NULL;
-	}
-	else
-	if (httpver == 11) {
-/*	HTTP 1.1 defaults to keep-alive, unless close is specified. */
-	   keepalive = strstr (c -> buf, "Connection: close") == NULL;
-	}
-
-/*	Identify the URL. */
-	p = strchr (c -> buf, ' ');
-	if (p == 0)
-	   return 1; /* There should be the method and a space... */
-	url = ++p; /* Now this should point to the requested URL. */
-
-	p = strchr (p, ' ');
-	if (p == NULL)
-	   return 1; /* There should be a space before HTTP/... */
-	*p = '\0';
-
-/*	Select the content to send, we have just two so far:
- *	"/" -> Our google map application.
- *	"/data.json" -> Our ajax request to update planes.
- */
-	if (strstr (url, "/data.json")) {
-	   content = (char *)context -> aircraftsToJson (&clen);
-	   ctype = (char *)MODES_CONTENT_TYPE_JSON;
-	}
-	else {
-	   struct stat sbuf;
-	   FILE	*fd;
-
-	   if (stat ("gmap.html", &sbuf) != -1 &&
-	       (fd = fopen ("gmap.html", "r")) != NULL) {
-	      content = new char [sbuf. st_size];
-	      if (fread (content, 1, sbuf.st_size, fd) < sbuf. st_size) {
-	         snprintf (content, sbuf.st_size,
-	                      "Error reading from file: %s",
-	                                              strerror(errno));
-	      }
-	      if (fd != NULL)
-	         fclose (fd);
-	      clen = sbuf.st_size;
-	   }
-	   else {
-	      content	= new char [128];
-	      clen = snprintf (content, 128,
-	                   "Error opening HTML file: %s", strerror(errno));
-	   }
-	   ctype = (char *)MODES_CONTENT_TYPE_HTML;
-	}
-/*
- *	Create the header and send the reply.
- */
-	hdrlen = snprintf (hdr, sizeof (hdr),
-	                       "HTTP/1.1 200 OK\r\n"
-	                       "Server: qt1090\r\n"
-	                       "Content-Type: %s\r\n"
-	                       "Connection: %s\r\n"
-	                       "Content-Length: %d\r\n"
-	                       "Access-Control-Allow-Origin: *\r\n"
-	                       "\r\n",
-	                       ctype,
-	                       keepalive ? "keep-alive" : "close",
-	                       clen);
-
-/*	Send header and content. */
-	if (write (c -> fd, hdr, hdrlen) != hdrlen ||
-	    write (c -> fd, content, clen) != clen) {
-	   free (content);
-	   return 1;
-	}
-
-	free (content);
-	context -> stat_http_requests++;
-	return !keepalive;
-}
-
-void	qt1090::ReadFromClients (void) {
-int j;
-struct client *c;
-
-        for (j = 0; j <= maxfd; j++) {
-	   struct client *c = clients [j];
-           if ((c != NULL) && (c -> service == https))
-              ReadFromClient (c,(char *)"\r\n\r\n", handleHTTPRequest);
-        }
-}
-
-void	qt1090::ReadFromClient (struct client *c,
-	                        char *sep,
-	                        int(*handler)(void *, struct client *)) {
-	while (true) {
-	   int left = CLIENT_BUF_SIZE - c -> buflen;
-	   int nread = read (c -> fd, &c -> buf [c -> buflen], left);
-//	   int nread = read (c -> fd, c -> buf + c -> buflen, left);
-	   int fullmsg = 0;
-	   int i;
-	   char *p;
-
-	   if (nread <= 0) {
-	      if (nread == 0 || errno != EAGAIN) {
-                /* Error, or end of file. */
-	          FreeClient (c -> fd);
-	      }
-	      break; /* Serve next client. */
-	   }
-
-	   c -> buflen += nread;
-
-//	Always null-term so we are free to use strstr() */
-	   c -> buf [c -> buflen] = '\0';
-
-//	If there is a complete message there must be the separator 'sep'
-//	in the buffer, note that we full-scan the buffer at every read
-//	for simplicity. */
-	   while ((p = strstr (c -> buf, sep)) != NULL) {
-	      i = p - c -> buf; /* Turn it as an index inside the buffer. */
-	      c -> buf[i] = '\0'; /* handler expects null terminated strings. */
-//	Call the function to process the message. It returns 1
-//	on error to signal we should close the client connection. */
-	      if (handler (this, c) != 0) {
-	         FreeClient (c -> fd);
-	         return;
-	      }
-
-//	Move what's left at the start of the buffer. */
-	      i += strlen(sep); /* Separator is part of the previous msg. */
-	      memmove (c -> buf, c -> buf + i, c -> buflen-i);
-	      c -> buflen -= i;
-	      c -> buf [c -> buflen] = '\0';
-//	Maybe there are more messages inside the buffer.
-//	Start looping from the start again. */
-	      fullmsg = 1;
-	   }
-//	If our buffer is full discard it, this is some badly
-//	formatted shit. */
-	   if (c -> buflen == CLIENT_BUF_SIZE) {
-	      c -> buflen = 0;
-//	If there is garbage, read more to discard it ASAP. */
-	      continue;
-	   }
-//	If no message was decoded process the next client, otherwise
-//	read more data from the same client. */
-	   if (!fullmsg)
-	      break;
-	}
-}
 
 void	qt1090::update_view (uint16_t *m, bool flag) {
 	viewer -> Display (m, flag);
@@ -811,6 +504,28 @@ void	qt1090::handle_interactiveButton (void) {
 
 void	qt1090::handle_httpButton (void) {
 	net	= !net;
+	if (net) {
+	   httpServer		= new QHttpServer (this);
+	   connect	(httpServer,
+	                 SIGNAL (newRequest (QHttpRequest*, QHttpResponse*)),
+	                 this,
+	                 SLOT (handleRequest (QHttpRequest*, QHttpResponse*)));
+           httpServer -> listen (QHostAddress::Any, httpPort);
+	   QString text = "port ";
+	   text. append (QString:: number (httpPort));
+	   httpPortLabel -> setText (text);
+	}
+	else 
+	if (httpServer != NULL) {
+	   disconnect	(httpServer,
+	                 SIGNAL (newRequest(QHttpRequest*, QHttpResponse*)),
+	                 this,
+	                 SLOT (handleRequest(QHttpRequest*, QHttpResponse*)));
+	   delete httpServer;
+	   httpPortLabel	-> setText ("   ");
+	   httpServer = NULL;
+	}
+
 	httpButton -> setText (net ? "http on" : "http off");
 }
 
@@ -869,3 +584,9 @@ void	qt1090::handle_show_preamblesButton (void) {
 	show_preambles	= !show_preambles;
 }
 
+void    qt1090::handleRequest (QHttpRequest *req,
+	                       QHttpResponse *resp) {
+        if (req -> methodString () != "HTTP_GET")
+	   return;
+        (void)new Responder (req, resp, this -> aircrafts);
+}

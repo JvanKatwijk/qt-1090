@@ -75,7 +75,7 @@
    <widget class="QLCDNumber" name="single_bit_fixed">
     <property name="geometry">
      <rect>
-      <x>520</x>
+      <x>240</x>
       <y>300</y>
       <width>64</width>
       <height>23</height>
@@ -91,7 +91,7 @@
    <widget class="QLCDNumber" name="two_bit_fixed">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>520</x>
       <y>300</y>
       <width>64</width>
       <height>23</height>
@@ -146,7 +146,7 @@
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
-      <x>590</x>
+      <x>330</x>
       <y>300</y>
       <width>171</width>
       <height>16</height>
@@ -159,7 +159,7 @@
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>320</x>
+      <x>590</x>
       <y>300</y>
       <width>141</width>
       <height>20</height>
@@ -191,6 +191,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The output of the program can be send - using a simple http server - to a webbrowser. The result is a kind&lt;/p&gt;&lt;p&gt;of flight radar.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
     <property name="text">
      <string>http output</string>
     </property>
@@ -208,11 +211,14 @@
    <widget class="QComboBox" name="errorhandlingCombo">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>380</x>
       <y>230</y>
       <width>131</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Two levels of correction are defined. Default is no correction, &amp;quot;normal correction&amp;quot; tries to correct by changing a single bit, &amp;quot; strong correction&amp;quot; is by trying to correct by changing 2 bits (the latter is heavy).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <item>
      <property name="text">
@@ -233,11 +239,14 @@
    <widget class="QPushButton" name="show_preamblesButton">
     <property name="geometry">
      <rect>
-      <x>530</x>
+      <x>610</x>
       <y>230</y>
       <width>121</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pushing this button will change the view in the display. Normal view is only to show the (first 16 + 52) samples from a message that passed the crc test (green). Alternate view is to show also the samples of those&lt;/p&gt;&lt;p&gt;messages, the preamble of which passes some elementary tests.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
      <string>preambles</string>
@@ -269,13 +278,13 @@
      </rect>
     </property>
     <property name="text">
-     <string>phase corrected</string>
+     <string>phase adjusted</string>
     </property>
    </widget>
    <widget class="QPushButton" name="metricButton">
     <property name="geometry">
      <rect>
-      <x>430</x>
+      <x>510</x>
       <y>230</y>
       <width>101</width>
       <height>31</height>
@@ -290,15 +299,15 @@
      <rect>
       <x>20</x>
       <y>400</y>
-      <width>171</width>
+      <width>31</width>
       <height>20</height>
      </rect>
     </property>
     <property name="toolTip">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;qt-1090 is a program in the sdr-j program suite. The program is developed, based on the dump1090 program written by Copyright (C) 2012 by Salvatore Sanfilippo &amp;lt;antirez@gmail.com&amp;gt; and redesigned and extended as well as equipped with a Qt based GUI by this author.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;qt-1090 is a program in the sdr-j program suite.  The program is developed, based on the dump1090 program written by Copyright (C) 2012 by Salvatore Sanfilippo &amp;lt;antirez@gmail.com&amp;gt; and completely redesigned, restructured and extended with a Qt based GUI by this author. The http library is  Copyright 2011-2014 Nikhil Marathe &amp;lt;nsm.nikhil@gmail.com&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
-     <string>© Copyright J van Katwijk</string>
+     <string>© </string>
     </property>
    </widget>
    <widget class="QLCDNumber" name="DF0">
@@ -507,6 +516,32 @@
     </property>
     <property name="text">
      <string>DF21</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="versionName">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>400</y>
+      <width>121</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="httpPortLabel">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>230</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>
