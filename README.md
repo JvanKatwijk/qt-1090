@@ -27,14 +27,15 @@ Making a lib and installing:
 
 * cd ..			/* back in the qt-1090 directory
  
-# edit qt-1090.pro to select your device(s) by commenting out or uncommenting
+edit qt-1090.pro to select your device(s) by commenting out or uncommenting
 
 	CONFIG  += sdrplay
 	CONFIG  += dabstick
 
 * qmake-qt5
 * make
-# the created qt-1090 executable is in ./linux-bin
+
+the created qt-1090 executable is in ./linux-bin
 
 ---------------------------------------------------------------------------
 Devices
