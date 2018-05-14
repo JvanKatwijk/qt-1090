@@ -76,7 +76,7 @@ double mmax	= 0;
 	for (i = -16; i < 2 * bitstoShow; i ++) {
 	   for (j = 0; j < 8; j ++) {
 	      X_AXIS [8 * (i + 16) + j] = (float)i  + (float)j / 8;
-	      Y_AXIS [8 * (i + 16) + j] = mag [i] / mmax * 100;
+	      Y_AXIS [8 * (i + 16) + j] = mag [16 + i] / mmax * 100;
 	   }
 	}
 
