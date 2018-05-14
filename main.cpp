@@ -119,9 +119,9 @@ int	freq		= 1090000000;
  */
 	QApplication a (argc, argv);
 //	setting the language
-	QString locale = QLocale::system (). name ();
-	qDebug() << "main:" <<  "Detected system language" << locale;
-	setTranslator (locale);
+//	QString locale = QLocale::system (). name ();
+//	qDebug() << "main:" <<  "Detected system language" << locale;
+//	setTranslator (locale);
 
 	theDevice	= setDevice (dumpSettings, deviceIndex, freq, fileName);
 	if (theDevice == NULL) {
