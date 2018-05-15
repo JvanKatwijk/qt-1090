@@ -7,7 +7,7 @@ designed  as a command line utility for RTLSDR devices.
 This  version supports SDRplay devices, as well as RTLSDR devices and
 is equipped with a simple GUI.
 
-![qt-1090 ](/Screenshot_qt-1090.png?raw=true)
+![qt-1090 ](/Screenshot-qt-1090.png?raw=true)
 
 
 Note that the current version is 0.6: while it is running, it
