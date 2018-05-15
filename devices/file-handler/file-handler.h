@@ -27,10 +27,10 @@
 #include	"adsb-constants.h"
 #include	"ringbuffer.h"
 #include	<pthread.h>
+#include	<stdio.h>
 #include	"device-handler.h"
 #include	<atomic>
 
-class	inputHandling;
 ///////////////////////////////////////////////////////////////////////////
 class	fileHandler: public deviceHandler {
 public:
@@ -43,7 +43,7 @@ public:
 	pthread_cond_t  data_cond;      /* Conditional variable associated. */
 	RingBuffer<int16_t> *dataBuffer;
 	std::atomic<bool>	running;
-	int	fd;
+	FILE	*fd;
 private:
 	pthread_t	filereader_thread;
 };

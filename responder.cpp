@@ -56,19 +56,36 @@
 	   sendMap (response);
 }
 
-void	Responder::sendMap (QHttpResponse *response) {
-struct stat sbuf;
-int	fd = -1;
-char	*body;
+#include	<fstream>
 
-	if (stat ("gmap.html", &sbuf) != -1 &&
-	   (fd = open ("gmap.html", O_RDONLY)) != -1) {
-	   body = new char [sbuf. st_size];
-	   if (read (fd, body, sbuf.st_size) == -1) {
-	      (void)snprintf (body, sbuf.st_size,
+int getFileSize (const char * fileName) {
+std::ifstream file (fileName, std::ifstream::in | std::ifstream::binary);
+
+	if (!file. is_open()) {
+	   return -1;
+	}
+
+	file. seekg (0, std::ios::end);
+	int fileSize = file. tellg ();
+	file.close();
+
+	return fileSize;
+}
+
+void	Responder::sendMap (QHttpResponse *response) {
+FILE	*fd;
+char	*body;
+int	fileSize	= getFileSize ("gmap.html");
+	
+	if (fileSize != -1) {
+	   fd = fopen ("gmap.html", "r");
+	   body = new char [fileSize];
+	   if (fread (body, 1, fileSize, fd) < fileSize) {
+	      (void)snprintf (body, fileSize,
                               "Error reading from file: %s",
                                                       strerror(errno));
 	   }
+	   fclose (fd);
 	}
 	else {
 	   body = new char [512];
@@ -86,7 +103,7 @@ void	Responder::sendPlaneData (QHttpResponse *response,
 	                          aircraft *planeList) {
 QString	body;
 
-	body	= QString::fromStdString (aircraftsToJson (planeList));	
+	body	= aircraftsToJson (planeList);	
 	response -> setHeader ("Content-Type",
 	                       "application/json;charset=utf-8");
 	response -> writeHead (200);

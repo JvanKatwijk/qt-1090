@@ -73,6 +73,11 @@ int	i;
 	aircrafts	= NULL;
 	interactive_last_update = 0;
 
+	screenTimer. setInterval (4000);
+	connect (&screenTimer, SIGNAL (timeout (void)),
+                 this, SLOT (updateScreen (void)));
+        screenTimer. start (4000);
+
 /* Statistics */
 	stat_valid_preamble	= 0;
 	stat_demodulated	= 0;
@@ -124,6 +129,7 @@ int	i;
 
 void	qt1090::finalize	(void) {
 	device	-> stopDevice ();
+	screenTimer. stop ();
 	pthread_cancel (reader_thread);
 	pthread_join (reader_thread, NULL);
 }
@@ -422,9 +428,8 @@ void	qt1090::useModesMessage (message *mm) {
  *	Track aircrafts in interactive mode or if the HTTP
  *	interface is enabled.
  */
-	   if (interactive || (stat_http_requests > 0)) {
+	   if (interactive || stat_http_requests > 0) 
 	      aircrafts = interactiveReceiveData (aircrafts, mm);
-	   }
 /*
  *	In non-interactive way, display messages on standard output.
  */
@@ -464,20 +469,18 @@ int16_t lbuf [MODES_DATA_LEN / 2];
 	   memcpy (&magnitudeVector [(MODES_FULL_LEN - 1) * 4 / 2],
 	           lbuf, MODES_DATA_LEN / 2 * sizeof (int16_t));
 
-	   detectModeS (magnitudeVector, data_len / 2);
-	   aircrafts	= removeStaleAircrafts (aircrafts, interactive_ttl);
-	   if (interactive &&
-	      (mstime () - interactive_last_update) >
-	                             MODES_INTERACTIVE_REFRESH_TIME) {
-	      showPlanes (aircrafts, metric);
-	      interactive_last_update = mstime();
-	   }
+	   detectModeS	(magnitudeVector, data_len / 2);
 	}
 }
-/////////////////////////////////////////////////////////////////////////
-
-#define MODES_CONTENT_TYPE_HTML "text/html;charset=utf-8"
-#define MODES_CONTENT_TYPE_JSON "application/json;charset=utf-8"
+//
+//	Timer driven
+void	qt1090::updateScreen (void) {
+	   aircrafts	= removeStaleAircrafts (aircrafts, interactive_ttl);
+	   if (interactive) 
+	      showPlanes (aircrafts, metric);
+}
+//
+///////////////////////////////////////////////////////////////////////
 
 void	qt1090::update_view (uint16_t *m, bool flag) {
 	viewer -> Display (m, flag);
@@ -513,6 +516,8 @@ void	qt1090::handle_httpButton (void) {
            httpServer -> listen (QHostAddress::Any, httpPort);
 	   QString text = "port ";
 	   text. append (QString:: number (httpPort));
+	   
+	   stat_http_requests	= 0;
 	   httpPortLabel -> setText (text);
 	}
 	else 
@@ -524,6 +529,7 @@ void	qt1090::handle_httpButton (void) {
 	   delete httpServer;
 	   httpPortLabel	-> setText ("   ");
 	   httpServer = NULL;
+	   stat_http_requests	= 0;
 	}
 
 	httpButton -> setText (net ? "http on" : "http off");
@@ -588,5 +594,7 @@ void    qt1090::handleRequest (QHttpRequest *req,
 	                       QHttpResponse *resp) {
         if (req -> methodString () != "HTTP_GET")
 	   return;
+	
+	stat_http_requests ++;
         (void)new Responder (req, resp, this -> aircrafts);
 }

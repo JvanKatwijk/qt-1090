@@ -48,8 +48,8 @@ int16_t localBuf [numSamples];
 	}
 //
 //	if we have a buffer filled, signal the receiving thread
-	st -> dataBuffer -> putDataIntoBuffer (localBuf, numSamples);
-	if (st -> dataBuffer -> GetRingBufferReadAvailable () > 256000)
+	st -> _I_Buffer -> putDataIntoBuffer (localBuf, numSamples);
+	if (st -> _I_Buffer -> GetRingBufferReadAvailable () > 256000)
 	   st -> signalData ();
 }
 
@@ -70,21 +70,91 @@ mir_sdr_DeviceT devDesc [4];
 	this	-> sdrplaySettings	= sdrplaySettings;
 	this	-> freq		= freq;
 
-	err	=  mir_sdr_ApiVersion (&version);
-	if (err != mir_sdr_Success) {
-	   fprintf (stderr, "Failure in getting library version\n");
-	   throw (1);
-	}
-	
-	if (version < 2.05) {
-           fprintf (stderr, "sorry, library too old\n");
-	   throw (1);
+	this	-> myFrame		= new QFrame (NULL);
+	setupUi (this -> myFrame);
+	this	-> myFrame	-> show ();
+	libraryLoaded                   = false;
+
+#ifdef  __MINGW32__
+HKEY APIkey;
+wchar_t APIkeyValue [256];
+ULONG APIkeyValue_length = 255;
+
+        if (RegOpenKey (HKEY_LOCAL_MACHINE,
+                        TEXT("Software\\MiricsSDR\\API"),
+                        &APIkey) != ERROR_SUCCESS) {
+          fprintf (stderr,
+                   "failed to locate API registry entry, error = %d\n",
+	                                                 (int)GetLastError());
+           delete myFrame;
+           throw (21);
         }
 
-        mir_sdr_GetDevices (devDesc, &numofDevs, (uint32_t) (4));
+        RegQueryValueEx (APIkey,
+                         (wchar_t *)L"Install_Dir",
+                         NULL,
+                         NULL,
+                         (LPBYTE)&APIkeyValue,
+                         (LPDWORD)&APIkeyValue_length);
+//      Ok, make explicit it is in the 64 bits section
+        wchar_t *x = wcscat (APIkeyValue, (wchar_t *)L"\\x86\\mir_sdr_api.dll");
+//      wchar_t *x = wcscat (APIkeyValue, (wchar_t *)L"\\x64\\mir_sdr_api.dll");
+//      fprintf (stderr, "Length of APIkeyValue = %d\n", APIkeyValue_length);
+//      wprintf (L"API registry entry: %s\n", APIkeyValue);
+        RegCloseKey(APIkey);
+
+	Handle  = LoadLibrary (x);
+	if (Handle == NULL) {
+          fprintf (stderr, "Failed to open mir_sdr_api.dll\n");
+          delete myFrame;
+          throw (22);
+        }
+#else
+        Handle          = dlopen ("libusb-1.0.so", RTLD_NOW | RTLD_GLOBAL);
+        Handle          = dlopen ("libmirsdrapi-rsp.so", RTLD_NOW);
+        if (Handle == NULL)
+           Handle       = dlopen ("libmir_sdr.so", RTLD_NOW);
+
+        if (Handle == NULL) {
+           fprintf (stderr, "error report %s\n", dlerror ());
+           delete myFrame;
+           throw (23);
+        }
+#endif
+
+	libraryLoaded	= true;
+        bool success = loadFunctions ();
+        if (!success) {
+#ifdef __MINGW32__
+           FreeLibrary (Handle);
+#else
+           dlclose (Handle);
+#endif
+           delete myFrame;
+           throw (23);
+        }
+	float ver;
+        err	= my_mir_sdr_ApiVersion (&ver);
+        if (ver < 2.05) {
+           fprintf (stderr, "sorry, library too old\n");
+#ifdef __MINGW32__
+           FreeLibrary (Handle);
+#else
+           dlclose (Handle);
+#endif
+	   throw (1);
+	}
+
+        my_mir_sdr_GetDevices (devDesc, &numofDevs, (uint32_t) (4));
         if (numofDevs == 0) {
            fprintf (stderr, "Sorry, no device found\n");
-	   throw (2);
+#ifdef __MINGW32__
+           FreeLibrary (Handle);
+#else
+           dlclose (Handle);
+#endif
+           delete myFrame;
+           throw (25);
         }
 
 	deviceIndex = 0;
@@ -92,13 +162,10 @@ mir_sdr_DeviceT devDesc [4];
         fprintf (stderr, "sdrdevice found = %s, hw Version = %d\n",
                                       devDesc [deviceIndex]. SerNo,
 	                                        hwVersion);
-        mir_sdr_SetDeviceIdx (deviceIndex);
+        my_mir_sdr_SetDeviceIdx (deviceIndex);
 //
 //	we have a device, so let's show it
 
-	this	-> myFrame		= new QFrame (NULL);
-	setupUi (this -> myFrame);
-	this	-> myFrame	-> show ();
 	serialNumber -> setText (devDesc [deviceIndex]. SerNo);
 	antennaSelector		-> hide ();
         if (hwVersion == 2) {
@@ -129,18 +196,28 @@ mir_sdr_DeviceT devDesc [4];
         connect (agcControl, SIGNAL (clicked (void)),
                  this, SLOT (agcControl_toggled (void)));
 	
-	dataBuffer	= new RingBuffer<int16_t> (32 * 32768);
+	_I_Buffer	= new RingBuffer<int16_t> (32 * 32768);
 }
 
 	sdrplayHandler::~sdrplayHandler (void) {
-	if (numofDevs > 0)
-	   mir_sdr_ReleaseDeviceIdx ();
+	if (!libraryLoaded)
+	   return;
 	sdrplaySettings -> beginGroup ("sdrplaySettings");
         sdrplaySettings -> setValue ("sdrplayGain", gainSlider -> value ());
         sdrplaySettings -> setValue ("sdrplay-ppm", ppmControl -> value ());
 	sdrplaySettings	-> setValue ("sdrplay-agc", enable_agc ? 1 : 0);
         sdrplaySettings -> endGroup ();
         sdrplaySettings -> sync ();
+	if (numofDevs > 0)
+	   my_mir_sdr_ReleaseDeviceIdx (deviceIndex);
+       if (_I_Buffer != NULL)
+           delete _I_Buffer;
+#ifdef __MINGW32__
+        FreeLibrary (Handle);
+#else
+        dlclose (Handle);
+#endif
+	delete myFrame;
 }
 
 void	sdrplayHandler::startDevice (void) {
@@ -149,7 +226,7 @@ int   gRdBSystem;
 int   err;
 int	samplesPerPacket;
 
-	err  = mir_sdr_StreamInit (&localGRed,
+	err  = my_mir_sdr_StreamInit (&localGRed,
                                    (double)(2000000) / 1000000.0,
                                    (double)(freq) / 1000000.0,
                                    mir_sdr_BW_5_000,
@@ -166,31 +243,30 @@ int	samplesPerPacket;
            throw (3);
         }
 
-	mir_sdr_AgcControl (enable_agc ?
+	my_mir_sdr_AgcControl (enable_agc ?
 	                        mir_sdr_AGC_100HZ :
 	                        mir_sdr_AGC_DISABLE,
 	                      - (102 - gainSlider -> value ()), 0, 0, 0, 0, 0);
         if (!enable_agc)
-	   mir_sdr_SetGr (102 - gainSlider -> value (), 1, 0);
+	   my_mir_sdr_SetGr (102 - gainSlider -> value (), 1, 0);
 
-        err             = mir_sdr_SetDcMode (4, 1);
-	err             = mir_sdr_SetDcTrackTime (63);
+        err             = my_mir_sdr_SetDcMode (4, 1);
+	err             = my_mir_sdr_SetDcTrackTime (63);
 	fprintf (stderr, "gestart\n");
 }
 
 void	sdrplayHandler::stopDevice (void) {
 	myFrame	-> hide ();
-	mir_sdr_StreamUninit    ();
-	mir_sdr_ReleaseDeviceIdx ();
+	my_mir_sdr_StreamUninit    ();
 }
 
 int	sdrplayHandler::getSamples (int16_t *buffer, int amount) {
-	dataBuffer	-> getDataFromBuffer (buffer, amount);
+	_I_Buffer	-> getDataFromBuffer (buffer, amount);
 	return amount;
 }
 
 int	sdrplayHandler::Samples	(void) {
-	return dataBuffer -> GetRingBufferReadAvailable ();
+	return _I_Buffer -> GetRingBufferReadAvailable ();
 }
 
 void	sdrplayHandler::signalData	(void) {
@@ -200,7 +276,7 @@ void	sdrplayHandler::signalData	(void) {
 void    sdrplayHandler::agcControl_toggled (void) {
 int	currentGred	= 102 - gainSlider -> value ();
 	enable_agc = !enable_agc;
-        mir_sdr_AgcControl (enable_agc ?
+        my_mir_sdr_AgcControl (enable_agc ?
 	                        mir_sdr_AGC_100HZ :
                                 mir_sdr_AGC_DISABLE,
 	                                   -currentGred, 0, 0, 0, 0, 1);
@@ -210,8 +286,8 @@ int	currentGred	= 102 - gainSlider -> value ();
 }
 
 void    sdrplayHandler::set_ppmControl (int ppm) {
-        mir_sdr_SetPpm    ((float)ppm);
-        mir_sdr_SetRf     ((float)freq, 1, 0);
+        my_mir_sdr_SetPpm    ((float)ppm);
+        my_mir_sdr_SetRf     ((float)freq, 1, 0);
 }
 
 void    sdrplayHandler::set_antennaControl (const QString &s) {
@@ -221,14 +297,182 @@ mir_sdr_ErrT err;
            return;
 
         if (s == "Antenna A")
-           err = mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_A);
+           err = my_mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_A);
         else
-           err = mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_B);
+           err = my_mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_B);
 }
 
 void	sdrplayHandler::setExternalGain (int gain) {
-	fprintf (stderr, "gain reduction %d\n", 102 - gain);
-        (void) mir_sdr_SetGr (102 - gain, 1, 0);
+//	fprintf (stderr, "gain reduction %d\n", 102 - gain);
+        (void) my_mir_sdr_SetGr (102 - gain, 1, 0);
         gainDisplay     -> display (gain);
 }
 
+bool	sdrplayHandler::loadFunctions	(void) {
+	my_mir_sdr_StreamInit	= (pfn_mir_sdr_StreamInit)
+	                    GETPROCADDRESS (this -> Handle,
+	                                    "mir_sdr_StreamInit");
+	if (my_mir_sdr_StreamInit == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_StreamInit\n");
+	   return false;
+	}
+
+	my_mir_sdr_StreamUninit	= (pfn_mir_sdr_StreamUninit)
+	                    GETPROCADDRESS (this -> Handle,
+	                                    "mir_sdr_StreamUninit");
+	if (my_mir_sdr_StreamUninit == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_StreamUninit\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetRf	= (pfn_mir_sdr_SetRf)
+	                    GETPROCADDRESS (Handle, "mir_sdr_SetRf");
+	if (my_mir_sdr_SetRf == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetRf\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetFs	= (pfn_mir_sdr_SetFs)
+	                    GETPROCADDRESS (Handle, "mir_sdr_SetFs");
+	if (my_mir_sdr_SetFs == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetFs\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetGr	= (pfn_mir_sdr_SetGr)
+	                    GETPROCADDRESS (Handle, "mir_sdr_SetGr");
+	if (my_mir_sdr_SetGr == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetGr\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetGrParams	= (pfn_mir_sdr_SetGrParams)
+	                    GETPROCADDRESS (Handle, "mir_sdr_SetGrParams");
+	if (my_mir_sdr_SetGrParams == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetGrParams\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetDcMode	= (pfn_mir_sdr_SetDcMode)
+	                    GETPROCADDRESS (Handle, "mir_sdr_SetDcMode");
+	if (my_mir_sdr_SetDcMode == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetDcMode\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetDcTrackTime	= (pfn_mir_sdr_SetDcTrackTime)
+	                    GETPROCADDRESS (Handle, "mir_sdr_SetDcTrackTime");
+	if (my_mir_sdr_SetDcTrackTime == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetDcTrackTime\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetSyncUpdateSampleNum = (pfn_mir_sdr_SetSyncUpdateSampleNum)
+	               GETPROCADDRESS (Handle, "mir_sdr_SetSyncUpdateSampleNum");
+	if (my_mir_sdr_SetSyncUpdateSampleNum == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetSyncUpdateSampleNum\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetSyncUpdatePeriod	= (pfn_mir_sdr_SetSyncUpdatePeriod)
+	                GETPROCADDRESS (Handle, "mir_sdr_SetSyncUpdatePeriod");
+	if (my_mir_sdr_SetSyncUpdatePeriod == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetSyncUpdatePeriod\n");
+	   return false;
+	}
+
+	my_mir_sdr_ApiVersion	= (pfn_mir_sdr_ApiVersion)
+	                GETPROCADDRESS (Handle, "mir_sdr_ApiVersion");
+	if (my_mir_sdr_ApiVersion == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_ApiVersion\n");
+	   return false;
+	}
+
+	my_mir_sdr_AgcControl	= (pfn_mir_sdr_AgcControl)
+	                GETPROCADDRESS (Handle, "mir_sdr_AgcControl");
+	if (my_mir_sdr_AgcControl == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_AgcControl\n");
+	   return false;
+	}
+
+	my_mir_sdr_Reinit	= (pfn_mir_sdr_Reinit)
+	                GETPROCADDRESS (Handle, "mir_sdr_Reinit");
+	if (my_mir_sdr_Reinit == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_Reinit\n");
+	   return false;
+	}
+
+	my_mir_sdr_SetPpm	= (pfn_mir_sdr_SetPpm)
+	                GETPROCADDRESS (Handle, "mir_sdr_SetPpm");
+	if (my_mir_sdr_SetPpm == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetPpm\n");
+	   return false;
+	}
+
+	my_mir_sdr_DebugEnable	= (pfn_mir_sdr_DebugEnable)
+	                GETPROCADDRESS (Handle, "mir_sdr_DebugEnable");
+	if (my_mir_sdr_DebugEnable == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_DebugEnable\n");
+	   return false;
+	}
+
+	my_mir_sdr_DCoffsetIQimbalanceControl	=
+	                     (pfn_mir_sdr_DCoffsetIQimbalanceControl)
+	                GETPROCADDRESS (Handle, "mir_sdr_DCoffsetIQimbalanceControl");
+	if (my_mir_sdr_DCoffsetIQimbalanceControl == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_DCoffsetIQimbalanceControl\n");
+	   return false;
+	}
+
+
+	my_mir_sdr_ResetUpdateFlags	= (pfn_mir_sdr_ResetUpdateFlags)
+	                GETPROCADDRESS (Handle, "mir_sdr_ResetUpdateFlags");
+	if (my_mir_sdr_ResetUpdateFlags == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_ResetUpdateFlags\n");
+	   return false;
+	}
+
+	my_mir_sdr_GetDevices		= (pfn_mir_sdr_GetDevices)
+	                GETPROCADDRESS (Handle, "mir_sdr_GetDevices");
+	if (my_mir_sdr_GetDevices == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_GetDevices");
+	   return false;
+	}
+
+	my_mir_sdr_GetCurrentGain	= (pfn_mir_sdr_GetCurrentGain)
+	                GETPROCADDRESS (Handle, "mir_sdr_GetCurrentGain");
+	if (my_mir_sdr_GetCurrentGain == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_GetCurrentGain");
+	   return false;
+	}
+
+	my_mir_sdr_GetHwVersion	= (pfn_mir_sdr_GetHwVersion)
+	                GETPROCADDRESS (Handle, "mir_sdr_GetHwVersion");
+	if (my_mir_sdr_GetHwVersion == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_GetHwVersion");
+	   return false;
+	}
+
+	my_mir_sdr_RSPII_AntennaControl	= (pfn_mir_sdr_RSPII_AntennaControl)
+	                GETPROCADDRESS (Handle, "mir_sdr_RSPII_AntennaControl");
+	if (my_mir_sdr_RSPII_AntennaControl == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_RSPII_AntennaControl");
+	   return false;
+	}
+
+	my_mir_sdr_SetDeviceIdx	= (pfn_mir_sdr_SetDeviceIdx)
+	                GETPROCADDRESS (Handle, "mir_sdr_SetDeviceIdx");
+	if (my_mir_sdr_SetDeviceIdx == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_SetDeviceIdx");
+	   return false;
+	}
+
+	my_mir_sdr_ReleaseDeviceIdx	= (pfn_mir_sdr_ReleaseDeviceIdx)
+	                GETPROCADDRESS (Handle, "mir_sdr_ReleaseDeviceIdx");
+	if (my_mir_sdr_ReleaseDeviceIdx == NULL) {
+	   fprintf (stderr, "Could not find mir_sdr_ReleaseDeviceIdx");
+	   return false;
+	}
+
+	return true;
+}

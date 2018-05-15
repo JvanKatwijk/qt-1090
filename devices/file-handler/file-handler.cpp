@@ -31,10 +31,11 @@ int	bufP	= 0;
 	                                 bool interactive) {	
 
 	   if (fileName [0] == '-' && fileName [1] == '\0') 
-	      fd = STDIN_FILENO;
-           else
-           if ((fd = open (fileName, O_RDONLY)) == -1) {
-	      throw (22);
+	      fd = stdin;
+           else {
+	      fd = fopen (fileName, "r");
+	      if (fd == NULL)
+	         throw (22);
            }
 
 	   dataBuffer	= new RingBuffer<int16_t> (16 * 32768);
@@ -44,7 +45,9 @@ int	bufP	= 0;
 	   pthread_cond_init  (&data_cond,  NULL);
 }
 
-	fileHandler::~fileHandler	(void) {}
+	fileHandler::~fileHandler	(void) {
+	   fclose (fd);
+}
 
 static
 void	*filereaderEntry (void *arg) {
@@ -55,7 +58,7 @@ uint8_t lbuf [MODES_DATA_LEN];
 	f -> running. store (true);
 	while (f -> running. load ()) {
 	   int i;
-	   int nread = read (f -> fd, lbuf, toread);
+	   size_t nread = fread (lbuf, 1, toread, f -> fd);
 	   if (nread <= 0) {
 	      return NULL; /* Signal the system. */
 	   }

@@ -24,11 +24,7 @@
 #ifndef	__RESPONDER__
 #define	__RESPONDER__
 #include        <stdio.h>
-#include        <unistd.h>
-#include        <sys/types.h>
-#include        <sys/stat.h>
-#include	<fcntl.h>
-
+#include	<stdio.h>
 #include	<qhttpserver.h>
 #include	<qhttprequest.h>
 #include	<qhttpresponse.h>

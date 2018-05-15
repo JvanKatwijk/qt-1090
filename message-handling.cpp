@@ -1,6 +1,5 @@
 #
 /*
- *
  *      qt-1090 is based on and contains source code from dump1090
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
  *      all rights acknowledged.
@@ -26,6 +25,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include	<cmath>
 #include	"message-handling.h"
 #include	"icao-cache.h"
 #include	"aircraft-handler.h"
@@ -495,17 +495,17 @@ void	message::recordExtendedSquitter (uint8_t *msg) {
 	   if (metype == 19 && mesub >= 1 && mesub <= 4) {
 /*	Airborne Velocity Message */
 	      if (mesub == 1 || mesub == 2) {
-	         ew_dir = (msg [5] & 04) >> 2;
-	         ew_velocity = ((msg [5] & 3) << 8) | msg[6];
-	         ns_dir = (msg [7] & 0x80) >> 7;
-	         ns_velocity = ((msg [7] & 0x7f) << 3) |
+	         ew_dir		= (msg [5] & 04) >> 2;
+	         ew_velocity	= ((msg [5] & 3) << 8) | msg[6];
+	         ns_dir		= (msg [7] & 0x80) >> 7;
+	         ns_velocity	= ((msg [7] & 0x7f) << 3) |
 	                                    ((msg [8] & 0xe0) >> 5);
 	         vert_rate_source = (msg [8] & 0x10) >> 4;
 	         vert_rate_sign = (msg [8] & 0x8) >> 3;
-	         vert_rate = ((msg [8] & 7) << 6) |
+	         vert_rate	= ((msg [8] & 7) << 6) |
 	                                       ((msg [9] & 0xfc) >> 2);
 /* Compute velocity and angle from the two speed components. */
-	         velocity = sqrt (ns_velocity * ns_velocity+
+	         velocity	= sqrt (ns_velocity * ns_velocity+
 	                                ew_velocity * ew_velocity);
 	         if (velocity != 0) {
 	            int ewv = ew_velocity;
@@ -518,19 +518,21 @@ void	message::recordExtendedSquitter (uint8_t *msg) {
 	               nsv *= -1;
                     heading = atan2 (ewv, nsv);
                     /* Convert to degrees. */
-                    heading = heading * 360 / (M_PI*2);
+                    heading = heading * 360 / (M_PI * 2);
                     /* We don't want negative values but a 0-360 scale. */
                     if (heading < 0) 
 	               heading += 360;
+	            if (heading > 360)
+	               heading = 0;
 	         } else {
 	            heading = 0;
 	         }  
               }
 	      else
 	      if (mesub == 3 || mesub == 4) {
-	         heading_is_valid = msg[5] & (1 << 2);
-	         heading = (360.0/128) * (((msg[5] & 3) << 5) |
-	                                        (msg[6] >> 3));
+	         heading_is_valid = msg [5] & (1 << 2);
+	         heading = (360.0 / 128) * (((msg [5] & 3) << 5) |
+	                                                 (msg [6] >> 3));
 	      }
 	   }
 	}

@@ -34,7 +34,7 @@
 #include	<QSettings>
 #include	<QMessageBox>
 #include	<QCloseEvent>
-#include	<QTableWidget>
+#include	<QTimer>
 #include	"qhttpserverfwd.h"
 #include	<qhttpserver.h>
 #include	<qhttprequest.h>
@@ -61,6 +61,7 @@ private:
 	void		update_table (int16_t, int);
 	int		table [32];
 	QHttpServer	*httpServer;
+	QTimer		screenTimer;
 public slots:
 	void		processData (void);
 private:
@@ -78,7 +79,6 @@ private:
 	bool		metric;		/* Use metric units. */
 	double		avg_corr;
 	int		correlationCounter;
-	QTableWidget	*tableWidget;
 	bool		show_preambles;
 	int		bitstoShow;
 public:
@@ -114,6 +114,7 @@ private slots:
 	void	handle_metricButton	(void);
 	void	handleRequest		(QHttpRequest *,
 	                                        QHttpResponse *);
+	void	updateScreen		(void);
 
 };
 

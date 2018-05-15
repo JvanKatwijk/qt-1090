@@ -29,7 +29,9 @@
 #include	"adsb-constants.h"
 #include	"message-handling.h"
 #include	<string>
+#include	<cmath>
 #include	<mutex>
+#include	<iostream>
 
 static	std::mutex	locker;
 /* Always positive MOD operation, used for CPR decoding. */
@@ -270,7 +272,7 @@ double lon0 = even_cprlon;
 double lon1 = odd_cprlon;
 
 /* Compute the Latitude Index "j" */
-int j	= floor (((59 * lat0 - 60 * lat1) / 131072) + 0.5);
+int j	= std::floor (((59 * lat0 - 60 * lat1) / 131072) + 0.5);
 double rlat0 = AirDlat0 * (cprModFunction (j, 60) + lat0 / 131072);
 double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
 
@@ -349,15 +351,27 @@ int speed	= this -> speed;
 }
 
 
-static
-int     getTermRows (void) {
-        struct winsize w;
-        ioctl (STDOUT_FILENO, TIOCGWINSZ, &w);
-        return w. ws_row;
+//static
+//int     getTermRows (void) {
+//        struct winsize w;
+//        ioctl (STDOUT_FILENO, TIOCGWINSZ, &w);
+//        return w. ws_row;
+//}
+
+#include	<stdlib.h>
+
+void	clearScreen	(void) {
+#ifdef	__MINGW32__
+	system ("cls");
+#else
+ 	printf ("\033[2J\033[1;1H");
+#endif
+//	printf ("\x1b[H\x1b[2J");    /* Clear the screen */
 }
 
 void	showPlanes (aircraft *aircrafts, bool metric) {
-int amount	= getTermRows ();
+int amount	= 15;
+//int amount	= getTermRows ();
 time_t now	= time (NULL);
 char progress [4];
 int count = 0;
@@ -366,7 +380,7 @@ int count = 0;
 	progress [time (NULL) % 3] = '.';
 	progress [3] = '\0';
 
-	printf ("\x1b[H\x1b[2J");    /* Clear the screen */
+	clearScreen ();
 	printf (
 	  "Hex    Flight   Altitude  Speed   Lat       Lon       Track  Messages Seen %s\n"
 "--------------------------------------------------------------------------------\n",
@@ -381,8 +395,7 @@ int count = 0;
 }
 
 
-std::string	aircraft::toJson (void) {
-std::string result;
+QString	aircraft::toJson (void) {
 char buf [512];
 int	l;
 
@@ -392,14 +405,13 @@ int	l;
 	              "\"speed\":%d},\n",
 	              hexaddr, flight, lat, lon,
 	              altitude, track, speed);
-	result	= std::string (buf);
-	return result;
+	return QString (buf);
 }
 
 /* Return a description of planes in json. */
-std::string	aircraftsToJson (aircraft *list) {
+QString	aircraftsToJson (aircraft *list) {
 aircraft *plane	= list;
-std::string Jsontxt;
+QString Jsontxt;
 
 	Jsontxt.append ("[\n");
 	locker. lock ();
@@ -412,8 +424,8 @@ std::string Jsontxt;
 	locker. unlock ();
 //	Remove the final comma if any, and closes the json array. */
 	if (Jsontxt. at (Jsontxt. length () - 2) == ',') {
-	   Jsontxt. pop_back ();
-	   Jsontxt. pop_back ();
+	   Jsontxt. remove (Jsontxt. length () - 1, 1);
+	   Jsontxt. remove (Jsontxt. length () - 1, 1);
 	   Jsontxt. push_back ('\n');
 	}
 	Jsontxt. append ("]\n");

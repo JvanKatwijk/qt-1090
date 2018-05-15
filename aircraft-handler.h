@@ -29,6 +29,7 @@
 #ifndef	__AIRCRAFT_HANDLER__
 #define	__AIRCRAFT_HANDLER__
 
+#include	<QString>
 #include	"stdint.h"
 #include	<sys/time.h>
 #include	<string>
@@ -61,12 +62,12 @@ public:
 	void    fillData	(message *mm);
 	void	decodeCPR	(void);
 	void	showPlane	(bool metric, time_t now);
-	std::string	toJson		(void);
+	QString	toJson		(void);
 };
 
 aircraft *interactiveReceiveData	(aircraft *, message *);
 aircraft *removeStaleAircrafts		(aircraft *, int);
 void	showPlanes			(aircraft *, bool);
-std::string aircraftsToJson		(aircraft *list);
+QString	aircraftsToJson			(aircraft *);
 #endif
 

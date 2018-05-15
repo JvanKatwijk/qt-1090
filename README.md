@@ -9,10 +9,23 @@ is equipped with a simple GUI.
 
 ![qt-1090 ](/Screenshot_qt-1090.png?raw=true)
 
+
+Note that the current version is 0.6: while it is running, it
+is still an experimental version
+
 =============================================================================
 
 -----------------------------------------------------------------------------
-Installation
+Installation under Windows
+-----------------------------------------------------------------------------
+
+The releases section contains a zipped folder with sdr-j software,
+including the current version of the qt-1090 software.
+Installation is by - obviously - downloading the zipped folder
+unzipping and selecting the program toi run.
+
+-----------------------------------------------------------------------------
+Installation under Linux
 -----------------------------------------------------------------------------
 
 First of all, you should have C++ and Qt5 installed.
@@ -36,6 +49,8 @@ edit qt-1090.pro to select your device(s) by commenting out or uncommenting
 * make
 
 the created qt-1090 executable is in ./linux-bin
+
+NOTE THAT THE CMAKE ROUTE IS OUTDATED.
 
 ---------------------------------------------------------------------------
 Devices
@@ -141,11 +156,12 @@ TODO
 --------------------------------------------------------------------------
 
 A major reason to use a different http library is the plan to make
-the software available under Windows.
+the software available under Windows. The zipped folder contains a
+DLL implementing the http library.
+
 On the todo list:
 
-* a. Make the software available under Windows
-* b. Generate an AppImage for use under Linux (x64) and the RPI 2/3
+* a. Generate an AppImage for use under Linux (x64) and the RPI 2/3
 
 ---------------------------------------------------------------------------
 Copyrights

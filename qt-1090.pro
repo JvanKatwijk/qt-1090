@@ -59,10 +59,29 @@ SOURCES += ./xclose.cpp   \
 # for windows32 we use:
 win32 {
 DESTDIR	= ../../windows-bin
+exists ("./.git") {
+   GITHASHSTRING = $$system(git rev-parse --short HEAD)
+   !isEmpty(GITHASHSTRING) {
+       message("Current git hash = $$GITHASHSTRING")
+       DEFINES += GITHASH=\\\"$$GITHASHSTRING\\\"
+   }
+}
+isEmpty(GITHASHSTRING) {
+    DEFINES += GITHASH=\\\"------\\\"
+}
+
 INCLUDEPATH += /usr/i686-w64-mingw32/sys-root/mingw/include
 INCLUDEPATH     += /mingw32/include
 INCLUDEPATH     += /mingw32/include/qwt
+ INCLUDEPATH += /usr/local/include /usr/include/qt4/qwt /usr/include/qt5/qwt /usr/include/qt4/qwt /usr/include/qwt /usr/local/qwt-6.1.4-svn/
 LIBS            += -L/usr/i686-w64-mingw32/sys-root/mingw/lib
+LIBS            += -lwinmm
+LIBS            += -lstdc++
+LIBS            += -lws2_32
+LIBS            += -lusb-1.0
+LIBS		+= -lqwt-qt5
+LIBS		+= -lqhttpserver
+
 }
 #
 #for fedora and ubuntu  and the rpi we use
@@ -96,7 +115,6 @@ dabstick {
 	                   ./devices/rtlsdr-handler/rtl-dongleselect.h
 	SOURCES		+= ./devices/rtlsdr-handler/rtlsdr-handler.cpp \
 	                   ./devices/rtlsdr-handler/rtl-dongleselect.cpp
-	LIBS		+= -lrtlsdr
 }
 #
 #	the SDRplay
@@ -107,5 +125,4 @@ sdrplay {
 	HEADERS		+= ./devices/sdrplay-handler/sdrplay-handler.h 
 	SOURCES		+= ./devices/sdrplay-handler/sdrplay-handler.cpp 
 	FORMS		+= ./devices/sdrplay-handler/sdrplay-widget.ui
-	LIBS		+= -lmirsdrapi-rsp
 }

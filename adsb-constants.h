@@ -26,7 +26,6 @@
  *    along with qt-1090; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
-
  */
 
 #ifndef	__ADSB_CONSTANTS__
@@ -39,14 +38,19 @@
 #include	<stdint.h>
 #include	<errno.h>
 #include	<unistd.h>
-#include	<math.h>
-#include	<sys/time.h>
-#include	<signal.h>
-#include	<fcntl.h>
-#include	<ctype.h>
-#include	<sys/stat.h>
-#include	<sys/ioctl.h>
-#include	<sys/select.h>
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#  include <time.h>
+#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
+#define _TIMEVAL_DEFINED
+struct timeval {
+    long tv_sec;
+    long tv_usec;
+};
+#include	"gettimeofday.h"
+#endif /* _TIMEVAL_DEFINED */
+#else
+#  include <sys/time.h>
+#endif
 
 class	aircraft;
 class	icaoCache;
@@ -78,7 +82,11 @@ long long mstime (void) {
 struct timeval tv;
 long long mst;
 
+#if	__MINGW32__
+        mingw_gettimeofday (&tv, NULL);
+#else
         gettimeofday (&tv, NULL);
+#endif
         mst = ((long long)tv.tv_sec) * 1000;
         mst += tv.tv_usec/1000;
         return mst;
@@ -92,6 +100,16 @@ int	messageLenByType (int type) {
         else
            return MODES_SHORT_MSG_BITS;
 }
+#ifdef  __MINGW32__
+//#include      "iostream.h"
+#include        "windows.h"
+#else
+#ifndef __FREEBSD__
+#include        "alloca.h"
+#endif
+#include        "dlfcn.h"
+typedef void    *HINSTANCE;
+#endif
 
 #endif
 
