@@ -17,6 +17,7 @@ QMAKE_LFLAGS	+= -flto
 
 CONFIG	+= sdrplay
 CONFIG	+= dabstick
+CONFIG	+= hackrf
 
 TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
 
@@ -126,3 +127,16 @@ sdrplay {
 	SOURCES		+= ./devices/sdrplay-handler/sdrplay-handler.cpp 
 	FORMS		+= ./devices/sdrplay-handler/sdrplay-widget.ui
 }
+
+#	the HACKRF One
+#
+hackrf {
+	DEFINES		+= __HAVE_HACKRF__
+	DEPENDPATH	+= ./devices/hackrf-handler 
+	INCLUDEPATH	+= ./devices/hackrf-handler 
+	INCLUDEPATH	+= ./devices/hackrf-handler/libhackrf 
+	HEADERS		+= ./devices/hackrf-handler/hackrf-handler.h 
+	SOURCES		+= ./devices/hackrf-handler/hackrf-handler.cpp 
+	FORMS		+= ./devices/hackrf-handler/hackrf-widget.ui
+}
+#

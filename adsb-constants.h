@@ -55,23 +55,22 @@ struct timeval {
 class	aircraft;
 class	icaoCache;
 
-#define MODES_DATA_LEN             (16*16384)   /* 256k */
+#define DATA_LEN             (16*16384)   /* 256k */
 
-#define MODES_PREAMBLE_US 8       /* microseconds */
-#define MODES_LONG_MSG_BITS 112
-#define MODES_SHORT_MSG_BITS 56
-#define MODES_FULL_LEN (MODES_PREAMBLE_US + MODES_LONG_MSG_BITS)
+#define PREAMBLE_US 8       /* microseconds */
+#define LONG_MSG_BITS 112
+#define SHORT_MSG_BITS 56
+#define FULL_LEN (PREAMBLE_US + LONG_MSG_BITS)
 
-#define MODES_UNIT_FEET 0
-#define MODES_UNIT_METERS 1
+#define UNIT_FEET 0
+#define UNIT_METERS 1
 
-#define MODES_INTERACTIVE_REFRESH_TIME 250      /* Milliseconds */
-#define MODES_INTERACTIVE_ROWS 15               /* Rows on screen */
-#define MODES_INTERACTIVE_TTL 60                /* TTL before being removed */
+#define INTERACTIVE_ROWS 15               /* Rows on screen */
+#define INTERACTIVE_TTL 60                /* TTL before being removed */
 
-#define MODES_NOTUSED(V) ((void) V)
+#define NOTUSED(V) ((void) V)
 
-#define	CURRENT_VERSION	"0.6"
+#define	CURRENT_VERSION	"0.7"
 
 #define	NO_ERRORFIX	0
 #define	NORMAL_ERRORFIX	1
@@ -96,9 +95,9 @@ static inline
 int	messageLenByType (int type) {
         if (type == 16 || type == 17 ||
             type == 19 || type == 20 || type == 21)
-           return MODES_LONG_MSG_BITS;
+           return LONG_MSG_BITS;
         else
-           return MODES_SHORT_MSG_BITS;
+           return SHORT_MSG_BITS;
 }
 #ifdef  __MINGW32__
 //#include      "iostream.h"

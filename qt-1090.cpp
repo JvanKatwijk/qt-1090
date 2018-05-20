@@ -25,7 +25,8 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include	"device-handler.h"
+#include        <QMessageBox>
+#include        <QFileDialog>
 #include	"adsb-constants.h"
 #include	"aircraft-handler.h"
 #include	"crc-handling.h"
@@ -35,22 +36,34 @@
 #include	"syncviewer.h"
 #include	"responder.h"
 
+#include	"device-handler.h"
+#ifdef	__HAVE_RTLSDR__
+#include	"rtlsdr-handler.h"
+#endif
+#ifdef	__HAVE_SDRPLAY__
+#include	"sdrplay-handler.h"
+#endif
+#ifdef	__HAVE_HACKRF__
+#include	"hackrf-handler.h"
+#endif
+#include	"file-handler.h"
+
 static
 void	*readerThreadEntryPoint (void *arg) {
-deviceHandler	*device = static_cast <deviceHandler *>(arg);
-	device -> startDevice ();
+deviceHandler	*theDevice = static_cast <deviceHandler *>(arg);
+	theDevice -> startDevice ();
 	return NULL;
 }
 
 
-	qt1090::qt1090 (QSettings *dumpSettings, deviceHandler *device):
-	                                      QMainWindow (NULL) {
+	qt1090::qt1090 (QSettings *dumpSettings, int32_t freq):
+	                                              QMainWindow (NULL) {
 int	i;
-	this	-> device	= device;
 	this	-> dumpSettings	= dumpSettings;
 
 	setupUi (this);
 
+	this	-> theDevice	= setDevice (freq);
 	httpPort	= dumpSettings	-> value ("http_port", 8080). toInt ();
 	bitstoShow	= dumpSettings	-> value ("bitstoShow", 16). toInt ();
 	for (i = 0; i < 31; i ++)
@@ -62,10 +75,10 @@ int	i;
 	net		= false;
 	metric		= false;
 	interactive	= false;
-	interactive_ttl	= MODES_INTERACTIVE_TTL;
+	interactive_ttl	= INTERACTIVE_TTL;
 
 //	Allocate the "working" vector
-	data_len = MODES_DATA_LEN + (MODES_FULL_LEN - 1) * 4;
+	data_len = DATA_LEN + (FULL_LEN - 1) * 4;
 	magnitudeVector	= new uint16_t [data_len / 2];
 
 //	Allocate the ICAO address cache.
@@ -73,27 +86,27 @@ int	i;
 	aircrafts	= NULL;
 	interactive_last_update = 0;
 
-	screenTimer. setInterval (4000);
+	screenTimer. setInterval (2000);
 	connect (&screenTimer, SIGNAL (timeout (void)),
                  this, SLOT (updateScreen (void)));
-        screenTimer. start (4000);
+        screenTimer. start (2000);
 
 /* Statistics */
 	stat_valid_preamble	= 0;
-	stat_demodulated	= 0;
 	stat_goodcrc		= 0;
 	stat_fixed		= 0;
 	stat_single_bit_fix	= 0;
 	stat_two_bits_fix	= 0;
 	stat_http_requests	= 0;
-	stat_out_of_phase	= 0;
 	stat_phase_corrected	= 0;
 //
-	ttl_selector	-> setValue (MODES_INTERACTIVE_TTL);
+	ttl_selector	-> setValue (INTERACTIVE_TTL);
 
 //	connect the device
-	connect (device, SIGNAL (dataAvailable (void)),
+	connect (theDevice, SIGNAL (dataAvailable (void)),
 	         this, SLOT (processData (void)));
+	connect (theDevice, SIGNAL (sendCount (int)),
+	         this, SLOT (showCount (int)));
 	connect (interactiveButton, SIGNAL (clicked (void)),
 	         this, SLOT (handle_interactiveButton (void)));
 	connect (errorhandlingCombo, SIGNAL (activated (const QString &)),
@@ -110,7 +123,7 @@ int	i;
 	pthread_create (&reader_thread,
 	                NULL,
 	                readerThreadEntryPoint,
-	                (void *)(device));
+	                (void *)(theDevice));
 	avg_corr		= 0;
 	correlationCounter	= 0;
 //	display the version
@@ -125,10 +138,11 @@ int	i;
 	qt1090::~qt1090	(void) {
 	delete[] magnitudeVector;	
 	delete	icao_cache;
+	delete	theDevice;
 }
 
 void	qt1090::finalize	(void) {
-	device	-> stopDevice ();
+	theDevice	-> stopDevice ();
 	screenTimer. stop ();
 	pthread_cancel (reader_thread);
 	pthread_join (reader_thread, NULL);
@@ -184,7 +198,7 @@ void applyPhaseCorrection (uint16_t *m, int offset) {
 int j;
 
 	offset += 16; /* Skip preamble. */
-	for (j = 0; j < (MODES_LONG_MSG_BITS-1) * 2; j += 2) {
+	for (j = 0; j < (LONG_MSG_BITS-1) * 2; j += 2) {
 	   if (m [offset + j] > m [offset + j + 1]) {
             /* One */
 	      m [offset + j + 2] = (m [offset + j + 2] * 5) / 4;
@@ -200,9 +214,9 @@ int j;
 int	qt1090::decodeBits (uint8_t *bits, uint16_t *m) {
 int	errors = 0;
 int	i;
-int	delta, first, second;
+int	first, second;
 
-	for (i = 0; i < MODES_LONG_MSG_BITS * 2; i += 2) {
+	for (i = 0; i < LONG_MSG_BITS * 2; i += 2) {
 	   first	=  m [i];
 	   second	=  m [i + 1];
 
@@ -211,7 +225,7 @@ int	delta, first, second;
                  * is an effective way to detect if it's just random noise
                  * that was detected as a valid preamble. */
                 bits [i / 2] = 2; /* error */
-                if (i < MODES_SHORT_MSG_BITS * 2)
+                if (i < SHORT_MSG_BITS * 2)
                    errors++;
 	   } else
 	   if (first > second) {
@@ -236,13 +250,13 @@ static int correlationVector [] = {
 static float avgValue	= 0;
 
 void	qt1090::detectModeS (uint16_t *m, uint32_t mlen) {
-uint8_t bits	[MODES_LONG_MSG_BITS];
-uint8_t	msg 	[MODES_LONG_MSG_BITS / 8];
-uint16_t aux 	[MODES_LONG_MSG_BITS * 2];
+uint8_t bits	[LONG_MSG_BITS];
+uint8_t	msg 	[LONG_MSG_BITS / 8];
+uint16_t aux 	[LONG_MSG_BITS * 2];
 uint32_t j, k;
-bool	apply_phasecorrection =  false;
 double	correlation;
 int	high;
+bool	phaseCorrected = false;
 /*
  *	The Mode S preamble is made of impulses of 0.5 microseconds at
  *	the following time offsets:
@@ -267,12 +281,12 @@ int	high;
  *	8   --
  *	9   -------------------
  */
-	for (j = 0; j < mlen - MODES_FULL_LEN * 2; j++) {
-	   int  delta, i, errors;
-	   bool good_message = false;
-	   if (apply_phasecorrection)
-	      goto good_preamble; /* We already checked it. */
-
+	for (j = 0; j < mlen - FULL_LEN * 2; j++) {
+	   int i, errors;
+//
+//
+//	The question here is whether or not to match with a
+//	correlation, 
 	   correlation = 0;
 	   for (k = 0; k < 14; k ++) 
 	      correlation += correlationVector [k] * m [j + k];
@@ -287,9 +301,9 @@ int	high;
 	   if (correlation < 2 * avg_corr)
 	      continue;
 
-	   if (!(m [j]   > m [j+1] &&
+	   if (!(m [j]   > m [j + 1] &&
 	         m [j+1] < m [j+2] &&
-	         m [j+2] > m[ j+3] &&
+	         m [j+2] > m [j+3] &&
 	         m [j+3] < m [j] &&
 	         m [j+4] < m [j] &&
 	         m [j+5] < m [j] &&
@@ -308,27 +322,27 @@ int	high;
 	       m [j + 14] >= high)
 	      continue;
 
-	   stat_valid_preamble++;
-	   validPreambles -> display ((int)stat_valid_preamble);
-
-good_preamble:
-//	If the previous attempt with this message failed, retry using
-//	magnitude correction. 
-	   if (apply_phasecorrection && (j > 0)) {
-	      memcpy (aux, &m [j + MODES_PREAMBLE_US * 2], sizeof(aux));
-              if (detectOutOfPhase (m , j)) {
+	
+	   errors = decodeBits (bits, &m [j + PREAMBLE_US * 2]);
+	   if (errors > 0) {
+	      memcpy (aux, &m [j + PREAMBLE_US * 2], sizeof(aux));
+              if (detectOutOfPhase (m, j)) {
 	         applyPhaseCorrection (m, j);
-	         stat_out_of_phase++;
+	         phaseCorrected = true;
 	      }
-//	Restore the original message if we used magnitude correction. 
-	      errors = decodeBits (bits, &m [j + MODES_PREAMBLE_US * 2]);
-	      memcpy (&m[j + MODES_PREAMBLE_US * 2], aux, sizeof (aux));
+//	Restore the original message after extracting the bits
+	      errors = decodeBits (bits, &m [j + PREAMBLE_US * 2]);
+	      memcpy (&m[j + PREAMBLE_US * 2], aux, sizeof (aux));
 	   }
-	   else
-	      errors = decodeBits (bits, &m [j + MODES_PREAMBLE_US * 2]);
 
-        /* Pack bits into bytes */
-	   for (i = 0; i < MODES_LONG_MSG_BITS / 8; i ++) {
+	   if (errors >= 4)	
+	      continue;		// seems hopeless
+	   stat_valid_preamble++;	// bold assumption here
+	   validPreambles -> display ((int)stat_valid_preamble);
+//
+//	one way or the other, we are here with bits
+//	Pack bits into bytes */
+	   for (i = 0; i < LONG_MSG_BITS / 8; i ++) {
 	      msg [i] = 0;
 	      for (k = 0; k < 8; k ++)
 	         msg [i] |= bits [8 * i + k] << (7 - k);
@@ -336,139 +350,84 @@ good_preamble:
 
 	   int msgtype	= msg [0] >> 3;
 	   int msglen	= messageLenByType (msgtype) / 8;
-
-//	Last check, high and low bits are different enough in magnitude
-//	to mark this as real message and not just noise? 
-	   delta = 0;
-	   for (i = 0; i < msglen * 8 * 2; i += 2) {
-	      delta += abs (m [j + i + MODES_PREAMBLE_US * 2] -
-	                    m [j + i + MODES_PREAMBLE_US * 2 + 1]);
-	   }
-	   delta /= msglen * 4;
-
 //
-/*	If we reached this point, and error is zero, it is possible that we
+/*	If we reached this point, it is possible that we
  *	have a Mode S message in our hands, but it may still be broken
- *	and CRC may not be correct. This is handled by the next layer.
+ *	and CRC may not be correct.
+ *	The message is decoded and checked, if false, we give up
  */
-	   if (errors == 0 ||
-	           ((handle_errors == STRONG_ERRORFIX) && errors < 3)) {
-	      message mm (handle_errors, icao_cache, msg);
+	   message mm (handle_errors, icao_cache, msg);
 
-	      if (mm. is_crcok () || apply_phasecorrection) {
-	         if (errors == 0)
-	            stat_demodulated++;
-	         if (mm. errorbit == -1) {
-	            if (mm. is_crcok ()) {
-	               stat_goodcrc++;
-	               goodCrc	-> display ((int)stat_goodcrc);
-	            }
-	         }
-	         else {
-	            stat_fixed++;
-	            fixed	-> display ((int)stat_fixed);
-	            if (mm. errorbit < MODES_LONG_MSG_BITS) {
-	               stat_single_bit_fix++;
-	               single_bit_fixed -> display ((int)stat_single_bit_fix);
-	            }
-	            else {
-	               stat_two_bits_fix++;
-	               two_bit_fixed -> display ((int)stat_two_bits_fix);
-	            }
-	         }
-	      }
-
-	      if (mm. is_crcok ()) {
-	         update_view (&m [j], true);
-	         j += (MODES_PREAMBLE_US + (msglen * 8)) * 2;
-	         good_message = true;
-	         if (apply_phasecorrection) {
-	            stat_phase_corrected ++;
-	            phase_corrected -> display ((int)stat_phase_corrected);
-	         }
-//	Pass data to the next layer */
-
-	         table [msgtype & 0x1F] ++;	
-	         update_table (msgtype & 0x1F, table [msgtype & 0x1F]);
-	         useModesMessage (&mm);
-	         apply_phasecorrection = false;
-	      }
-	      else
+	   if (!mm. is_crcok ()) {
 	      if (show_preambles)
-	         update_view (&m [j], false);
-//
-//	and try for the next
+                 update_view (&m [j], false);
 	      continue;
 	   }
+//
+//	wow, it seems we have something here
+	   update_view (&m [j], true);
 
-//	Retry with phase correction if possible. */
-	   if (!good_message && !apply_phasecorrection) {
-	      j--;
-	      apply_phasecorrection = true;
+//	update statistics
+	   if (mm. errorbit == -1) {	// no corrections
+	      if (mm. is_crcok ()) {
+	         stat_goodcrc++;
+	         goodCrc	-> display ((int)stat_goodcrc);
+	      }
 	   }
 	   else {
-	      apply_phasecorrection = false;
+	      stat_fixed++;
+	      fixed	-> display ((int)stat_fixed);
+	      if (mm. errorbit < LONG_MSG_BITS) {
+	         stat_single_bit_fix++;
+	         single_bit_fixed -> display ((int)stat_single_bit_fix);
+	      }
+	      else {
+	         stat_two_bits_fix++;
+	         two_bit_fixed -> display ((int)stat_two_bits_fix);
+	      }
 	   }
-	}
-}
+//
+//	prepare for the next round
+	   if (mm. is_crcok ()) {
+	      j += (PREAMBLE_US + (msglen * 8)) * 2;
+	      if (phaseCorrected) {
+	         stat_phase_corrected ++;
+	         phase_corrected -> display ((int)stat_phase_corrected);
+	         phaseCorrected = false;
+	      }
 
-/*
- *	When a new message is available, because it was decoded from the
- *	device, file, or received in the TCP input port, or any other
- *	way we can receive a decoded message, we call this function in order
- *	to use the message.
- *
- *	Basically this function passes a raw message to the upper layers for
- *	further processing and visualization.
- */
-void	qt1090::useModesMessage (message *mm) {
-
-	if ((!check_crc) || (mm -> is_crcok ())) {
+	      table [msgtype & 0x1F] ++;	
+	      update_table (msgtype & 0x1F, table [msgtype & 0x1F]);
 /*
  *	Track aircrafts in interactive mode or if the HTTP
  *	interface is enabled.
  */
-	   if (interactive || stat_http_requests > 0) 
-	      aircrafts = interactiveReceiveData (aircrafts, mm);
+	      if (interactive || stat_http_requests > 0) 
+	         aircrafts = interactiveReceiveData (aircrafts, &mm);
 /*
  *	In non-interactive way, display messages on standard output.
  */
-	   if (!interactive) {
-	      mm -> displayMessage (check_crc);
-	      printf ("\n");
+	      if (!interactive) {
+	         mm. displayMessage (check_crc);
+	         printf ("\n");
+	      }
 	   }
 	}
 }
-
-//
-
-/* Turn an hex digit into its 4 bit decimal value.
- * Returns -1 if the digit is not in the 0-F range. */
-int hexDigitVal (int c) {
-	c = tolower (c);
-	if (c >= '0' && c <= '9')
-	   return c-'0';
-	else
-	if (c >= 'a' && c <= 'f')
-	   return c-'a'+10;
-	else
-	   return -1;
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 
 //	this slot is called upon the arrival of data
 void	qt1090::processData (void) {
-int16_t lbuf [MODES_DATA_LEN / 2];
-	while (device -> Samples () > MODES_DATA_LEN / 2) {
-	   device -> getSamples (lbuf, MODES_DATA_LEN / 2);
-	   memcpy (&magnitudeVector [0],
-	           &magnitudeVector [MODES_DATA_LEN / 2],
-	           ((MODES_FULL_LEN - 1) * sizeof (uint16_t)) * 4 / 2);
-	   memcpy (&magnitudeVector [(MODES_FULL_LEN - 1) * 4 / 2],
-	           lbuf, MODES_DATA_LEN / 2 * sizeof (int16_t));
+int16_t lbuf [DATA_LEN / 2];
 
+	while (theDevice -> Samples () > DATA_LEN / 2) {
+	   theDevice -> getSamples (lbuf, DATA_LEN / 2);
+	   memcpy (&magnitudeVector [0],
+	           &magnitudeVector [DATA_LEN / 2],
+	           ((FULL_LEN - 1) * sizeof (uint16_t)) * 4 / 2);
+	   memcpy (&magnitudeVector [(FULL_LEN - 1) * 4 / 2],
+	           lbuf, DATA_LEN / 2 * sizeof (int16_t));
 	   detectModeS	(magnitudeVector, data_len / 2);
 	}
 }
@@ -598,3 +557,54 @@ void    qt1090::handleRequest (QHttpRequest *req,
 	stat_http_requests ++;
         (void)new Responder (req, resp, this -> aircrafts);
 }
+//
+//
+//	selecting a device
+deviceHandler	*qt1090::setDevice (int freq) {
+deviceHandler	*inputDevice	= NULL;
+#ifdef	__HAVE_HACKRF__
+	try {
+	   inputDevice	= new hackrfHandler (dumpSettings, freq);
+	   return inputDevice;
+	} catch (int e) {
+	   fprintf (stderr, "no hackrf detected, going on\n");
+	}
+#endif
+#ifdef	__HAVE_SDRPLAY__
+	try {
+	   inputDevice	= new sdrplayHandler (dumpSettings, freq);
+	   return inputDevice;
+	} catch (int e) {
+	   fprintf (stderr, "no sdrplay detected, going on\n");}
+#endif
+#ifdef	__HAVE_RTLSDR__
+	try {
+	   inputDevice	= new rtlsdrHandler (dumpSettings, freq);
+	   return inputDevice;
+	} catch (int e) {
+	   fprintf (stderr, "no rtlsdr device detected, going on\n");
+	}
+#endif
+//
+//	if everything fails, the user probably meant to read from
+//	a file
+	QString file = QFileDialog::getOpenFileName (this,
+	                                                tr ("Open file ..."),
+	                                                QDir::homePath (),
+	                                                tr ("iq data (*.iq)"));
+	file		= QDir::toNativeSeparators (file);
+	try {
+	   inputDevice	= new fileHandler (file, true);
+	}
+	catch (int e) {
+	   QMessageBox::warning (this, tr ("Warning"),
+	                               tr ("file not found"));
+	   return NULL;
+	}
+	return NULL;		// never used
+}
+
+void	qt1090::showCount	(int c) {
+	fprintf (stderr, "%d\n", c);
+}
+

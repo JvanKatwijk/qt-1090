@@ -24,6 +24,7 @@
 #ifndef __FILE_HANDLER__
 #define	__FILE_HANDLER__
 
+#include	<QString>
 #include	"adsb-constants.h"
 #include	"ringbuffer.h"
 #include	<pthread.h>
@@ -34,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////
 class	fileHandler: public deviceHandler {
 public:
-		fileHandler	(const char *, bool);
+		fileHandler	(QString &, bool);
 		~fileHandler	(void);
 	void	startDevice	(void);
 	void	stopDevice	(void);

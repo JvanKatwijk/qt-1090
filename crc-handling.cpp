@@ -100,7 +100,7 @@ int	nbytes	= bits / 8;
 
 int	fixTwoBitsErrors (uint8_t *msg, int bits) {
 int j, i;
-unsigned char aux [MODES_LONG_MSG_BITS / 8];
+unsigned char aux [LONG_MSG_BITS / 8];
 
 	for (j = 0; j < bits; j++) {
 	   int byte1 = j / 8;

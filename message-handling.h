@@ -40,7 +40,7 @@ public:
 	int mesub;                  /* Extended squitter message subtype. */
 	int velocity;               /* Computed from EW and NS velocity. */
 private:
-	uint8_t msg [MODES_LONG_MSG_BITS / 8]; /* Binary message. */
+	uint8_t msg [LONG_MSG_BITS / 8]; /* Binary message. */
 	int msgbits;                /* Number of bits in message */
 	uint32_t crc;               /* Message CRC */
 	int crcok;                  /* True if CRC was valid */

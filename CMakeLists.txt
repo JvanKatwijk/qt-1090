@@ -39,8 +39,8 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "")
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
 ######################################################################
-if(DEFINED AIRSPY)
-   set(AIRSPY true)
+if(DEFINED HACKRF)
+   set(HACKRF true)
 endif ()
 
 if(DEFINED SDRPLAY)
@@ -73,132 +73,104 @@ endif ()
 ##########################################################################
 #	The devices
 
-	if (AIRSPY)
-	   find_path (AIRSPYLIB_INCLUDE_DIR
-                      NAMES airspy.h
-                      PATHS
-                      /usr/local/include/
-                      /usr/local/include/libairspy
-           )
-           include_directories (${AIRSPYLIB_INCLUDE_DIR})
-           find_library (AIRSPYLIB airspy)
-           if(NOT(AIRSPYLIB))
-              message (FATAL_ERROR "please install library for airspy")
-           else(NOT(AIRSPYLIB))
-              list (APPEND extraLibs ${AIRSPYLIB})
-           endif ()
-
+	if (HACKRF)
 	   set (${objectName}_UIS
 	        ${${objectName}_UIS}
-	        ./devices/airspy-handler/airspy-widget.ui
+	        ./devices/hackrf-handler/hackrf-widget.ui
 	   )
 
 	   set (${objectName}_MOCS
 	        ${${objectName}_MOCS}
-	        ./devices/airspy-handler/airspy-handler.h
+	        ./devices/hackrf-handler/hackrf-handler.h
 	   )
 
 	   include_directories (
-	     ./devices/airspy-handler
-	     ./devices/airspy-handler/libairspy
+	     ./devices/hackrf-handler
+	     ./devices/hackrf-handler/libhackrf
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ./devices/airspy-handler/airspy-handler.h
-	        ./devices/airspy-handler/libairspy/airspy.h
+	        ./devices/hackrf-handler/hackrf-handler.h
+	        ./devices/hackrf-handler/libhackrf/hackrf.h
 	   )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ./devices/airspy-handler/airspy-handler.cpp
+	        ./devices/hackrf-handler/hackrf-handler.cpp
 	   )
 
-	   add_definitions (-D__HAVE_AIRSPY__)
-	endif (AIRSPY)
+	   add_definitions (-D__HAVE_HACKRF__)
+	endif (HACKRF)
 
 	if (SDRPLAY)
-	   find_path (SDRPLAYLIB_INCLUDE_DIR
-                      NAMES mirsdrapi-rsp.h
-                      PATHS
-                      /usr/local/include/
-	   )
-           include_directories (${SDRPLAYLIB_INCLUDE_DIR})
-
-           find_library (SDRPLAYLIB mirsdrapi-rsp)
-           if(NOT(SDRPLAYLIB))
-              message(FATAL_ERROR "please install -lmirsdrapi-rsp")
-           else(NOT(SDRPLAYLIB))
-              list (APPEND extraLibs ${SDRPLAYLIB})
-           endif(NOT(SDRPLAYLIB))
-
+#	   find_path (SDRPLAYLIB_INCLUDE_DIR
+#                      NAMES mirsdrapi-rsp.h
+#                      PATHS
+#                      /usr/local/include/
+#	   )
+#	   include_directories (${SDRPLAYLIB_INCLUDE_DIR})
 	   set (${objectName}_UIS
-                ${${objectName}_UIS}
-                ./devices/sdrplay-handler/sdrplay-widget.ui
-           )
-
-           set (${objectName}_MOCS
-                ${${objectName}_MOCS}
-                ./devices/sdrplay-handler/sdrplay-handler.h
-           )
-
-	   set ($(objectName)_HDRS
-                ${${objectName}_HDRS}
-                ./devices/sdrplay-handler/sdrplay-handler.h
-           )
-
-	   include_directories (
-             ./devices/sdrplay-handler
-           )
-
-           set (${objectName}_SRCS
-                ${${objectName}_SRCS}
-                ./devices/sdrplay-handler/sdrplay-handler.cpp
-           )
+	        ${${objectName}_UIS}
+	        ./devices/sdrplay-handler/sdrplay-widget.ui
+	   )
 
 	   set (${objectName}_MOCS
-	        ${${objectName}_MOCS} 
+	        ${${objectName}_MOCS}
 	        ./devices/sdrplay-handler/sdrplay-handler.h
 	   )
 
-	   add_definitions (-D__HAVE_SDRPLAY__)
+	   include_directories (
+	     ./devices/sdrplay-handler
+	   )
+
+	   set ($(objectName)_HDRS
+	        ${${objectName}_HDRS}
+	        ./devices/sdrplay-handler/sdrplay-handler.h
+	        ./devices/sdrplay-handler/mirsdrapi-rsp.h
+           )
+
+	   set (${objectName}_SRCS
+	        ${${objectName}_SRCS}
+	        ./devices/sdrplay-handler/sdrplay-handler.cpp
+	   )
+
+	 add_definitions (-D__HAVE_SDRPLAY__)
 	endif (SDRPLAY)
 
 	if (RTLSDR)
-           find_package(LibRTLSDR)
-           if (NOT LIBRTLSDR_FOUND)
-               message(FATAL_ERROR "please install librtlsdr")
-           endif ()
-	   list (APPEND extraLibs ${LibRTLSDRLIB})
-	   ###include_directories (${RTLSDR_INCLUDE_DIR})
+#	   find_package(LibRTLSDR)
+#	   if (NOT LIBRTLSDR_FOUND)
+#	      message(FATAL_ERROR "please install librtlsdr")
+#	   endif ()
+#	   ###include_directories (${RTLSDR_INCLUDE_DIR})
 
 	   set (${objectName}_UIS
-                ${${objectName}_UIS}
-                ./devices/rtlsdr-handler/rtlsdr-widget.ui
-           )
+	        ${${objectName}_UIS}
+	        ./devices/rtlsdr-handler/rtlsdr-widget.ui
+	   )
 
-           set (${objectName}_MOCS
-                ${${objectName}_MOCS}
-                ./devices/rtlsdr-handler/rtl-dongleselect.h
-                ./devices/rtlsdr-handler/rtlsdr-handler.h
-           )
-
-	   set (${objectName}_HDRS
-                ${${objectName}_HDRS}
-                ./devices/rtlsdr-handler/rtlsdr-handler.h
-                ./devices/rtlsdr-handler/rtl-dongleselect.h
-	        
-           )
+	   set (${objectName}_MOCS
+	        ${${objectName}_MOCS}
+	        ./devices/rtlsdr-handler/rtl-dongleselect.h
+	        ./devices/rtlsdr-handler/rtlsdr-handler.h
+	   )
 
 	   include_directories (
-             ./devices/rtlsdr-handler
-           )
+	        ./devices/rtlsdr-handler/
+	   )
 
-           set (${objectName}_SRCS
-                ${${objectName}_SRCS}
-                ./devices/rtlsdr-handler/rtlsdr-handler.cpp
-                ./devices/rtlsdr-handler/rtl-dongleselect.cpp
-           )
+	   set (${objectName}_HDRS
+	        ${${objectName}_HDRS}
+	        ./devices/rtlsdr-handler/rtlsdr-handler.h
+	        ./devices/rtlsdr-handler/rtl-dongleselect.h
+	   )
+
+	   set (${objectName}_SRCS
+	        ${${objectName}_SRCS}
+	        ./devices/rtlsdr-handler/rtlsdr-handler.cpp
+	        ./devices/rtlsdr-handler/rtl-dongleselect.cpp
+	   )
 
 	   add_definitions (-D__HAVE_RTLSDR__)
 	endif()
@@ -232,9 +204,9 @@ endif ()
 	     ./icao-cache.h
 	     ./crc-handling.h
 	     ./message-handling.h
+	     ./responder.h
 	     ./device-handler.h
 	     ./devices/file-handler/file-handler.h
-	     ./anet.h
 	     ./syncviewer.h
 	)
 
@@ -247,9 +219,9 @@ endif ()
 	     ./icao-cache.cpp
 	     ./crc-handling.cpp
 	     ./message-handling.cpp
+	     ./responder.cpp
 	     ./device-handler.cpp
 	     ./devices/file-handler/file-handler.cpp
-	     ./anet.cpp
 	     ./syncviewer.cpp
 	)
 
@@ -264,6 +236,7 @@ endif ()
         QT5_WRAP_CPP (MOCS ${${objectName}_MOCS}
                      ./qt-1090.h
 	             ./device-handler.h
+	             ./responder.h
 	)
 
 	QT5_WRAP_UI (UIS ${${objectName}_UIS}
@@ -281,7 +254,7 @@ endif ()
 	                       Qt5::Widgets
                                Qt5::Network
                                ${extraLibs}
-	                       -lm -ldl -lrtlsdr
+	                       -lm -ldl -lrtlsdr -lqhttpserver
 	)
 
 	INSTALL (TARGETS ${objectName} DESTINATION .)

@@ -35,11 +35,11 @@ void sdrplay_dataCallback (int16_t          *xi,
 uint32_t	i;
 sdrplayHandler *st = static_cast <sdrplayHandler *>(ctx);
 int16_t localBuf [numSamples];
-	MODES_NOTUSED (firstSampleNum);
-	MODES_NOTUSED (grChanged);
-	MODES_NOTUSED (rfChanged);
-	MODES_NOTUSED (fsChanged);
-	MODES_NOTUSED (reset);
+	NOTUSED (firstSampleNum);
+	NOTUSED (grChanged);
+	NOTUSED (rfChanged);
+	NOTUSED (fsChanged);
+	NOTUSED (reset);
 //
 	for (i = 0; i < numSamples; i ++) {
 	   localBuf [i] = (xi [i] < 0 ? -xi [i] : xi [i]) +

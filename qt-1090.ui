@@ -304,7 +304,7 @@
      </rect>
     </property>
     <property name="toolTip">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;qt-1090 is a program in the sdr-j program suite.  The program is developed, based on the dump1090 program written by Copyright (C) 2012 by Salvatore Sanfilippo &amp;lt;antirez@gmail.com&amp;gt; and completely redesigned, restructured and extended with a Qt based GUI by this author. The http library is  Copyright 2011-2014 Nikhil Marathe &amp;lt;nsm.nikhil@gmail.com&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;qt-1090 is a program in the sdr-j program suite (Copyrights J van Katwijk, Lazy Chair Computing). The program is developed, based on the dump1090 program written by Copyright (C) 2012 by Salvatore Sanfilippo &amp;lt;antirez@gmail.com&amp;gt; and completely redesigned, restructured and extended with a Qt based GUI by this author. The http library is Copyright 2011-2014 Nikhil Marathe &amp;lt;nsm.nikhil@gmail.com&amp;gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
      <string>© </string>

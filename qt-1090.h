@@ -49,24 +49,25 @@ class	syncViewer;
 class	qt1090: public QMainWindow, private Ui_mainwindow {
 Q_OBJECT
 public:
-	qt1090		(QSettings *, deviceHandler *);
+	qt1090		(QSettings *, int freq);
 	~qt1090		(void);
 private:
 	void		finalize	(void);
 	void		closeEvent	(QCloseEvent *event);
 	int		decodeBits	(uint8_t *bits, uint16_t *m);
 	void		detectModeS	(uint16_t *m, uint32_t mlen);
-	void		useModesMessage (message *mm);
-	void		update_view (uint16_t *m, bool);
-	void		update_table (int16_t, int);
+	void		update_view	(uint16_t *m, bool);
+	void		update_table	(int16_t, int);
+	deviceHandler	*setDevice	(int32_t);
 	int		table [32];
 	QHttpServer	*httpServer;
 	QTimer		screenTimer;
 public slots:
-	void		processData (void);
+	void		showCount	(int);
+	void		processData	(void);
 private:
 	pthread_t	reader_thread;
-	deviceHandler	*device;
+	deviceHandler	*theDevice;
 	QSettings	*dumpSettings;
 	uint16_t	*magnitudeVector;
 	uint32_t	data_len;	/* Buffer length. */
@@ -95,15 +96,12 @@ public:
 //	Statistics */
 public:
 	long long stat_valid_preamble;
-	long long stat_demodulated;
 	long long stat_goodcrc;
 	long long stat_badcrc;
 	long long stat_fixed;
 	long long stat_single_bit_fix;
 	long long stat_two_bits_fix;
 	long long stat_http_requests;
-	long long stat_sbs_connections;
-	long long stat_out_of_phase;
 	long long stat_phase_corrected;
 private slots:
 	void	handle_interactiveButton (void);

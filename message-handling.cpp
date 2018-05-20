@@ -63,7 +63,7 @@ uint32_t crc2;
 
 	this	-> icao_cache = icao_cache;
 /* Work on our local copy */
-	memcpy (msg, msg_o, MODES_LONG_MSG_BITS / 8);
+	memcpy (msg, msg_o, LONG_MSG_BITS / 8);
 
 	msgtype = msg [0] >>3;    /* Downlink Format */
 	msgbits = messageLenByType (msgtype);
@@ -209,7 +209,7 @@ int j;
  *	Helpers
  *************************************************************************/
 bool	message::bruteForceAP (uint8_t *msg) {
-uint8_t aux [MODES_LONG_MSG_BITS / 8];
+uint8_t aux [LONG_MSG_BITS / 8];
 
 	if (!(msgtype == 0 ||         /* Short air surveillance */
 	      msgtype == 4 ||         /* Surveillance, altitude reply */
@@ -251,14 +251,14 @@ uint8_t aux [MODES_LONG_MSG_BITS / 8];
 
 /*
  *	Decode the 13 bit AC altitude field (in DF 20 and others).
- *	Returns the altitude, and sets 'unit' to either MODES_UNIT_METERS
- *	or MODES_UNIT_FEETS. */
+ *	Returns the altitude, and sets 'unit' to either UNIT_METERS
+ *	or UNIT_FEETS. */
 int	message::decodeAC13Field (uint8_t *msg, int *unit) {
 int m_bit = msg [3] & (1 << 6);
 int q_bit = msg [3] & (1 << 4);
 
 	if (m_bit == 0) {
-	   *unit = MODES_UNIT_FEET;
+	   *unit = UNIT_FEET;
 	   if (q_bit != 0) {
 //	N is the 11 bit integer resulting from the removal of bit
 //	Q and M 
@@ -273,7 +273,7 @@ int q_bit = msg [3] & (1 << 4);
             /* TODO: Implement altitude where Q=0 and M=0 */
            }
 	} else {
-	   *unit = MODES_UNIT_METERS;
+	   *unit = UNIT_METERS;
 //	TODO: Implement altitude when meter unit is selected. */
 	}
 	return 0;
@@ -288,7 +288,7 @@ int q_bit = msg [5] & 1;
 
 	if (q_bit) {
 //	N is the 11 bit integer resulting from the removal of bit Q 
-	   *unit = MODES_UNIT_FEET;
+	   *unit = UNIT_FEET;
 	   int n = ((msg [5] >> 1) << 4) | ((msg [6] & 0xF0) >> 4);
 //	The final altitude is computed:
 	   return n * 25 - 1000;
@@ -373,7 +373,7 @@ void	message::print_msgtype_0 (void) {
 	if (msgtype == 0) {
 	   printf("DF 0: Short Air-Air Surveillance.\n");
 	   printf("  Altitude       : %d %s\n", altitude,
-	           (unit == MODES_UNIT_METERS) ? "meters" : "feet");
+	           (unit == UNIT_METERS) ? "meters" : "feet");
 	   printf ("  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
 	}
 }
@@ -386,7 +386,7 @@ void	message::print_msgtype_4_20 (void) {
 	   printf ("  DR             : %d\n", dr);
 	   printf ("  UM             : %d\n", um);
            printf ("  Altitude       : %d %s\n", altitude,
-	                (unit == MODES_UNIT_METERS) ? "meters" : "feet");
+	                (unit == UNIT_METERS) ? "meters" : "feet");
 	   printf ("  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
 	   if (msgtype == 20) {
 //	TODO: 56 bits DF20 MB additional field. */

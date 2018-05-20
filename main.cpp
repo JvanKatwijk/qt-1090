@@ -34,13 +34,6 @@
 #include        "adsb-constants.h"
 #include	"qt-1090.h"
 
-#ifdef	__HAVE_RTLSDR__
-#include	"rtlsdr-handler.h"
-#endif
-#ifdef	__HAVE_SDRPLAY__
-#include	"sdrplay-handler.h"
-#endif
-#include	"file-handler.h"
 #define DEFAULT_INI     ".qt-1090.ini"
 
 #ifndef	GITHASH
@@ -68,15 +61,12 @@ QString fileName;
 }
 
 void    	setTranslator	(QString Language);
-deviceHandler   *setDevice (QSettings *dabSettings,
-                            int deviceIndex, int freq, char *fileName);
 void		showHelp (void);
 
 
 int     main (int argc, char **argv) {
 QString initFileName	= fullPathfor (QString (DEFAULT_INI), ".ini");
 qt1090  *MyRadioInterface;
-deviceHandler	*theDevice;
 QSettings       *dumpSettings;           // ini file
 int     j;
 char	*fileName	= NULL;
@@ -92,15 +82,10 @@ int	freq		= 1090000000;
 	for (j = 1; j < argc; j++) {
 	   bool more = j + 1 < argc; /* There are more arguments. */
 
-	   if (!strcmp (argv [j], "--device-index") && more) {
-	      deviceIndex	= atoi (argv [++j]);
-	   } else
 	   if (!strcmp (argv [j],"--freq") && more) {
 	       freq = strtoll (argv[++j], NULL, 10);
 	   } else
-	   if (!strcmp (argv [j],"--ifile") && more) {
-	       fileName = strdup (argv[++j]);
-	   } else if (!strcmp (argv[j],"--help")) {
+	   if (!strcmp (argv[j],"--help")) {
 	      showHelp ();
 	      exit (0);
 	   } else {
@@ -123,14 +108,9 @@ int	freq		= 1090000000;
 //	qDebug() << "main:" <<  "Detected system language" << locale;
 //	setTranslator (locale);
 
-	theDevice	= setDevice (dumpSettings, deviceIndex, freq, fileName);
-	if (theDevice == NULL) {
-	   fprintf (stderr, "sorry, no device found, fatal\n");
-	   exit (1);
-	}
 //	a. setWindowIcon (QIcon (":/dab-radio.ico"));
 
-	MyRadioInterface = new qt1090 (dumpSettings, theDevice);
+	MyRadioInterface = new qt1090 (dumpSettings, freq);
 	MyRadioInterface -> show ();
 
 #if QT_VERSION >= 0x050600
@@ -141,7 +121,6 @@ int	freq		= 1090000000;
  *      done:
  */
 	dumpSettings -> sync ();
-	delete theDevice;
 	fprintf (stderr, "back in main program\n");
 	fflush (stdout);
 	fflush (stderr);
@@ -170,45 +149,6 @@ QTranslator *Translator = new QTranslator;
 
 	QLocale curLocale (QLocale ((const QString&)Language));
 	QLocale::setDefault (curLocale);
-}
-
-deviceHandler	*setDevice (QSettings *dumpSettings,
-	                    int deviceIndex, int freq, char *fileName) {
-deviceHandler	*inputDevice	= NULL;
-///	OK, everything quiet, now let us see what to do
-	if (fileName != NULL) {
-	   try {
-	      inputDevice = new fileHandler (fileName, true);
-	      return inputDevice;
-	   } catch (int e) {
-	      fprintf (stderr, "Failing to open %s, fatal\n", fileName);	
-	      exit (1);
-	   }
-	}
-#ifdef	__HAVE_SDRPLAY__
-	try {
-	   inputDevice	= new sdrplayHandler (dumpSettings, freq);
-	   return inputDevice;
-	} catch (int e) {
-	   fprintf (stderr, "no sdrplay detected, going on\n");}
-#endif
-#ifdef	__HAVE_AIRSPY__
-	try {
-	   inputDevice	= new airspyHandler (dumpSettings, freq);
-	   return inputDevice;
-	} catch (int e) {
-	   fprintf (stderr, "no airspy detected, going on\n");
-	}
-#endif
-#ifdef	__HAVE_RTLSDR__
-	try {
-	   inputDevice	= new rtlsdrHandler (dumpSettings, freq);
-	   return inputDevice;
-	} catch (int e) {
-	   fprintf (stderr, "no rtlsdr device detected, going on\n");
-	}
-#endif
-	return new deviceHandler ();
 }
 
 

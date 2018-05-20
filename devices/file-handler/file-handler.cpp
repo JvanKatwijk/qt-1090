@@ -27,13 +27,13 @@
 static int16_t localBuf [2048];
 int	bufP	= 0;
 
-	fileHandler::fileHandler	(const char *fileName,
+	fileHandler::fileHandler	(QString &fileName,
 	                                 bool interactive) {	
-
-	   if (fileName [0] == '-' && fileName [1] == '\0') 
+const char * c_fileName = fileName. toLatin1 (). data ();
+	   if (c_fileName [0] == '-' && c_fileName [1] == '\0') 
 	      fd = stdin;
            else {
-	      fd = fopen (fileName, "r");
+	      fd = fopen (c_fileName, "r");
 	      if (fd == NULL)
 	         throw (22);
            }
@@ -52,8 +52,8 @@ int	bufP	= 0;
 static
 void	*filereaderEntry (void *arg) {
 fileHandler *f = static_cast<fileHandler *> (arg);
-int toread = MODES_DATA_LEN;
-uint8_t lbuf [MODES_DATA_LEN];
+int toread = DATA_LEN;
+uint8_t lbuf [DATA_LEN];
 
 	f -> running. store (true);
 	while (f -> running. load ()) {
