@@ -31,6 +31,7 @@
 #include        <QDir>
 #include	<QDebug>
 #include        <unistd.h>
+#include	<getopt.h>
 #include        "adsb-constants.h"
 #include	"qt-1090.h"
 
@@ -61,8 +62,6 @@ QString fileName;
 }
 
 void    	setTranslator	(QString Language);
-void		showHelp (void);
-
 
 int     main (int argc, char **argv) {
 QString initFileName	= fullPathfor (QString (DEFAULT_INI), ".ini");
@@ -72,31 +71,29 @@ int     j;
 char	*fileName	= NULL;
 int	deviceIndex	= 0;
 int	freq		= 1090000000;
+int	opt;
+bool	network		= false;
 
 	QCoreApplication::setOrganizationName	("Lazy Chair Computing");
 	QCoreApplication::setOrganizationDomain ("Lazy Chair Computing");
 	QCoreApplication::setApplicationName	("qt-1090");
 	QCoreApplication::setApplicationVersion (QString (CURRENT_VERSION) + " Git: " + GITHASH);
 
-//	Parse the command line options */
-	for (j = 1; j < argc; j++) {
-	   bool more = j + 1 < argc; /* There are more arguments. */
+//	Parse the command line options 
 
-	   if (!strcmp (argv [j],"--freq") && more) {
-	       freq = strtoll (argv[++j], NULL, 10);
-	   } else
-	   if (!strcmp (argv[j],"--help")) {
-	      showHelp ();
-	      exit (0);
-	   } else {
-	      fprintf (stderr,
-	            "Unknown or insufficient number of arguments for option '%s'.\n\n",
-	                           argv[j]);
-	      showHelp ();
-              exit (1);
+	while ((opt = getopt (argc, argv, "f:F:n")) != -1) {
+	   switch (opt) {	// there aren't many
+	      case 'f':
+	      case 'F':	
+	         freq	= atoi (optarg);
+	         break;
+	      case 'n':
+	         network	= true;
+	         break;
+	      default:
+	         break;
 	   }
 	}
-	
 	dumpSettings =  new QSettings (initFileName, QSettings::IniFormat);
 /*
  *      Before we connect control to the gui, we have to
@@ -110,7 +107,7 @@ int	freq		= 1090000000;
 
 //	a. setWindowIcon (QIcon (":/dab-radio.ico"));
 
-	MyRadioInterface = new qt1090 (dumpSettings, freq);
+	MyRadioInterface = new qt1090 (dumpSettings, freq, network);
 	MyRadioInterface -> show ();
 
 #if QT_VERSION >= 0x050600
@@ -125,7 +122,7 @@ int	freq		= 1090000000;
 	fflush (stdout);
 	fflush (stderr);
 	qDebug ("It is done\n");
-//	delete MyRadioInterface;
+	delete MyRadioInterface;
 	delete dumpSettings;
 }
 
@@ -152,39 +149,3 @@ QTranslator *Translator = new QTranslator;
 }
 
 
-void showHelp (void) {
-    printf(
-"--device-index <index>   Select RTL device (default: 0).\n"
-"--gain <db>              Set gain (default: max gain. Use -100 for auto-gain).\n"
-"--enable-agc             Enable the Automatic Gain Control (default: off).\n"
-"--freq <hz>              Set frequency (default: 1090 Mhz).\n"
-"--ifile <filename>       Read data from file (use '-' for stdin).\n"
-"--interactive            Interactive mode refreshing data on screen.\n"
-"--interactive-rows <num> Max number of rows in interactive mode (default: 15).\n"
-"--interactive-ttl <sec>  Remove from list if idle for <sec> (default: 60).\n"
-"--raw                    Show only messages hex values.\n"
-"--net                    Enable networking.\n"
-"--net-only               Enable just networking, no RTL device or file used.\n"
-"--net-ro-port <port>     TCP listening port for raw output (default: 30002).\n"
-"--net-ri-port <port>     TCP listening port for raw input (default: 30001).\n"
-"--net-http-port <port>   HTTP server port (default: 8080).\n"
-"--net-sbs-port <port>    TCP listening port for BaseStation format output (default: 30003).\n"
-"--no-fix                 Disable single-bits error correction using CRC.\n"
-"--no-crc-check           Disable messages with broken CRC (discouraged).\n"
-"--aggressive             More CPU for more messages (two bits fixes, ...).\n"
-"--stats                  With --ifile print stats at exit. No other output.\n"
-"--onlyaddr               Show only ICAO addresses (testing purposes).\n"
-"--metric                 Use metric units (meters, km/h, ...).\n"
-"--snip <level>           Strip IQ file removing samples < level.\n"
-"--debug <flags>          Debug mode (verbose), see README for details.\n"
-"--help                   Show this help.\n"
-"\n"
-"Debug mode flags: d = Log frames decoded with errors\n"
-"                  D = Log frames decoded with zero errors\n"
-"                  c = Log frames with bad CRC\n"
-"                  C = Log frames with good CRC\n"
-"                  p = Log frames with bad preamble\n"
-"                  n = Log network debugging info\n"
-"                  j = Log frames to frames.js, loadable by debug.html.\n"
-    );
-}

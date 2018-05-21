@@ -37,6 +37,9 @@
 #include	"responder.h"
 
 #include	"device-handler.h"
+#ifdef	__HAVE_RTLTCP__
+#include	"rtl_tcp-handler.h"
+#endif
 #ifdef	__HAVE_RTLSDR__
 #include	"rtlsdr-handler.h"
 #endif
@@ -56,16 +59,16 @@ deviceHandler	*theDevice = static_cast <deviceHandler *>(arg);
 }
 
 
-	qt1090::qt1090 (QSettings *dumpSettings, int32_t freq):
+	qt1090::qt1090 (QSettings *qt1090Settings, int32_t freq, bool network):
 	                                              QMainWindow (NULL) {
 int	i;
-	this	-> dumpSettings	= dumpSettings;
+	this	-> qt1090Settings	= qt1090Settings;
 
 	setupUi (this);
 
-	this	-> theDevice	= setDevice (freq);
-	httpPort	= dumpSettings	-> value ("http_port", 8080). toInt ();
-	bitstoShow	= dumpSettings	-> value ("bitstoShow", 16). toInt ();
+	this	-> theDevice	= setDevice (freq, network);
+	httpPort	= qt1090Settings	-> value ("http_port", 8080). toInt ();
+	bitstoShow	= qt1090Settings	-> value ("bitstoShow", 16). toInt ();
 	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
 	viewer		= new syncViewer (dumpview, bitstoShow);
@@ -105,8 +108,6 @@ int	i;
 //	connect the device
 	connect (theDevice, SIGNAL (dataAvailable (void)),
 	         this, SLOT (processData (void)));
-	connect (theDevice, SIGNAL (sendCount (int)),
-	         this, SLOT (showCount (int)));
 	connect (interactiveButton, SIGNAL (clicked (void)),
 	         this, SLOT (handle_interactiveButton (void)));
 	connect (errorhandlingCombo, SIGNAL (activated (const QString &)),
@@ -220,10 +221,13 @@ int	first, second;
 	   first	=  m [i];
 	   second	=  m [i + 1];
 
-           if ((0.85 * first <= second) && (second <= 1.15 * first)) {
-                /* Checking if two adjacent samples have the same magnitude
-                 * is an effective way to detect if it's just random noise
-                 * that was detected as a valid preamble. */
+           if (((0.85 * first <= second) && (second <= 1.15 * first)) ||
+               ((0.85 * second <= first) && (first <= 1.15 * second))) {
+/*
+ *	Checking if two adjacent samples have about the same magnitude
+ *	is an effective way to detect if it's just random noise
+ *	that was detected as a valid preamble.
+ */
                 bits [i / 2] = 2; /* error */
                 if (i < SHORT_MSG_BITS * 2)
                    errors++;
@@ -301,8 +305,8 @@ bool	phaseCorrected = false;
 	   if (correlation < 2 * avg_corr)
 	      continue;
 
-	   if (!(m [j]   > m [j + 1] &&
-	         m [j+1] < m [j+2] &&
+	   if (!(m [j]   > 1.5 * m [j + 1] &&
+	         1.5 * m [j+1] < m [j+2] &&
 	         m [j+2] > m [j+3] &&
 	         m [j+3] < m [j] &&
 	         m [j+4] < m [j] &&
@@ -560,11 +564,23 @@ void    qt1090::handleRequest (QHttpRequest *req,
 //
 //
 //	selecting a device
-deviceHandler	*qt1090::setDevice (int freq) {
+deviceHandler	*qt1090::setDevice (int freq, bool network) {
 deviceHandler	*inputDevice	= NULL;
+
+#ifdef	__HAVE_RTLTCP__
+	if (network) {
+	   try {
+	      inputDevice = new rtltcpHandler (qt1090Settings, freq);
+	      return inputDevice;
+	   } catch (int e) {
+	      fprintf (stderr, "no valid network connection, trying devices\n");
+	   }
+	}
+#endif
+	
 #ifdef	__HAVE_HACKRF__
 	try {
-	   inputDevice	= new hackrfHandler (dumpSettings, freq);
+	   inputDevice	= new hackrfHandler (qt1090Settings, freq);
 	   return inputDevice;
 	} catch (int e) {
 	   fprintf (stderr, "no hackrf detected, going on\n");
@@ -572,14 +588,14 @@ deviceHandler	*inputDevice	= NULL;
 #endif
 #ifdef	__HAVE_SDRPLAY__
 	try {
-	   inputDevice	= new sdrplayHandler (dumpSettings, freq);
+	   inputDevice	= new sdrplayHandler (qt1090Settings, freq);
 	   return inputDevice;
 	} catch (int e) {
 	   fprintf (stderr, "no sdrplay detected, going on\n");}
 #endif
 #ifdef	__HAVE_RTLSDR__
 	try {
-	   inputDevice	= new rtlsdrHandler (dumpSettings, freq);
+	   inputDevice	= new rtlsdrHandler (qt1090Settings, freq);
 	   return inputDevice;
 	} catch (int e) {
 	   fprintf (stderr, "no rtlsdr device detected, going on\n");
@@ -601,10 +617,7 @@ deviceHandler	*inputDevice	= NULL;
 	                               tr ("file not found"));
 	   return NULL;
 	}
-	return NULL;		// never used
-}
-
-void	qt1090::showCount	(int c) {
-	fprintf (stderr, "%d\n", c);
+	
+	return new  deviceHandler ();
 }
 

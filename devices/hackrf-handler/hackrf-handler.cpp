@@ -194,8 +194,6 @@ int	res;
 //	we use a static large buffer, rather than trying to allocate
 //	a buffer on the stack
 static int16_t buffer [32 * 32768];
-static	int64_t	sum	= 0;
-static	int	xount	= 0;
 static
 int	callback (hackrf_transfer *transfer) {
 hackrfHandler *ctx = static_cast <hackrfHandler *>(transfer -> rx_ctx);
@@ -208,13 +206,6 @@ RingBuffer<int16_t> * q = ctx -> _I_Buffer;
 	   int16_t im	= (int16_t)(((int8_t *)p) [2 * i + 1]);
 //	   buffer [i]	= sqrt (re * re + im * im);
 	   buffer [i]	= (re < 0 ? -re : re) + (im < 0 ? -im : im); 
-	   sum += buffer [i];
-	   if (++xount > 2000000) {
-	      ctx -> signaller (sum / 2000000);
-	      xount	= 0;
-	      sum	= 0;
-	   }
-	      
 	}
 	q	-> putDataIntoBuffer (buffer, transfer -> valid_length / 2);
 	if (q -> GetRingBufferReadAvailable () > 256000)
@@ -269,10 +260,6 @@ int32_t	hackrfHandler::Samples	(void) {
 
 void	hackrfHandler::signalData	(void) {
 	emit dataAvailable ();
-}
-
-void	hackrfHandler::signaller	(int d) {
-	emit sendCount	(d);
 }
 
 bool	hackrfHandler::load_hackrfFunctions (void) {

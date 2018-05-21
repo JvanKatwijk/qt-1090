@@ -47,6 +47,7 @@ edit qt-1090.pro to select your device(s) by commenting out or uncommenting
 	CONFIG  += sdrplay
 	CONFIG  += dabstick
 	CONFIG  += hackrf
+	CONFIG	+= rtl_tcp		// untested as yet
 
 Note that the software loads - in run time - the support library for the
 selected device. So, even if you do not have a device installed, you can
@@ -59,8 +60,6 @@ The steps to create an executable are
 
 the created qt-1090 executable is in ./linux-bin
 
-NOTE THAT THE CMAKE ROUTE IS OUTDATED AND DOES NOT WORK YET
-
 ---------------------------------------------------------------------------
 Devices
 ---------------------------------------------------------------------------
@@ -72,6 +71,9 @@ an attempt is made to open  the hackRF device, and if that fails
 an RTLSDR based device.
 If that fails, it is assumed that - since no devices are apparently connected -
 you want to read in a file, and a file selector will show.
+
+As a - yet - untested addition, a client for the rtl_tcp server is implemented.
+In order to select this, use a command line parameter "-n".
 
 ---------------------------------------------------------------------------
 Normal usage

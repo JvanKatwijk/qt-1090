@@ -43,7 +43,6 @@ virtual	int		getSamples	(int16_t *, int);
 virtual	int		Samples		(void);
 signals:
 	void		dataAvailable	(void);
-	void		sendCount	(int);
 };
 #endif
 

@@ -49,7 +49,7 @@ class	syncViewer;
 class	qt1090: public QMainWindow, private Ui_mainwindow {
 Q_OBJECT
 public:
-	qt1090		(QSettings *, int freq);
+	qt1090		(QSettings *, int freq, bool network);
 	~qt1090		(void);
 private:
 	void		finalize	(void);
@@ -58,17 +58,16 @@ private:
 	void		detectModeS	(uint16_t *m, uint32_t mlen);
 	void		update_view	(uint16_t *m, bool);
 	void		update_table	(int16_t, int);
-	deviceHandler	*setDevice	(int32_t);
+	deviceHandler	*setDevice	(int32_t, bool);
 	int		table [32];
 	QHttpServer	*httpServer;
 	QTimer		screenTimer;
 public slots:
-	void		showCount	(int);
 	void		processData	(void);
 private:
 	pthread_t	reader_thread;
 	deviceHandler	*theDevice;
-	QSettings	*dumpSettings;
+	QSettings	*qt1090Settings;
 	uint16_t	*magnitudeVector;
 	uint32_t	data_len;	/* Buffer length. */
 	int		httpPort;

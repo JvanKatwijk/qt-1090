@@ -51,6 +51,10 @@ if(DEFINED RTLSDR)
    set(RTLSDR true)
 endif ()
 
+if(DEFINED RTLTCP)
+   set(RTLTCP true)
+endif ()
+
 #########################################################################
         find_package (PkgConfig)
 	find_package (LSBId)
@@ -137,6 +141,34 @@ endif ()
 
 	 add_definitions (-D__HAVE_SDRPLAY__)
 	endif (SDRPLAY)
+
+	if (RTLTCP)
+	   set (${objectName}_UIS
+	        ${${objectName}_UIS}
+	        ./devices/rtltcp-handler/rtl_tcp-widget.ui
+	   )
+
+	   set (${objectName}_MOCS
+	        ${${objectName}_MOCS}
+	        ./devices/rtltcp-handler/rtl_tcp-handler.h
+	   )
+
+	   include_directories (
+	     ./devices/rtltcp-handler
+	   )
+
+	   set ($(objectName)_HDRS
+	        ${${objectName}_HDRS}
+	        ./devices/rtltcp-handler/rtl_tcp-handler.h
+           )
+
+	   set (${objectName}_SRCS
+	        ${${objectName}_SRCS}
+	        ./devices/rtltcp-handler/rtl_tcp-handler.cpp
+	   )
+
+	 add_definitions (-D__HAVE_RTLTCP__)
+	endif (RTLTCP)
 
 	if (RTLSDR)
 #	   find_package(LibRTLSDR)

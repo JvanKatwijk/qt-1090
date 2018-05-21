@@ -78,7 +78,6 @@ public:
 //	The buffer should be visible by the callback function
 	RingBuffer<int16_t>	*_I_Buffer;
 	void		signalData		(void);
-	void		signaller		(int);
 	hackrf_device	*theDevice;
 private:
 

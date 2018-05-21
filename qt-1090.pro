@@ -18,6 +18,7 @@ QMAKE_LFLAGS	+= -flto
 CONFIG	+= sdrplay
 CONFIG	+= dabstick
 CONFIG	+= hackrf
+CONFIG	+= rtl_tcp
 
 TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
 
@@ -127,7 +128,7 @@ sdrplay {
 	SOURCES		+= ./devices/sdrplay-handler/sdrplay-handler.cpp 
 	FORMS		+= ./devices/sdrplay-handler/sdrplay-widget.ui
 }
-
+#
 #	the HACKRF One
 #
 hackrf {
@@ -138,5 +139,16 @@ hackrf {
 	HEADERS		+= ./devices/hackrf-handler/hackrf-handler.h 
 	SOURCES		+= ./devices/hackrf-handler/hackrf-handler.cpp 
 	FORMS		+= ./devices/hackrf-handler/hackrf-widget.ui
+}
+#
+#	the rtl_tcp client
+#
+hackrf {
+	DEFINES		+= __HAVE_RTLTCP__
+	DEPENDPATH	+= ./devices/rtltcp-handler 
+	INCLUDEPATH	+= ./devices/rtltcp-handler 
+	HEADERS		+= ./devices/rtltcp-handler/rtl_tcp-handler.h 
+	SOURCES		+= ./devices/rtltcp-handler/rtl_tcp-handler.cpp 
+	FORMS		+= ./devices/rtltcp-handler/rtl_tcp-widget.ui
 }
 #
