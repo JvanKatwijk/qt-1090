@@ -134,7 +134,9 @@ uint32_t crc2;
  *	For more info: http://en.wikipedia.org/wiki/Gillham_code
  */
 	identity = computeIdentity (msg);
-/*	We recovered the message, mark the checksum as valid. */
+/*
+ *	We recovered the message, mark the checksum as valid.
+ */
 	if (msgtype != 11 && msgtype != 17) {
 	   crcok = bruteForceAP (msg);
 	}

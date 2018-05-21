@@ -40,6 +40,19 @@ current directory is the qt-1090 directory):
 * make
 * sudo make install
 
+--------------------------------------------------------------------------
+Issues with qhttpServer
+--------------------------------------------------------------------------
+
+I am looking at other http libraries, since qhttpServer lib
+gives some issues when cloding under windows.
+
+
+
+--------------------------------------------------------------------------
+Now constructing the executable
+--------------------------------------------------------------------------
+
 * cd ..			/* back in the qt-1090 directory
  
 edit qt-1090.pro to select your device(s) by commenting out or uncommenting
@@ -59,6 +72,10 @@ The steps to create an executable are
 * make
 
 the created qt-1090 executable is in ./linux-bin
+
+A CMakeLists.txt file is available in the source directory with which
+an executable can be created using cmake.
+However, one needs to have the http library installed.
 
 ---------------------------------------------------------------------------
 Devices

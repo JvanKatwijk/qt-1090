@@ -143,10 +143,25 @@ int	i;
 }
 
 void	qt1090::finalize	(void) {
+	net	= false;
+	if (httpServer != NULL) {
+	   disconnect	(httpServer,
+	                 SIGNAL (newRequest(QHttpRequest*, QHttpResponse*)),
+	                 this,
+	                 SLOT (handleRequest(QHttpRequest*, QHttpResponse*)));
+	   delete httpServer;
+	   fprintf (stderr, "httpServer is now quiet\n");
+	   httpPortLabel	-> setText ("   ");
+	   httpServer = NULL;
+	   stat_http_requests	= 0;
+	}
+
+	fprintf (stderr, "going to stop the input\n");
 	theDevice	-> stopDevice ();
 	screenTimer. stop ();
 	pthread_cancel (reader_thread);
 	pthread_join (reader_thread, NULL);
+	fprintf (stderr, "reader is quiet\n");
 }
 
 /* Return -1 if the message is out of fase left-side
@@ -453,11 +468,11 @@ void	qt1090::update_view (uint16_t *m, bool flag) {
 void	qt1090::closeEvent (QCloseEvent *event) {
         QMessageBox::StandardButton resultButton =
                         QMessageBox::question (this, "qt1090",
-                                               tr("Are you sure?\n"),
+                                               tr ("Are you sure?\n"),
                                                QMessageBox::No | QMessageBox::Yes,
                                                QMessageBox::Yes);
         if (resultButton != QMessageBox::Yes) {
-           event -> ignore();
+           event -> ignore ();
         } else {
            finalize ();
            event -> accept ();

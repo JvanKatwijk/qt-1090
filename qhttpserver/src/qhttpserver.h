@@ -62,7 +62,8 @@ public:
     /** @param parent Parent QObject for the server. */
     QHttpServer(QObject *parent = 0);
 
-    virtual ~QHttpServer();
+	~QHttpServer();
+//	virtual ~QHttpServer();
 
     /// Start the server by bounding to the given @c address and @c port.
     /** @note This function returns immediately, it does not block.

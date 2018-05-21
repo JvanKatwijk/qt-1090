@@ -28,7 +28,7 @@
 #include "qhttpserver.h"
 #include "qhttpconnection.h"
 
-QHttpResponse::QHttpResponse(QHttpConnection *connection)
+QHttpResponse::QHttpResponse (QHttpConnection *connection)
     // TODO: parent child relation
     : QObject(0),
       m_connection(connection),

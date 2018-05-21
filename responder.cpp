@@ -56,6 +56,9 @@
 	   sendMap (response);
 }
 
+Responder::~Responder (void) {
+}
+
 #include	<fstream>
 
 int getFileSize (const char * fileName) {
@@ -108,8 +111,5 @@ QString	body;
 	                       "application/json;charset=utf-8");
 	response -> writeHead (200);
 	response -> end (body. toUtf8 ());
-}
-
-Responder::~Responder (void) {
 }
 

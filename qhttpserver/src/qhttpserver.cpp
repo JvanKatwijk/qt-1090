@@ -31,8 +31,8 @@
 
 QHash<int, QString> STATUS_CODES;
 
-QHttpServer::QHttpServer(QObject *parent) : QObject(parent), m_tcpServer(0)
-{
+QHttpServer::QHttpServer(QObject *parent) : QObject(parent),
+	m_tcpServer(0) {
 #define STATUS_CODE(num, reason) STATUS_CODES.insert(num, reason);
     // {{{
     STATUS_CODE(100, "Continue")
@@ -90,8 +90,8 @@ QHttpServer::QHttpServer(QObject *parent) : QObject(parent), m_tcpServer(0)
     // }}}
 }
 
-QHttpServer::~QHttpServer()
-{
+QHttpServer::~QHttpServer() {
+	fprintf (stderr, "now stopping qhttpServer\n");
 }
 
 void QHttpServer::newConnection()

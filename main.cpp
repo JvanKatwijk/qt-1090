@@ -122,7 +122,7 @@ bool	network		= false;
 	fflush (stdout);
 	fflush (stderr);
 	qDebug ("It is done\n");
-	delete MyRadioInterface;
+//	delete MyRadioInterface;
 	delete dumpSettings;
 }
 
