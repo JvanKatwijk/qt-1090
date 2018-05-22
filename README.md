@@ -45,7 +45,7 @@ Issues with qhttpServer
 --------------------------------------------------------------------------
 
 I am looking at other http libraries, since qhttpServer lib
-gives some issues when cloding under windows.
+gives some issues when closing under windows.
 
 
 
