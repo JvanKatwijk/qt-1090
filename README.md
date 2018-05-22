@@ -24,13 +24,26 @@ including the current version of the qt-1090 software.
 Installation is by - obviously - downloading the zipped folder
 unzipping and selecting the program to run.
 
+--------------------------------------------------------------------------
+Issues with qhttpServer under Windows
+--------------------------------------------------------------------------
+
+I am looking at other http libraries, since qhttpServer lib
+might give some issues when closing under windows.
+
 -----------------------------------------------------------------------------
 Installation under Linux
 -----------------------------------------------------------------------------
 
-First of all, you should have C++ and Qt5 installed.
+Step 1 is of course downloading the sourcetree
+
+* git clone https://githib.com/JvanKatwijk/qt-1090
+
+To compile, you should have C++ and Qt5 installed.
 The current version of qt-1090 uses the qhttpserver library,
 the sources of this library are included in the source tree.
+
+Step 2 is creating the qhttpserver library
 
 Creating a  qhttpserver library and installing (assuming the
 current directory is the qt-1090 directory):
@@ -40,18 +53,7 @@ current directory is the qt-1090 directory):
 * make
 * sudo make install
 
---------------------------------------------------------------------------
-Issues with qhttpServer
---------------------------------------------------------------------------
-
-I am looking at other http libraries, since qhttpServer lib
-gives some issues when cloding under windows.
-
-
-
---------------------------------------------------------------------------
-Now constructing the executable
---------------------------------------------------------------------------
+Step 3 is configuring the executable 
 
 * cd ..			/* back in the qt-1090 directory
  
@@ -66,7 +68,7 @@ Note that the software loads - in run time - the support library for the
 selected device. So, even if you do not have a device installed, you can
 select it for inclusion in the configuration.
 
-The steps to create an executable are
+Step 4 is running qmake/make
 
 * qmake-qt5
 * make
@@ -84,7 +86,7 @@ Devices
 Support can be configured for SDRplay, RTLSDR based
 devices and  the hackrf one. If all devices are configured, the
 software will first attempt to open the SDRplay, if that fails,
-an attempt is made to open  the hackRF device, and if that fails
+an attempt is made to open the hackRF device, and if that fails
 an RTLSDR based device.
 If that fails, it is assumed that - since no devices are apparently connected -
 you want to read in a file, and a file selector will show.
@@ -108,6 +110,21 @@ allowing you to select a file with the extension ".iq".
 If a device  is found and initialized, a widget for the
 control of the device appears. Depending on the device,
 device parameters, such as gain, autogain and ppm offset can be set.
+
+----------------------------------------------------------------------------
+Command line parameters and ini file settings
+----------------------------------------------------------------------------
+
+with -f xxxx another frequency can be selected
+with -n a choice is made for an input from an rtl_tcp server
+
+Next to command line parameters, a few configuration parameters can be
+set in the ini file (.qt-1090.ini, a file in the home directory)
+
+ * the http_port, default 8080, can be set by setting "http_port=xxxx"
+ * the amount of bits to be shown in the display can be set by "bitstoShow=x"
+
+Note that (a) each bit takes two samples, and (b), the first 16 samples, the preamble, are always shown.
 
 ----------------------------------------------------------------------------
 File input
