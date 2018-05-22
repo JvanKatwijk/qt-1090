@@ -91,6 +91,8 @@ public:
 //	Interactive mode */
 	aircraft	*aircrafts;
 	long long interactive_last_update;  /* Last screen update in milliseconds */
+	void            sendMap         (QHttpResponse *);
+        void            sendPlaneData   (QHttpResponse *, aircraft *);
 
 //	Statistics */
 public:

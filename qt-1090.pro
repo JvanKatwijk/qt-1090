@@ -41,8 +41,7 @@ HEADERS += ./xclose.h \
            ./message-handling.h \
            ./device-handler.h \
            ./devices/file-handler/file-handler.h \
-           ./syncviewer.h \
-	   ./responder.h
+           ./syncviewer.h 
 
 FORMS	+= ./qt-1090.ui
 
@@ -55,8 +54,7 @@ SOURCES += ./xclose.cpp   \
            ./message-handling.cpp   \
            ./device-handler.cpp   \
            ./devices/file-handler/file-handler.cpp   \
-           ./syncviewer.cpp \
-	   ./responder.cpp
+           ./syncviewer.cpp 
 #
 # for windows32 we use:
 win32 {

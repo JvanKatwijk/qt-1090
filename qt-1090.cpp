@@ -34,7 +34,6 @@
 #include	"icao-cache.h"
 #include	"xclose.h"
 #include	"syncviewer.h"
-#include	"responder.h"
 
 #include	"device-handler.h"
 #ifdef	__HAVE_RTLTCP__
@@ -76,6 +75,7 @@ int	i;
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;
 	net		= false;
+	httpServer	= NULL;
 	metric		= false;
 	interactive	= false;
 	interactive_ttl	= INTERACTIVE_TTL;
@@ -145,6 +145,7 @@ int	i;
 void	qt1090::finalize	(void) {
 	net	= false;
 	if (httpServer != NULL) {
+	   httpServer	-> close ();
 	   disconnect	(httpServer,
 	                 SIGNAL (newRequest(QHttpRequest*, QHttpResponse*)),
 	                 this,
@@ -486,31 +487,31 @@ void	qt1090::handle_interactiveButton (void) {
 void	qt1090::handle_httpButton (void) {
 	net	= !net;
 	if (net) {
-	   httpServer		= new QHttpServer (this);
+	   httpServer	= new QHttpServer (this);
+	   httpServer -> listen (QHostAddress::Any, httpPort);
 	   connect	(httpServer,
 	                 SIGNAL (newRequest (QHttpRequest*, QHttpResponse*)),
 	                 this,
 	                 SLOT (handleRequest (QHttpRequest*, QHttpResponse*)));
-           httpServer -> listen (QHostAddress::Any, httpPort);
 	   QString text = "port ";
 	   text. append (QString:: number (httpPort));
-	   
 	   stat_http_requests	= 0;
 	   httpPortLabel -> setText (text);
+	   httpButton	-> setText ("http on");
 	}
 	else 
 	if (httpServer != NULL) {
+	   httpServer	-> close ();
 	   disconnect	(httpServer,
 	                 SIGNAL (newRequest(QHttpRequest*, QHttpResponse*)),
 	                 this,
 	                 SLOT (handleRequest(QHttpRequest*, QHttpResponse*)));
-	   delete httpServer;
 	   httpPortLabel	-> setText ("   ");
-	   httpServer = NULL;
+	   httpButton	-> setText ("http off");
 	   stat_http_requests	= 0;
+	   delete httpServer;
+	   httpServer	= NULL;
 	}
-
-	httpButton -> setText (net ? "http on" : "http off");
 }
 
 void	qt1090::set_ttl	(int l) {
@@ -568,14 +569,74 @@ void	qt1090::handle_show_preamblesButton (void) {
 	show_preambles	= !show_preambles;
 }
 
-void    qt1090::handleRequest (QHttpRequest *req,
-	                       QHttpResponse *resp) {
-        if (req -> methodString () != "HTTP_GET")
+void    qt1090::handleRequest (QHttpRequest *request,
+	                       QHttpResponse *response) {
+        if (request -> methodString () != "HTTP_GET")
 	   return;
 	
 	stat_http_requests ++;
-        (void)new Responder (req, resp, this -> aircrafts);
+
+	if (request -> path () == "/data.json")
+	   sendPlaneData (response, aircrafts);
+	else
+	if (request -> path () == "/")
+	   sendMap (response);
 }
+
+#include	<fstream>
+
+int getFileSize (const char * fileName) {
+std::ifstream file (fileName, std::ifstream::in | std::ifstream::binary);
+
+	if (!file. is_open()) {
+	   return -1;
+	}
+
+	file. seekg (0, std::ios::end);
+	int fileSize = file. tellg ();
+	file.close();
+
+	return fileSize;
+}
+
+void	qt1090::sendMap (QHttpResponse *response) {
+FILE	*fd;
+char	*body;
+int	fileSize	= getFileSize ("gmap.html");
+	
+	if (fileSize != -1) {
+	   fd = fopen ("gmap.html", "r");
+	   body = new char [fileSize];
+	   if (fread (body, 1, fileSize, fd) < fileSize) {
+	      (void)snprintf (body, fileSize,
+                              "Error reading from file: %s",
+                                                      strerror(errno));
+	   }
+	   fclose (fd);
+	}
+	else {
+	   body = new char [512];
+	   (void) snprintf (body, 512,
+                           "Error opening HTML file: %s", strerror(errno));
+	}
+
+	response -> setHeader ("Content-Type", "text/html");
+	response -> writeHead (200);
+	response -> end (body);
+	delete[] body;
+}
+
+void	qt1090::sendPlaneData (QHttpResponse *response,
+	                          aircraft *planeList) {
+QString	body;
+
+	body	= aircraftsToJson (planeList);	
+	response -> setHeader ("Content-Type",
+	                       "application/json;charset=utf-8");
+	response -> writeHead (200);
+	response -> end (body. toUtf8 ());
+}
+
 //
 //
 //	selecting a device
