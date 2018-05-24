@@ -172,7 +172,7 @@
    <widget class="QPushButton" name="interactiveButton">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>230</y>
       <width>88</width>
       <height>31</height>
@@ -185,7 +185,7 @@
    <widget class="QPushButton" name="httpButton">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>190</x>
       <y>230</y>
       <width>88</width>
       <height>31</height>
@@ -201,7 +201,7 @@
    <widget class="QSpinBox" name="ttl_selector">
     <property name="geometry">
      <rect>
-      <x>110</x>
+      <x>100</x>
       <y>230</y>
       <width>96</width>
       <height>31</height>
@@ -211,7 +211,7 @@
    <widget class="QComboBox" name="errorhandlingCombo">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>370</x>
       <y>230</y>
       <width>131</width>
       <height>31</height>
@@ -227,21 +227,21 @@
     </item>
     <item>
      <property name="text">
-      <string>normal correction</string>
+      <string>1 bit correction</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>strong correction</string>
+      <string>2 bit correction</string>
      </property>
     </item>
    </widget>
    <widget class="QPushButton" name="show_preamblesButton">
     <property name="geometry">
      <rect>
-      <x>610</x>
+      <x>600</x>
       <y>230</y>
-      <width>121</width>
+      <width>131</width>
       <height>31</height>
      </rect>
     </property>
@@ -284,7 +284,7 @@
    <widget class="QPushButton" name="metricButton">
     <property name="geometry">
      <rect>
-      <x>510</x>
+      <x>500</x>
       <y>230</y>
       <width>101</width>
       <height>31</height>
@@ -534,14 +534,30 @@
    <widget class="QLabel" name="httpPortLabel">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>280</x>
       <y>230</y>
-      <width>81</width>
+      <width>91</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="dumpButton">
+    <property name="geometry">
+     <rect>
+      <x>597</x>
+      <y>380</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The planes, the data of which is more or less complete, can be recorded in a file. Two data are recorded,&lt;/p&gt;&lt;p&gt;the time of entry in the system - with parameters position and height - and the time the system lost sight&lt;/p&gt;&lt;p&gt;on the plane - with the last known parameters position and height.&lt;/p&gt;&lt;p&gt;Touching the button causes a file selection menu to appear, after selecting a file the file is created and&lt;/p&gt;&lt;p&gt;data - as described above - will be written to the file until tge button is touched again.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="text">
+     <string>dump </string>
     </property>
    </widget>
   </widget>

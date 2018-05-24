@@ -39,8 +39,8 @@ class	message;
 /* Structure used to describe an aircraft in iteractive mode. */
 class aircraft {
 public:
-	aircraft	(uint32_t);
-	~aircraft	(void);
+	aircraft		(uint32_t);
+	~aircraft		(void);
 	uint32_t addr;      /* ICAO address */
 	char hexaddr[7];    /* Printable ICAO address */
 	char flight[9];     /* Flight number */
@@ -62,11 +62,16 @@ public:
 	void    fillData	(message *mm);
 	void	decodeCPR	(void);
 	void	showPlane	(bool metric, time_t now);
+	void	showPlaneonExit	(FILE *);
 	QString	toJson		(void);
+//
+	time_t	entryTime;
+	double	lat_in, lon_in;
+	int	altitude_in;
 };
 
 aircraft *interactiveReceiveData	(aircraft *, message *);
-aircraft *removeStaleAircrafts		(aircraft *, int);
+aircraft *removeStaleAircrafts		(aircraft *, int, FILE *);
 void	showPlanes			(aircraft *, bool);
 QString	aircraftsToJson			(aircraft *);
 #endif

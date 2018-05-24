@@ -191,6 +191,10 @@ intensive;
 * e	a push button switching between metrics and non metrics data in interactive mode;
 * f	a push button switching between "all preambles shown" and "preambles with good crc" shown. The distinction is in the color, green is "crc ok".
 
+The bottom line contains a button "dump", pushing this button causes
+some data to be written onto a file. This data described the entry and
+exit points of planes in the system.
+
 ----------------------------------------------------------------------------
 Using google maps
 ----------------------------------------------------------------------------

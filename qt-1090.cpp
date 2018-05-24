@@ -79,14 +79,15 @@ int	i;
 	metric		= false;
 	interactive	= false;
 	interactive_ttl	= INTERACTIVE_TTL;
+	dumpfilePointer	= NULL;
 
 //	Allocate the "working" vector
-	data_len = DATA_LEN + (FULL_LEN - 1) * 4;
+	data_len	= DATA_LEN + (FULL_LEN - 1) * 4;
 	magnitudeVector	= new uint16_t [data_len / 2];
 
 //	Allocate the ICAO address cache.
 	icao_cache	= new icaoCache	();
-	aircrafts	= NULL;
+	planeList	= NULL;
 	interactive_last_update = 0;
 
 	screenTimer. setInterval (2000);
@@ -121,6 +122,8 @@ int	i;
 	connect (show_preamblesButton, SIGNAL (clicked (void)),
 		 this, SLOT (handle_show_preamblesButton (void)));
 
+	connect (dumpButton, SIGNAL (clicked (void)),
+	         this, SLOT (handle_dumpButton (void)));
 	pthread_create (&reader_thread,
 	                NULL,
 	                readerThreadEntryPoint,
@@ -423,7 +426,7 @@ bool	phaseCorrected = false;
  *	interface is enabled.
  */
 	      if (interactive || stat_http_requests > 0) 
-	         aircrafts = interactiveReceiveData (aircrafts, &mm);
+	         planeList = interactiveReceiveData (planeList, &mm);
 /*
  *	In non-interactive way, display messages on standard output.
  */
@@ -454,9 +457,11 @@ int16_t lbuf [DATA_LEN / 2];
 //
 //	Timer driven
 void	qt1090::updateScreen (void) {
-	   aircrafts	= removeStaleAircrafts (aircrafts, interactive_ttl);
+	   planeList	= removeStaleAircrafts (planeList,
+	                                        interactive_ttl,
+	                                        dumpfilePointer);
 	   if (interactive) 
-	      showPlanes (aircrafts, metric);
+	      showPlanes (planeList, metric);
 }
 //
 ///////////////////////////////////////////////////////////////////////
@@ -527,7 +532,7 @@ void	qt1090::handle_errorhandlingCombo (const QString &s) {
 	if (s == "no correction")
 	   handle_errors =  NO_ERRORFIX;
 	else
-	if (s == "normal correction")
+	if (s == "1 bit correction")
 	   handle_errors = NORMAL_ERRORFIX;
 	else
 	   handle_errors = STRONG_ERRORFIX;
@@ -577,7 +582,7 @@ void    qt1090::handleRequest (QHttpRequest *request,
 	stat_http_requests ++;
 
 	if (request -> path () == "/data.json")
-	   sendPlaneData (response, aircrafts);
+	   sendPlaneData (response, planeList);
 	else
 	if (request -> path () == "/")
 	   sendMap (response);
@@ -697,3 +702,23 @@ deviceHandler	*inputDevice	= NULL;
 	return new  deviceHandler ();
 }
 
+void	qt1090::handle_dumpButton (void) {
+
+	if (dumpfilePointer != 0) {
+	   fclose (dumpfilePointer);
+	   dumpfilePointer	= NULL;
+	   dumpButton	-> setText ("dump");
+	   return;
+	}
+
+	QString file = QFileDialog::getSaveFileName (this,
+	                                             tr ("Open file ..."),
+	                                             QDir::homePath (),
+	                                             tr ("txt data (*.txt)"));
+	file		= QDir::toNativeSeparators (file);
+	dumpfilePointer	= fopen (file. toLatin1 (). data (), "w");
+	if (dumpfilePointer != NULL)
+	   dumpButton	-> setText ("dumping");
+}
+
+	

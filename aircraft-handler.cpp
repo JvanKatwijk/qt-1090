@@ -142,6 +142,10 @@ double cprDlonFunction (double lat, int isodd) {
 	seen		= time (NULL);
 	messages	= 0;
 	next		= NULL;
+	entryTime	= time (NULL);
+	lon_in		= 0.0;
+	lat_in		= 0.0;
+	altitude_in	= 0;
 }
 
 	aircraft::~aircraft (void) {}
@@ -217,6 +221,8 @@ void	aircraft::fillData (message *mm) {
 
 	if (mm -> msgtype == 0 ||
 	    mm -> msgtype == 4 || mm -> msgtype == 20) {
+	   if (this -> altitude_in == 0)
+	      this -> altitude_in = mm -> altitude;
 	   this -> altitude = mm -> altitude;
 	}
 	else
@@ -241,6 +247,10 @@ void	aircraft::fillData (message *mm) {
 //	the position.
 	      if (abs (this -> even_cprtime - this -> odd_cprtime) <= 10000) {
 	         decodeCPR ();
+	         if ((lat_in == 0) || (lon_in == 0)) {
+	           lat_in = lat;
+	           lon_in = lon;
+	         }
 	      }
 	   }	
 	   else
@@ -311,7 +321,8 @@ double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
 /* When in interactive mode If we don't receive new nessages within
  * wtime seconds we remove the aircraft from the list.
  */
-aircraft *removeStaleAircrafts (aircraft *list, int wtime) {
+aircraft *removeStaleAircrafts (aircraft *list,
+	                        int wtime, FILE *dumpfilePointer) {
 aircraft *currentPlane = list;
 aircraft *prev = NULL;
 time_t now = time(NULL);
@@ -321,7 +332,12 @@ time_t now = time(NULL);
 	      aircraft *next = currentPlane -> next;
 //	Remove the element from the linked list, be careful
 //	when removing the first element. */
+	      if ((currentPlane -> lon_in != 0) &&
+	          (currentPlane -> lat_in != 0)) 
+	         currentPlane -> showPlaneonExit (dumpfilePointer);
+	                 
 	      delete currentPlane;
+	   
 	      if (prev == NULL)
 	         list = next;
 	      else
@@ -350,13 +366,20 @@ int speed	= this -> speed;
 	        lat, lon, track, messages, (int)(now - seen));
 }
 
+void	aircraft:: showPlaneonExit (FILE *dumpfilePointer) {
+	if (dumpfilePointer != NULL) {
+	   std::string time_in	= ctime (&entryTime);
+	   const time_t currentTime = time (NULL);
+	   std::string time_out = ctime (&currentTime);
+	   fprintf (dumpfilePointer,
+	            "Plane  %-6s %-8s \n", hexaddr, flight);
+	   fprintf (dumpfilePointer, "%-9d %-7.03f %-7.03f  entered at %s",
+	            altitude_in, lat_in, lon_in, time_in. c_str ());
+	   fprintf (dumpfilePointer, "%-9d %-7.03f %-7.03f  left at %s \n",
+	            altitude, lat, lon, time_out. c_str ());
+	}
+}
 
-//static
-//int     getTermRows (void) {
-//        struct winsize w;
-//        ioctl (STDOUT_FILENO, TIOCGWINSZ, &w);
-//        return w. ws_row;
-//}
 
 #include	<stdlib.h>
 
@@ -393,7 +416,6 @@ int count = 0;
 	   count++;
 	}
 }
-
 
 QString	aircraft::toJson (void) {
 char buf [512];

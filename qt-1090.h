@@ -35,6 +35,7 @@
 #include	<QMessageBox>
 #include	<QCloseEvent>
 #include	<QTimer>
+#include	<stdio.h>
 #include	"qhttpserverfwd.h"
 #include	<qhttpserver.h>
 #include	<qhttprequest.h>
@@ -81,6 +82,7 @@ private:
 	int		correlationCounter;
 	bool		show_preambles;
 	int		bitstoShow;
+	FILE		*dumpfilePointer;
 public:
 	icaoCache	*icao_cache;
 	bool		check_crc;	/* Only display messages with good CRC. */
@@ -89,7 +91,7 @@ public:
 	int		debug;		/* Debugging mode. */
 
 //	Interactive mode */
-	aircraft	*aircrafts;
+	aircraft	*planeList;
 	long long interactive_last_update;  /* Last screen update in milliseconds */
 	void            sendMap         (QHttpResponse *);
         void            sendPlaneData   (QHttpResponse *, aircraft *);
@@ -114,7 +116,7 @@ private slots:
 	void	handleRequest		(QHttpRequest *,
 	                                        QHttpResponse *);
 	void	updateScreen		(void);
-
+	void	handle_dumpButton	(void);
 };
 
 #endif
