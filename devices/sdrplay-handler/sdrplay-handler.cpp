@@ -41,11 +41,9 @@ int16_t localBuf [numSamples];
 	NOTUSED (fsChanged);
 	NOTUSED (reset);
 //
-	for (i = 0; i < numSamples; i ++) {
+	for (i = 0; i < numSamples; i ++) 
 	   localBuf [i] = (xi [i] < 0 ? -xi [i] : xi [i]) +
 	                            (xq [i] < 0 ? -xq [i] : xq [i]);
-//	   localBuf [i] /= 8;
-	}
 //
 //	if we have a buffer filled, signal the receiving thread
 	st -> _I_Buffer -> putDataIntoBuffer (localBuf, numSamples);

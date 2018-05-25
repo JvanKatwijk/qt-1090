@@ -121,7 +121,6 @@ int	i;
 	         this, SLOT (handle_metricButton (void)));
 	connect (show_preamblesButton, SIGNAL (clicked (void)),
 		 this, SLOT (handle_show_preamblesButton (void)));
-
 	connect (dumpButton, SIGNAL (clicked (void)),
 	         this, SLOT (handle_dumpButton (void)));
 	pthread_create (&reader_thread,
@@ -267,17 +266,12 @@ int	first, second;
  *	Every detected Mode S message is convert it into a
  *	stream of bits and passed to the function to display it.
  */
-static int correlationVector [] = {
-	   20, 1, 20, 1, 1, 1, 1, 20, 1, 20, 1, 1, 1, 1};
-
-static float avgValue	= 0;
 
 void	qt1090::detectModeS (uint16_t *m, uint32_t mlen) {
 uint8_t bits	[LONG_MSG_BITS];
 uint8_t	msg 	[LONG_MSG_BITS / 8];
 uint16_t aux 	[LONG_MSG_BITS * 2];
 uint32_t j, k;
-double	correlation;
 int	high;
 bool	phaseCorrected = false;
 /*
@@ -307,27 +301,10 @@ bool	phaseCorrected = false;
 	for (j = 0; j < mlen - FULL_LEN * 2; j++) {
 	   int i, errors;
 //
-//
-//	The question here is whether or not to match with a
-//	correlation, 
-	   correlation = 0;
-	   for (k = 0; k < 14; k ++) 
-	      correlation += correlationVector [k] * m [j + k];
-
-	   avgValue	= 0.9999 * avgValue + 0.0001 * m[j];
-	   avg_corr = 0.99999 * avg_corr + 0.00001 * correlation;
-	   if (correlationCounter < 100000) {
-	      correlationCounter ++;
-	      continue;
-	   }
-
-	   if (correlation < 2 * avg_corr)
-	      continue;
-
 	   if (!(m [j]   > 1.5 * m [j + 1] &&
-	         1.5 * m [j+1] < m [j+2] &&
-	         m [j+2] > m [j+3] &&
-	         m [j+3] < m [j] &&
+	         m [j]   > 1.5 * m [j + 3] &&
+	         m [j + 2] > 1.5 * m [j + 1] &&
+	         m [j + 2] > 1.5 * m [j + 3] &&
 	         m [j+4] < m [j] &&
 	         m [j+5] < m [j] &&
 	         m [j+6] < m [j] &&

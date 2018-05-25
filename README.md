@@ -10,7 +10,7 @@ is equipped with a simple GUI.
 ![qt-1090 ](/screenshot-qt-1090.png?raw=true)
 
 
-Note that the current version is 0.7: while it is running, it
+The current version is 0.7: while it is running, it
 is still an experimental version.
 
 =============================================================================
@@ -160,15 +160,15 @@ pulses. Each pulse has a length of 0.5 micro seconds,
 	*      4.5 - 5   usec: last impulse.
 
 
-The display on the GUI shows samples comprising a preamble (with on the
+The display on the GUI shows samples from a preamble (with on the
 X axis -16 .. 0, and a user specified amount of samples from the accompanying
-message. 
-In normal use, the bars on the display are green, indicating that the message
+message.)
+
+In normal use, only green bars are shown, indicating that the message
 these values were taken from passed a CRC check. Switching the pushbutton
 labeled "preambles" causes all messages, passing some elementary checks
 on the preamble, to be shown. In that case the bars are green for a message
 passing the CRC check, red otherwise,
-
 
 The amount of bits of the message shown is default 16, it can be changed by
 setting the value for "bitstoShow" in the ini file. This ini file is to be
@@ -193,13 +193,27 @@ intensive;
 
 The bottom line contains a button "dump", pushing this button causes
 some data to be written onto a file. This data described the entry and
-exit points of planes in the system.
+exit points of planes in the system, data as given below
+
+	Plane  4951cc TAP764
+	36975     52.036  3.960    entered at Fri May 25 16:50:30 2018
+	37000     52.289  4.084    left at Fri May 25 16:53:45 2018
+	
+	Plane  484188
+	20300     51.719  4.497    entered at Fri May 25 16:50:50 2018
+	21725     51.553  4.403    left at Fri May 25 16:54:19 2018
+	
+	Plane  484557 KLM19P
+	14900     51.964  4.753    entered at Fri May 25 16:50:33 2018
+	18100     51.953  4.749    left at Fri May 25 16:55:01 2018
+	
 
 ----------------------------------------------------------------------------
-Using google maps
+Showing planes on google maps
 ----------------------------------------------------------------------------
 
-On pressing the button to switch on http, 
+On pressing the button to switch on http, a browser can display the planes
+on a map, listening to a designated  port.
 The HTTP server assumes that the file "gmap.html" is stored in the same
 directory where the qt-1090 program resides. Note that the browser should
 listen to the port specified in the field next to that button.

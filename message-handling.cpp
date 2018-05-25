@@ -110,8 +110,8 @@ uint32_t crc2;
 	aa3 = msg [3];
 
 /*	DF 17 type (assuming this is a DF17, otherwise not used) */
-	metype = msg [4] >> 3;   /* Extended squitter message type. */
-	mesub  = msg [4] & 7;     /* Extended squitter message subtype. */
+	metype = msg [4] >> 3;	/* Extended squitter message type. */
+	mesub  = msg [4] & 7;	/* Extended squitter message subtype. */
 
 /*	Fields for DF4,5,20,21 */
 	fs = msg [0] & 7;        /* Flight status for DF4,5,20,21 */
@@ -175,13 +175,15 @@ void	message::displayMessage (bool check_crc) {
 int j;
 
 //	Show the raw message. */
-	printf ("*");
+	fprintf (stdout, "*");
 	for (j = 0; j < msgbits / 8; j++)
-	   printf ("%02x", msg [j]);
-	printf (";\n");
+	   fprintf (stdout, "%02x", msg [j]);
+	time_t t = time (NULL);
+	const char *s = ctime (&t);
+	fprintf (stdout, "; received at %s\n", s);
 //
 //	and its "interpretation"
-	printf ("CRC: %06x (%s)\n", (int)crc, crcok ? "ok" : "wrong");
+	fprintf (stdout, "CRC: %06x (%s)\n", (int)crc, crcok ? "ok" : "wrong");
 	if (errorbit != -1)
 	   printf("Single bit error fixed, bit %d\n", errorbit);
 
@@ -199,12 +201,11 @@ int j;
 	} else
 	if (msgtype == 17) {
 	   print_msgtype_17 ();
-	} else {
-	   if (check_crc)
-	      printf ("DF %d with good CRC received "
+	} else 
+	if (check_crc)
+	   fprintf (stdout, "DF %d with good CRC received "
 	              "(decoding still not implemented).\n",
 	              msgtype);
-	}
 }
 
 /************************************************************************
@@ -373,23 +374,23 @@ const char *ais_charset =
         /* DF 0 */
 void	message::print_msgtype_0 (void) {
 	if (msgtype == 0) {
-	   printf("DF 0: Short Air-Air Surveillance.\n");
-	   printf("  Altitude       : %d %s\n", altitude,
+	   fprintf (stdout, "DF 0: Short Air-Air Surveillance.\n");
+	   fprintf (stdout, "  Altitude       : %d %s\n", altitude,
 	           (unit == UNIT_METERS) ? "meters" : "feet");
-	   printf ("  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
+	   fprintf (stdout, "  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
 	}
 }
 
 void	message::print_msgtype_4_20 (void) {
 	if (msgtype == 4 || msgtype == 20) {
-	   printf ("DF %d: %s, Altitude Reply.\n", msgtype,
+	   fprintf (stdout, "DF %d: %s, Altitude Reply.\n", msgtype,
 	                  (msgtype == 4) ? "Surveillance" : "Comm-B");
-	   printf ("  Flight Status  : %s\n", fs_str [fs]);
-	   printf ("  DR             : %d\n", dr);
-	   printf ("  UM             : %d\n", um);
-           printf ("  Altitude       : %d %s\n", altitude,
+	   fprintf (stdout, "  Flight Status  : %s\n", fs_str [fs]);
+	   fprintf (stdout, "  DR             : %d\n", dr);
+	   fprintf (stdout, "  UM             : %d\n", um);
+           fprintf (stdout, "  Altitude       : %d %s\n", altitude,
 	                (unit == UNIT_METERS) ? "meters" : "feet");
-	   printf ("  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
+	   fprintf (stdout, "  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
 	   if (msgtype == 20) {
 //	TODO: 56 bits DF20 MB additional field. */
 	   }
@@ -398,13 +399,13 @@ void	message::print_msgtype_4_20 (void) {
 
 void	message::print_msgtype_5_21 (void) {
 	if (msgtype == 5 || msgtype == 21) {
-	   printf ("DF %d: %s, Identity Reply.\n", msgtype,
+	   fprintf (stdout, "DF %d: %s, Identity Reply.\n", msgtype,
 	                     (msgtype == 5) ? "Surveillance" : "Comm-B");
-	   printf ("  Flight Status  : %s\n", fs_str [fs]);
-	   printf ("  DR             : %d\n", dr);
-	   printf ("  UM             : %d\n", um);
-	   printf ("  Squawk         : %d\n", identity);
-	   printf ("  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
+	   fprintf (stdout, "  Flight Status  : %s\n", fs_str [fs]);
+	   fprintf (stdout, "  DR             : %d\n", dr);
+	   fprintf (stdout, "  UM             : %d\n", um);
+	   fprintf (stdout, "  Squawk         : %d\n", identity);
+	   fprintf (stdout, "  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
 
 	   if (msgtype == 21) {
 //	TODO: 56 bits DF21 MB additional field. */
@@ -415,61 +416,61 @@ void	message::print_msgtype_5_21 (void) {
 //	DF 11 */
 void	message::print_msgtype_11 (void) {
 	if (msgtype == 11) {
-	   printf ("DF 11: All Call Reply.\n");
-	   printf ("  Capability  : %s\n", ca_str [ca]);
-	   printf ("  ICAO Address: %02x%02x%02x\n", aa1, aa2, aa3);
+	   fprintf (stdout, "DF 11: All Call Reply.\n");
+	   fprintf (stdout, "  Capability  : %s\n", ca_str [ca]);
+	   fprintf (stdout, "  ICAO Address: %02x%02x%02x\n", aa1, aa2, aa3);
 	}
 }
 
 //	DF 17 */
 void	message::print_msgtype_17 (void) {
 	if (msgtype == 17) {
-	   printf ("DF 17: ADS-B message.\n");
-	   printf ("  Capability     : %d (%s)\n", ca, ca_str [ca]);
-	   printf ("  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
-	   printf ("  Extended Squitter  Type: %d\n", metype);
-	   printf ("  Extended Squitter  Sub : %d\n", mesub);
-	   printf ("  Extended Squitter  Name: %s\n",
+	   fprintf (stdout, "DF 17: ADS-B message.\n");
+	   fprintf (stdout, "  Capability     : %d (%s)\n", ca, ca_str [ca]);
+	   fprintf (stdout, "  ICAO Address   : %02x%02x%02x\n", aa1, aa2, aa3);
+	   fprintf (stdout, "  Extended Squitter  Type: %d\n", metype);
+	   fprintf (stdout, "  Extended Squitter  Sub : %d\n", mesub);
+	   fprintf (stdout, "  Extended Squitter  Name: %s\n",
 	                        getMEDescription (metype, mesub));
 
 //	Decode the extended squitter message. */
 	   if (metype >= 1 && metype <= 4) {
 //	Aircraft identification. */
-	      const char *ac_type_str[4] = {
+	      const char *ac_type_str [4] = {
 	                               "Aircraft Type D",
 	                               "Aircraft Type C",
 	                               "Aircraft Type B",
 	                               "Aircraft Type A"
 	      };
 
-	      printf ("    Aircraft Type  : %s\n",
+	      fprintf (stdout, "    Aircraft Type  : %s\n",
 	                           ac_type_str [aircraft_type]);
-	      printf ("    Identification : %s\n", flight);
+	      fprintf (stdout, "    Identification : %s\n", flight);
 	   } else
 	   if (metype >= 9 && metype <= 18) {
-	      printf ("    F flag   : %s\n", fflag ? "odd" : "even");
-	      printf ("    T flag   : %s\n", tflag ? "UTC" : "non-UTC");
-	      printf ("    Altitude : %d feet\n", altitude);
-	      printf ("    Latitude : %d (not decoded)\n", raw_latitude);
-	      printf ("    Longitude: %d (not decoded)\n", raw_longitude);
+	      fprintf (stdout, "    F flag   : %s\n", fflag ? "odd" : "even");
+	      fprintf (stdout, "    T flag   : %s\n", tflag ? "UTC" : "non-UTC");
+	      fprintf (stdout, "    Altitude : %d feet\n", altitude);
+	      fprintf (stdout, "    Latitude : %d (not decoded)\n", raw_latitude);
+	      fprintf (stdout, "    Longitude: %d (not decoded)\n", raw_longitude);
 	   } else
 	   if (metype == 19 && mesub >= 1 && mesub <= 4) {
 	      if (mesub == 1 || mesub == 2) {
 //	Velocity */
-                printf ("    EW direction      : %d\n", ew_dir);
-                printf ("    EW velocity       : %d\n", ew_velocity);
-                printf ("    NS direction      : %d\n", ns_dir);
-                printf ("    NS velocity       : %d\n", ns_velocity);
-                printf ("    Vertical rate src : %d\n", vert_rate_source);
-                printf ("    Vertical rate sign: %d\n", vert_rate_sign);
-                printf ("    Vertical rate     : %d\n", vert_rate);
+                fprintf (stdout, "    EW direction      : %d\n", ew_dir);
+                fprintf (stdout, "    EW velocity       : %d\n", ew_velocity);
+                fprintf (stdout, "    NS direction      : %d\n", ns_dir);
+                fprintf (stdout, "    NS velocity       : %d\n", ns_velocity);
+                fprintf (stdout, "    Vertical rate src : %d\n", vert_rate_source);
+                fprintf (stdout, "    Vertical rate sign: %d\n", vert_rate_sign);
+                fprintf (stdout, "    Vertical rate     : %d\n", vert_rate);
 	      } else
 	      if (mesub == 3 || mesub == 4) {
-	         printf ("    Heading status: %d", heading_is_valid);
-	         printf ("    Heading: %d", heading);
+	         fprintf (stdout, "    Heading status: %d", heading_is_valid);
+	         fprintf (stdout, "    Heading: %d", heading);
 	      }
 	   } else {
-	      printf("    Unrecognized ME type: %d subtype: %d\n", 
+	      fprintf (stdout, "    Unrecognized ME type: %d subtype: %d\n", 
 	                                   metype, mesub);
 	   }
 	} 
