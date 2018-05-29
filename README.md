@@ -9,13 +9,17 @@ it supports SDRplay devices, RTLSDR devices and HACKRF One, and
 is equipped with a simple GUI.
 
 ![qt-1090 ](/qt-1090-1.png?raw=true)
+the display shows the preamble and the first 16 bits as appearing
+in the incoming signal of a recognized message.
 
 ![qt-1090 ](/qt-1090-2.png?raw=true)
+the display shows the last few incoming (recognized) messages
 
 ---------------------------------------------------------------------------
 
-The current version is 0.8: while it is running, it
-is still an experimental version and does not have its final functionality.
+The current version is 0.8: while it is definitely running, it
+is still an experimental version and does not have all of 
+its final functionality.
 
 ----------------------------------------------------------------------------
 
