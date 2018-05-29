@@ -13,8 +13,10 @@ is equipped with a simple GUI.
 ![qt-1090 ](/qt-1090-2.png?raw=true)
 
 ---------------------------------------------------------------------------
+
 The current version is 0.8: while it is running, it
 is still an experimental version and does not have its final functionality.
+
 ----------------------------------------------------------------------------
 
 ============================================================================
