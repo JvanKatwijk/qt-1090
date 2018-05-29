@@ -84,7 +84,6 @@ virtual void    run (void) {
 int j;
 int	deviceCount;
 int	deviceIndex;
-char vendor[256], product[256], serial[256];
 
 	this	-> freq		= freq;
 	workerHandle		= NULL;
@@ -170,7 +169,7 @@ char vendor[256], product[256], serial[256];
 	this -> rtlsdr_set_tuner_gain_mode (theDevice, 1);
 
 	this -> rtlsdr_set_center_freq (theDevice, freq);
-	this -> rtlsdr_set_sample_rate (theDevice, 2000000);
+	this -> rtlsdr_set_sample_rate (theDevice, 2400000);
 	this -> rtlsdr_reset_buffer    (theDevice);
 	_I_Buffer		= new RingBuffer<int16_t> (32 * 32768);
 //

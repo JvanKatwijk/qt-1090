@@ -39,9 +39,10 @@
 
 class syncViewer {
 public:
-	syncViewer	(QwtPlot *, uint16_t);
+	syncViewer	(QwtPlot *);
         ~syncViewer	(void);
-void    Display		(uint16_t *, bool);
+void    Display_1	(uint16_t *, int);
+void    Display_2	(uint16_t *, int);
 private:
         QwtPlot         *plotgrid;
         uint16_t        displaySize;
@@ -50,10 +51,6 @@ private:
         QwtPlotMarker   *Marker;
 	QBrush          *greenBrush;
 	QBrush          *redBrush;
-	double		*X_AXIS;
-	double		*Y_AXIS;
-	int		samplestoShow;
-	int		bitstoShow;
 };
 
 #endif

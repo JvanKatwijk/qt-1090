@@ -22,18 +22,12 @@
  */
 
 #include	"syncviewer.h"
+#include	<QBrush>
 
-
-	syncViewer::syncViewer (QwtPlot		*plot,
-	                        uint16_t	bitstoShow) {
+	syncViewer::syncViewer (QwtPlot		*plot) {
         plotgrid	= plot;
-	this	-> bitstoShow	= bitstoShow;
-	samplestoShow	= 16 + 2 * bitstoShow;
-        displaySize	= 8 * samplestoShow;
 	plotgrid	-> setCanvasBackground (Qt::black);
 	grid		= new QwtPlotGrid;
-	X_AXIS		= new double [displaySize];
-	Y_AXIS		= new double [displaySize];
 #if defined QWT_VERSION && ((QWT_VERSION >> 8) < 0x0601)
 	grid	-> setMajPen (QPen(Qt::white, 0, Qt::DotLine));
 #else
@@ -60,35 +54,95 @@
         SpectrumCurve   -> attach (plotgrid);
 }
 
+double	x_buffer [2048];
+double	y_buffer [2048];
+
 	syncViewer::~syncViewer (void) {
 }
 
-void	syncViewer::Display (uint16_t *mag, bool flag) {
-int i, j;
-double mmax	= 0;
+void	syncViewer::Display_2 (uint16_t *mag, int length) {
+int	i;
+int	mmax	= 0;
 
-	for (i = 0; i < 16 + 104; i ++)
+	memmove (y_buffer, &y_buffer [length + 50],
+	                          (1024 - (length + 50)) * sizeof (double));
+
+	for (i = 0; i < 1024; i ++)
+	   x_buffer [i] = i;
+	for (i = 0; i < 50; i ++)
+	   y_buffer [1024 - 1 - length - 50 + i] = 0;
+
+	for (i = 0; i < length; i ++)
 	   if (mag [i] > mmax)
 	      mmax = mag [i];
 
-	SpectrumCurve -> setPen (flag ? QPen (Qt::green) : QPen (Qt::red));
-        SpectrumCurve   -> setBrush (flag ? *greenBrush : *redBrush);
-	for (i = -16; i < 2 * bitstoShow; i ++) {
-	   for (j = 0; j < 8; j ++) {
-	      X_AXIS [8 * (i + 16) + j] = (float)i  + (float)j / 8;
-	      Y_AXIS [8 * (i + 16) + j] = mag [16 + i] / mmax * 100;
-	   }
-	}
+	for (i = 0; i < length; i ++)
+	   y_buffer [1024 - 1 - length + i] = mag [i] * 100 / mmax;
 
+	SpectrumCurve -> setPen (QPen (Qt::white));
+        SpectrumCurve   -> setBrush (Qt::NoBrush);
+	plotgrid        -> setAxisScale (QwtPlot::xBottom,
+                                         (double)x_buffer [0],
+                                         x_buffer [1024 - 2]);
+        plotgrid        -> enableAxis (QwtPlot::xBottom);
+        plotgrid        -> setAxisScale (QwtPlot::yLeft, 0, 100);
+
+	y_buffer [0]	= 0;
+	y_buffer [1024 - 2] = 0;
+	SpectrumCurve	-> setSamples (x_buffer, y_buffer, 1024 - 1);
+	plotgrid	-> replot ();
+}
+//
+//	show the samples of the prefix of a message, including the preamble
+void	syncViewer::Display_1 (uint16_t *mag, int bitstoShow) {
+int i, j;
+double mmax	= 0;
+double samples [16 + 2 * bitstoShow];
+int	phase	= 5;
+int	displaySize	= 16 + 2 * bitstoShow;
+double X_AXIS [displaySize * 8];
+double Y_AXIS [displaySize * 8];
+int	incr	= 1;
+//
+//	we have 6 samples on 2.4M for 5 periods of 0.5 usec
+
+	for (i = 0; i < 16 + 2 * bitstoShow; i += 5) {
+	   samples [i + 0] = 5 * mag [i + 0 + incr] / 6 +
+	                     1 * mag [i + 1 + incr] / 6;
+	   samples [i + 1] = 4 * mag [i + 1 + incr] / 6 +
+	                     2 * mag [i + 1 + incr + 1] / 6;
+	   samples [i + 2] = 3 * mag [i + 2 + incr] / 6 +
+	                     3 * mag [i + 2 + incr + 1] / 6;
+	   samples [i + 3] = 2 * mag [i + 3 + incr] / 6 +
+	                     4 * mag [i + 3 + incr + 1] / 6;
+	   samples [i + 4] = 1 * mag [i + 4 + incr] / 6 +
+	                     5 * mag [i + 4 + incr + 1] / 6;
+	   incr ++;
+	}
+	
+
+	for (i = 0; i < 16 + 2 * bitstoShow; i ++)
+	   if (samples [i] > mmax)
+	      mmax = samples [i];
+
+	for (i = -16; i < 2 * bitstoShow; i ++) {
+           for (j = 0; j < 8; j ++) {
+              X_AXIS [8 * (i + 16) + j] = (float)i  + (float)j / 8;
+              Y_AXIS [8 * (i + 16) + j] = samples [16 + i] / mmax * 100;
+           }
+        }
+
+	SpectrumCurve -> setPen (QPen (Qt::green));
+        SpectrumCurve   -> setBrush (*greenBrush);
 	plotgrid        -> setAxisScale (QwtPlot::xBottom,
                                          (double)X_AXIS [0],
-                                         X_AXIS [displaySize - 2]);
+                                         X_AXIS [displaySize * 8 - 2]);
         plotgrid        -> enableAxis (QwtPlot::xBottom);
         plotgrid        -> setAxisScale (QwtPlot::yLeft, 0, 100);
 
 	Y_AXIS [0]	= 0;
-	Y_AXIS [displaySize - 2] = 0;
-	SpectrumCurve	-> setSamples (X_AXIS, Y_AXIS, displaySize - 1);
+	Y_AXIS [displaySize * 8 - 2] = 0;
+	SpectrumCurve	-> setSamples (X_AXIS, Y_AXIS, displaySize * 8 - 1);
 	plotgrid	-> replot ();
 }
 

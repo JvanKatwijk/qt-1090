@@ -57,7 +57,6 @@ private:
 	void		closeEvent	(QCloseEvent *event);
 	int		decodeBits	(uint8_t *bits, uint16_t *m);
 	void		detectModeS	(uint16_t *m, uint32_t mlen);
-	void		update_view	(uint16_t *m, bool);
 	void		update_table	(int16_t, int);
 	deviceHandler	*setDevice	(int32_t, bool);
 	int		table [32];
@@ -73,14 +72,11 @@ private:
 	uint32_t	data_len;	/* Buffer length. */
 	int		httpPort;
 	syncViewer	*viewer;
-
+	bool		singleView;
 //	Configuration */
 	bool		net;		/* Enable networking. */
 	bool		interactive;	/* Interactive mode */
 	bool		metric;		/* Use metric units. */
-	double		avg_corr;
-	int		correlationCounter;
-	bool		show_preambles;
 	int		bitstoShow;
 	FILE		*dumpfilePointer;
 public:
@@ -111,12 +107,12 @@ private slots:
 	void	handle_errorhandlingCombo	(const QString &);
 	void	handle_httpButton	(void);
 	void	set_ttl			(int);
-	void	handle_show_preamblesButton (void);
 	void	handle_metricButton	(void);
 	void	handleRequest		(QHttpRequest *,
 	                                        QHttpResponse *);
 	void	updateScreen		(void);
 	void	handle_dumpButton	(void);
+	void	handle_viewButton	(void);
 };
 
 #endif

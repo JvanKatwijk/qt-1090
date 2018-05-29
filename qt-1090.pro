@@ -14,6 +14,8 @@ CONFIG		+= console
 QMAKE_CFLAGS	+= -g
 QMAKE_CXXFLAGS	+= -g
 QMAKE_LFLAGS	+= -g
+RC_ICONS        =  qt-1090.ico
+RESOURCES       += resources.qrc
 
 CONFIG	+= sdrplay
 CONFIG	+= dabstick

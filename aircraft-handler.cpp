@@ -246,11 +246,18 @@ void	aircraft::fillData (message *mm) {
 //	If the two data is less than 10 seconds apart, compute
 //	the position.
 	      if (abs (this -> even_cprtime - this -> odd_cprtime) <= 10000) {
-	         decodeCPR ();
+	         double newLat, newLon;
+	         decodeCPR (&newLat, &newLon);
 	         if ((lat_in == 0) || (lon_in == 0)) {
 	           lat_in = lat;
 	           lon_in = lon;
 	         }
+//	later on, we add here a check that the new position seems
+//	reasonable
+//	         fprintf (stderr, "new position (%f %f) vs (%f %f)\n",
+//	                                 newLat, newLon, lat, lon);
+	         lat	= newLat;
+	         lon	= newLon;
 	      }
 	   }	
 	   else
@@ -273,7 +280,7 @@ void	aircraft::fillData (message *mm) {
  *    simplicity. This may provide a position that is less fresh of a few
  *    seconds.
  */
-void	aircraft::decodeCPR (void) {
+void	aircraft::decodeCPR (double *newLat, double *newLon) {
 const double AirDlat0 = 360.0 / 60;
 const double AirDlat1 = 360.0 / 59;
 double lat0 = even_cprlat;
@@ -301,21 +308,21 @@ double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
 	   int ni = cprNFunction (rlat0, 0);
 	   int m = floor ((((lon0 * (cprNLFunction (rlat0) - 1)) -
                         (lon1 * cprNLFunction (rlat0))) / 131072) + 0.5);
-	   lon = cprDlonFunction (rlat0, 0) *
+	   *newLon = cprDlonFunction (rlat0, 0) *
 	                      (cprModFunction (m, ni) + lon0 / 131072);
-	   lat = rlat0;
+	   *newLat = rlat0;
 	}
 	else {		/* Use odd packet. */
 	   int ni = cprNFunction (rlat1,1);
 	   int m = floor ((((lon0 * (cprNLFunction (rlat1) - 1)) -
 	                   (lon1 * cprNLFunction (rlat1))) / 131072.0) + 0.5);
-	   lon = cprDlonFunction (rlat1, 1) *
+	   *newLon = cprDlonFunction (rlat1, 1) *
 	                           (cprModFunction (m, ni) + lon1 / 131072);
-	   lat = rlat1;
+	   *newLat = rlat1;
 	}
 
-	if (lon > 180)
-	   lon -= 360;
+	if (*newLon > 180)
+	   *newLon -= 360;
 }
 
 /* When in interactive mode If we don't receive new nessages within
@@ -419,9 +426,8 @@ int count = 0;
 
 QString	aircraft::toJson (void) {
 char buf [512];
-int	l;
 
-	l = snprintf (buf, 512,
+	(void)snprintf (buf, 512,
 	              "{\"hex\":\"%s\", \"flight\":\"%s\", \"lat\":%f, "
 	              "\"lon\":%f, \"altitude\":%d, \"track\":%d, "
 	              "\"speed\":%d},\n",

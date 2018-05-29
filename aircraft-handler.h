@@ -60,7 +60,7 @@ public:
 	long long odd_cprtime, even_cprtime;
 	aircraft *next;		/* Next aircraft in our linked list. */
 	void    fillData	(message *mm);
-	void	decodeCPR	(void);
+	void	decodeCPR	(double *, double *);
 	void	showPlane	(bool metric, time_t now);
 	void	showPlaneonExit	(FILE *);
 	QString	toJson		(void);

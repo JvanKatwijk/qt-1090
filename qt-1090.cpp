@@ -3,6 +3,10 @@
  *      qt-1090 is based on and contains source code from dump1090
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
  *      all rights acknowledged.
+ *	
+ *	The demodulation code is based on
+ *	demod_2400.c: 2.4MHz Mode S demodulator.
+ *	 Copyright (c) 2014,2015 Oliver Jowett <oliver@mutability.co.uk>
  *
  *	qt-1090 Copyright (C) 2018
  *	Jan van Katwijk (J.vanKatwijk@gmail.com)
@@ -66,12 +70,12 @@ int	i;
 	setupUi (this);
 
 	this	-> theDevice	= setDevice (freq, network);
-	httpPort	= qt1090Settings	-> value ("http_port", 8080). toInt ();
-	bitstoShow	= qt1090Settings	-> value ("bitstoShow", 16). toInt ();
+	httpPort	= qt1090Settings -> value ("http_port", 8080). toInt ();
+	bitstoShow      = qt1090Settings -> value ("bitstoShow", 16). toInt ();
+
 	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
-	viewer		= new syncViewer (dumpview, bitstoShow);
-	show_preambles	= false;
+	viewer		= new syncViewer (dumpview);
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;
 	net		= false;
@@ -81,6 +85,7 @@ int	i;
 	interactive_ttl	= INTERACTIVE_TTL;
 	dumpfilePointer	= NULL;
 
+	singleView	= true;
 //	Allocate the "working" vector
 	data_len	= DATA_LEN + (FULL_LEN - 1) * 4;
 	magnitudeVector	= new uint16_t [data_len / 2];
@@ -119,16 +124,14 @@ int	i;
 	         this, SLOT (set_ttl (int)));
 	connect (metricButton, SIGNAL (clicked (void)),
 	         this, SLOT (handle_metricButton (void)));
-	connect (show_preamblesButton, SIGNAL (clicked (void)),
-		 this, SLOT (handle_show_preamblesButton (void)));
 	connect (dumpButton, SIGNAL (clicked (void)),
 	         this, SLOT (handle_dumpButton (void)));
+	connect (viewButton, SIGNAL (clicked (void)),
+	         this, SLOT (handle_viewButton (void)));
 	pthread_create (&reader_thread,
 	                NULL,
 	                readerThreadEntryPoint,
 	                (void *)(theDevice));
-	avg_corr		= 0;
-	correlationCounter	= 0;
 //	display the version
         QString v = "qt-1090 -" + QString (CURRENT_VERSION);
         QString versionText = "qt-1090 version: " + QString(CURRENT_VERSION);
@@ -167,99 +170,6 @@ void	qt1090::finalize	(void) {
 	fprintf (stderr, "reader is quiet\n");
 }
 
-/* Return -1 if the message is out of fase left-side
- * Return  1 if the message is out of fase right-size
- * Return  0 if the message is not particularly out of phase.
- *
- * Note: this function will access m [-1], so the caller should make sure to
- * call it only if we are not at the start of the current buffer.
- */
-int	detectOutOfPhase (uint16_t *m, int offset) {
-	if (m [offset + 3 ] > m [offset + 2] / 3) return 1;
-	if (m [offset + 10] > m [offset + 9] / 3) return 1;
-	if (m [offset + 6 ] > m [offset + 7] / 3) return -1;
-	if (m [offset - 1 ] > m [offset + 0] / 3) return -1;
-	return 0;
-}
-
-/*
- *	This function does not really correct the phase of the message,
- *	it just applies a transformation to the first sample
- *	representing a given bit:
- *
- *	If the previous bit was one, we amplify it a bit.
- *	If the previous bit was zero, we decrease it a bit.
- *
- *	This simple transformation makes the message a bit more likely to be
- *	correctly decoded for out of phase messages:
- *
- *	When messages are out of phase there is more uncertainty in
- *	sequences of the same bit multiple times, since 11111 will be
- *	transmitted as continuously altering magnitude (high, low, high, low...)
- * 
- *	However because the message is out of phase some part of the high
- *	is mixed in the low part, so that it is hard to distinguish if it is
- *	a zero or a one.
- *
- *	However when the message is out of phase, passing from 0 to 1 or from
- *	1 to 0 happens in a very recognizable way, for instance in the 0 -> 1
- *	transition, magnitude goes low, high, high, low, and one of of the
- *	two middle samples the high will be *very* high as part of the previous
- *	or next high signal will be mixed there.
- *
- *	Applying our simple transformation we make more likely if the current
- *	bit is a zero, to detect another zero. Symmetrically if it is a one
- *	it will be more likely to detect a one because of the transformation.
- *	In this way similar levels will be interpreted more likely in the
- *	correct way.
- */
-void applyPhaseCorrection (uint16_t *m, int offset) {
-int j;
-
-	offset += 16; /* Skip preamble. */
-	for (j = 0; j < (LONG_MSG_BITS-1) * 2; j += 2) {
-	   if (m [offset + j] > m [offset + j + 1]) {
-            /* One */
-	      m [offset + j + 2] = (m [offset + j + 2] * 5) / 4;
-	   } else {
-	    /* Zero */
-	      m [offset + j + 2] = (m [offset + j + 2] * 4) / 5;
-	   }
-	}
-}
-
-//	Decode all the next 112 bits, regardless of the actual message
-//	size, we do not know the actual size yet.
-int	qt1090::decodeBits (uint8_t *bits, uint16_t *m) {
-int	errors = 0;
-int	i;
-int	first, second;
-
-	for (i = 0; i < LONG_MSG_BITS * 2; i += 2) {
-	   first	=  m [i];
-	   second	=  m [i + 1];
-
-           if (((0.85 * first <= second) && (second <= 1.15 * first)) ||
-               ((0.85 * second <= first) && (first <= 1.15 * second))) {
-/*
- *	Checking if two adjacent samples have about the same magnitude
- *	is an effective way to detect if it's just random noise
- *	that was detected as a valid preamble.
- */
-                bits [i / 2] = 2; /* error */
-                if (i < SHORT_MSG_BITS * 2)
-                   errors++;
-	   } else
-	   if (first > second) {
-	      bits [i / 2] = 1;
-	   } else {
-//	(first < second) for exclusion  */
-	      bits [i / 2] = 0;
-	   }
-        }
-	return errors;
-}
-
 /*
  *	Detect a Mode S messages inside the magnitude buffer pointed
  *	by 'm' and of size 'mlen' bytes.
@@ -267,13 +177,49 @@ int	first, second;
  *	stream of bits and passed to the function to display it.
  */
 
+
+static inline int slice_phase0(uint16_t *m) {
+    return 5 * m[0] - 3 * m[1] - 2 * m[2];
+}
+static inline int slice_phase1(uint16_t *m) {
+    return 4 * m[0] - m[1] - 3 * m[2];
+}
+static inline int slice_phase2(uint16_t *m) {
+    return 3 * m[0] + m[1] - 4 * m[2];
+}
+static inline int slice_phase3(uint16_t *m) {
+    return 2 * m[0] + 3 * m[1] - 5 * m[2];
+}
+static inline int slice_phase4(uint16_t *m) {
+    return m[0] + 5 * m[1] - 5 * m[2] - m[3];
+}
+
+//	2.4MHz sampling rate version
+//
+//	When sampling at 2.4MHz we have exactly 6 samples per 5 symbols.
+//	Each symbol is 500ns wide, each sample is 416.7ns wide
+//
+//	We maintain a phase offset that is expressed in units of
+//	1/5 of a sample i.e. 1/6 of a symbol, 83.333ns
+//	Each symbol we process advances the phase offset by
+//	6 i.e. 6/5 of a sample, 500ns
+//
+//	The correlation functions above correlate a 1-0 pair
+//	of symbols (i.e. manchester encoded 1 bit)
+//	starting at the given sample, and assuming that
+//	the symbol starts at a fixed 0-5 phase offset within
+//	m[0].
+//	They return a correlation value, generally
+//	interpreted as >0 = 1 bit, <0 = 0 bit
+//
+//	TODO check if there are better (or more balanced)
+//	correlation functions to use here
+//
+
 void	qt1090::detectModeS (uint16_t *m, uint32_t mlen) {
-uint8_t bits	[LONG_MSG_BITS];
 uint8_t	msg 	[LONG_MSG_BITS / 8];
-uint16_t aux 	[LONG_MSG_BITS * 2];
-uint32_t j, k;
-int	high;
-bool	phaseCorrected = false;
+
+uint32_t j;
 /*
  *	The Mode S preamble is made of impulses of 0.5 microseconds at
  *	the following time offsets:
@@ -282,10 +228,6 @@ bool	phaseCorrected = false;
  *	1.0 - 1.5 usec: second impulse.
  *	3.5 - 4   usec: third impulse.
  *	4.5 - 5   usec: last impulse.
- * 
- *	Since we are sampling at 2 Mhz every sample in our magnitude vector
- *	is 0.5 usec, so the preamble will look like this, assuming there is
- *	an impulse at offset 0 in the array:
  *
  *	0   -----------------
  *	1   -
@@ -298,121 +240,282 @@ bool	phaseCorrected = false;
  *	8   --
  *	9   -------------------
  */
-	for (j = 0; j < mlen - FULL_LEN * 2; j++) {
-	   int i, errors;
+	for (j = 0; j < mlen; j++) {
+	   uint16_t *preamble = &m [j];
+	   int high;
+	   uint32_t base_signal, base_noise;
+	   int try_phase;
+
+//	Look for a message starting at around sample 0 with phase offset 3..7
+//	Ideal sample values for preambles with different phase
+//	Xn is the first data symbol with phase offset N
 //
-	   if (!(m [j]   > 1.5 * m [j + 1] &&
-	         m [j]   > 1.5 * m [j + 3] &&
-	         m [j + 2] > 1.5 * m [j + 1] &&
-	         m [j + 2] > 1.5 * m [j + 3] &&
-	         m [j+4] < m [j] &&
-	         m [j+5] < m [j] &&
-	         m [j+6] < m [j] &&
-	         m [j+7] > m [j+8] &&
-	         m [j+8] < m [j+9] &&
-	         m [j+9] > m [j+6]))
+//	sample#: 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
+//	phase 3: 2/4\0/5\1 0 0 0 0/5\1/3 3\0 0 0 0 0 0 X4
+//	phase 4: 1/5\0/4\2 0 0 0 0/4\2 2/4\0 0 0 0 0 0 0 X0
+//	phase 5: 0/5\1/3 3\0 0 0 0/3 3\1/5\0 0 0 0 0 0 0 X1
+//	phase 6: 0/4\2 2/4\0 0 0 0 2/4\0/5\1 0 0 0 0 0 0 X2
+//	phase 7: 0/3 3\1/5\0 0 0 0 1/5\0/4\2 0 0 0 0 0 0 X3
+//
+        
+//	quick check: we must have a rising edge 0->1 and a falling edge 12->13
+	   if (!(preamble [0]  < preamble [1] &&
+	         preamble [12] > preamble [13]) )
+              continue;
+
+	   if (preamble [1] > preamble [2] &&                   // 1
+	       preamble [2] < preamble [3] &&
+	                        preamble [3] > preamble [4] &&  // 3
+	       preamble [8] < preamble [9] &&
+	                        preamble[9] > preamble[10] &&   // 9
+	       preamble [10] < preamble [11]) {                 // 11-12
+//	peaks at 1,3,9,11-12: phase 3
+	      high = (preamble [1] + preamble [3] +
+	              preamble[9] + preamble [11] + preamble[12]) / 4;
+	      base_signal	= preamble[1] + preamble[3] + preamble[9];
+	      base_noise	= preamble[5] + preamble[6] + preamble[7];
+	   } else
+	   if (preamble [1] > preamble[2] &&                       // 1
+	       preamble [2] < preamble[3] &&
+	                   preamble[3] > preamble[4] &&  // 3
+	       preamble [8] < preamble[9] &&
+	                   preamble[9] > preamble[10] && // 9
+	       preamble [11] < preamble [12]) {                     // 12
+//	peaks at 1,3,9,12: phase 4
+	      high = (preamble [1] + preamble [3] +
+	                 preamble [9] + preamble [12]) / 4;
+	      base_signal = preamble [1] + preamble [3] +
+	                          preamble [9] + preamble [12];
+	      base_noise  = preamble [5] + preamble [6] +
+	                          preamble [7] + preamble [8];
+	   } else
+	   if (preamble [1] > preamble [2] &&                        // 1
+	       preamble [2] < preamble [3] &&
+	                          preamble[4] > preamble[5] && // 3-4
+	       preamble [8] < preamble [9] &&
+	                          preamble[10] > preamble[11] && // 9-10
+	       preamble [11] < preamble[12]) {                    // 12
+//	peaks at 1,3-4,9-10,12: phase 5
+	      high = (preamble [1] + preamble [3] +
+	              preamble [4] + preamble [9] +
+	                      preamble [10] + preamble [12]) / 4;
+	      base_signal	= preamble [1] + preamble [12];
+	      base_noise	= preamble [6] + preamble [7];
+	   } else
+	   if (preamble[1] > preamble[2] &&            // 1
+	       preamble[3] < preamble[4] &&
+	       preamble[4] > preamble[5] &&            // 4
+	       preamble[9] < preamble[10] &&
+	       preamble[10] > preamble[11] &&          // 10
+	       preamble[11] < preamble[12]) {          // 12
+//	peaks at 1,4,10,12: phase 6
+	      high = (preamble[1] + preamble[4] +
+	                      preamble [10] + preamble [12]) / 4;
+	      base_signal = preamble [1] + preamble [4] +
+	                      preamble [10] + preamble [12];
+	      base_noise = preamble [5] + preamble [6] +
+	                      preamble [7] + preamble [8];
+	   } else
+	   if (preamble [2] > preamble [3] &&            // 1-2
+	       preamble [3] < preamble [4] &&
+	               preamble [4] > preamble [5] &&    // 4
+	       preamble [9] < preamble [10] &&
+	               preamble[10] > preamble[11] &&    // 10
+	       preamble [11] < preamble [12]) {          // 12
+//	peaks at 1-2,4,10,12: phase 7
+	      high = (preamble [1] + preamble [2] +
+	                preamble [4] + preamble [10] + preamble [12]) / 4;
+	      base_signal = preamble [4] + preamble [10] + preamble [12];
+	      base_noise = preamble[6] + preamble[7] + preamble[8];
+	   } else {
+//	no suitable peaks
+	      continue;
+	   }
+
+// Check for enough signal
+	   if (base_signal * 2 < 8 * base_noise) // about 3.5dB SNR
 	      continue;
 
-	   high = (m [j] + m [j + 2] + m [j + 7] + m [j + 9]) / 6;
-	   if (m [j + 4] >= high || m [j + 5] >= high)
+//	Check that the "quiet" bits 6,7,15,16,17 are actually quiet
+	   if (preamble [5] >= high / 2 ||
+               preamble [6] >= high / 2 ||
+               preamble [7] >= high / 2 ||
+               preamble [8] >= high / 2 ||
+               preamble [14] >= high / 2 ||
+               preamble [15] >= high / 2 ||
+               preamble [16] >= high / 2 ||
+               preamble [17] >= high / 2 ||
+               preamble [18] >= high / 2) {
 	      continue;
-	   if (m [j + 11] >= high ||
-	       m [j + 12] >= high ||
-               m [j + 13] >= high ||
-	       m [j + 14] >= high)
-	      continue;
+	   }
 
 	
-	   errors = decodeBits (bits, &m [j + PREAMBLE_US * 2]);
-	   if (errors > 0) {
-	      memcpy (aux, &m [j + PREAMBLE_US * 2], sizeof(aux));
-              if (detectOutOfPhase (m, j)) {
-	         applyPhaseCorrection (m, j);
-	         phaseCorrected = true;
+//	try phases until we find a good crc (if any)
+
+	   validPreambles -> display ((int)stat_valid_preamble ++);
+	   for (try_phase = 4; try_phase <= 8; ++try_phase) {
+	   int msgType;
+	   uint16_t *pPtr;
+           int phase, i, bytelen;
+
+	      pPtr = &m [j + 19] + (try_phase / 5);
+	      phase = try_phase % 5;
+
+	      bytelen = LONG_MSG_BITS / 8;
+	      for (i = 0; i < bytelen; ++i) {
+              uint8_t theByte = 0;
+
+                 switch (phase) {
+	            case 0:
+	               theByte = 
+	                  (slice_phase0 (pPtr) > 0 ? 0x80 : 0) |
+	                  (slice_phase2 (pPtr+2) > 0 ? 0x40 : 0) |
+	                  (slice_phase4 (pPtr+4) > 0 ? 0x20 : 0) |
+	                  (slice_phase1 (pPtr+7) > 0 ? 0x10 : 0) |
+	                  (slice_phase3 (pPtr+9) > 0 ? 0x08 : 0) |
+	                  (slice_phase0 (pPtr+12) > 0 ? 0x04 : 0) |
+	                  (slice_phase2 (pPtr+14) > 0 ? 0x02 : 0) |
+	                  (slice_phase4 (pPtr+16) > 0 ? 0x01 : 0);
+
+	                phase = 1;
+	                pPtr += 19;
+	                break;
+                    
+	             case 1:
+	                theByte =
+	                   (slice_phase1 (pPtr) > 0 ? 0x80 : 0) |
+	                   (slice_phase3 (pPtr+2) > 0 ? 0x40 : 0) |
+	                   (slice_phase0 (pPtr+5) > 0 ? 0x20 : 0) |
+	                   (slice_phase2 (pPtr+7) > 0 ? 0x10 : 0) |
+	                   (slice_phase4 (pPtr+9) > 0 ? 0x08 : 0) |
+	                   (slice_phase1 (pPtr+12) > 0 ? 0x04 : 0) |
+	                   (slice_phase3 (pPtr+14) > 0 ? 0x02 : 0) |
+	                   (slice_phase0 (pPtr+17) > 0 ? 0x01 : 0);
+
+	                phase = 2;
+	                pPtr += 19;
+	                break;
+
+	             case 2:
+	                theByte =
+	                   (slice_phase2 (pPtr) > 0 ? 0x80 : 0) |
+	                   (slice_phase4 (pPtr+2) > 0 ? 0x40 : 0) |
+	                   (slice_phase1 (pPtr+5) > 0 ? 0x20 : 0) |
+	                   (slice_phase3 (pPtr+7) > 0 ? 0x10 : 0) |
+	                   (slice_phase0 (pPtr+10) > 0 ? 0x08 : 0) |
+	                   (slice_phase2 (pPtr+12) > 0 ? 0x04 : 0) |
+	                   (slice_phase4 (pPtr+14) > 0 ? 0x02 : 0) |
+	                   (slice_phase1 (pPtr+17) > 0 ? 0x01 : 0);
+
+	                phase = 3;
+	                pPtr += 19;
+	                break;
+
+	             case 3:
+	               theByte = 
+	                   (slice_phase3 (pPtr) > 0 ? 0x80 : 0) |
+	                   (slice_phase0 (pPtr+3) > 0 ? 0x40 : 0) |
+	                   (slice_phase2 (pPtr+5) > 0 ? 0x20 : 0) |
+	                   (slice_phase4 (pPtr+7) > 0 ? 0x10 : 0) |
+	                   (slice_phase1 (pPtr+10) > 0 ? 0x08 : 0) |
+	                   (slice_phase3 (pPtr+12) > 0 ? 0x04 : 0) |
+	                   (slice_phase0 (pPtr+15) > 0 ? 0x02 : 0) |
+	                   (slice_phase2 (pPtr+17) > 0 ? 0x01 : 0);
+
+	               phase = 4;
+	               pPtr += 19;
+	               break;
+
+	            case 4:
+	               theByte = 
+	                   (slice_phase4 (pPtr) > 0 ? 0x80 : 0) |
+	                   (slice_phase1 (pPtr+3) > 0 ? 0x40 : 0) |
+	                   (slice_phase3 (pPtr+5) > 0 ? 0x20 : 0) |
+	                   (slice_phase0 (pPtr+8) > 0 ? 0x10 : 0) |
+	                   (slice_phase2 (pPtr+10) > 0 ? 0x08 : 0) |
+	                   (slice_phase4 (pPtr+12) > 0 ? 0x04 : 0) |
+	                   (slice_phase1 (pPtr+15) > 0 ? 0x02 : 0) |
+	                   (slice_phase3 (pPtr+17) > 0 ? 0x01 : 0);
+
+	               phase = 0;
+	               pPtr += 20;
+	               break;
+	         }
+
+	         msg [i] = theByte;
+	         if (i == 0) {
+	            msgType = msg [0] >> 3;
+	            switch (msgType) {
+	               case 0: case 4: case 5: case 11:
+	                  bytelen = SHORT_MSG_BITS / 8;
+	                  break;
+                        
+	               case 16: case 17: case 18: case 20: case 21: case 24:
+	                  break;
+
+	               default:
+	                  bytelen = 1; // unknown DF, give up immediately
+	                  break;
+	            }
+	         }
 	      }
-//	Restore the original message after extracting the bits
-	      errors = decodeBits (bits, &m [j + PREAMBLE_US * 2]);
-	      memcpy (&m[j + PREAMBLE_US * 2], aux, sizeof (aux));
-	   }
-
-	   if (errors >= 4)	
-	      continue;		// seems hopeless
-	   stat_valid_preamble++;	// bold assumption here
-	   validPreambles -> display ((int)stat_valid_preamble);
-//
-//	one way or the other, we are here with bits
-//	Pack bits into bytes */
-	   for (i = 0; i < LONG_MSG_BITS / 8; i ++) {
-	      msg [i] = 0;
-	      for (k = 0; k < 8; k ++)
-	         msg [i] |= bits [8 * i + k] << (7 - k);
-	   }
-
-	   int msgtype	= msg [0] >> 3;
-	   int msglen	= messageLenByType (msgtype) / 8;
+	      if (bytelen == 1)
+	         continue;
 //
 /*	If we reached this point, it is possible that we
  *	have a Mode S message in our hands, but it may still be broken
  *	and CRC may not be correct.
  *	The message is decoded and checked, if false, we give up
  */
-	   message mm (handle_errors, icao_cache, msg);
+	      message mm (handle_errors, icao_cache, msg);
 
-	   if (!mm. is_crcok ()) {
-	      if (show_preambles)
-                 update_view (&m [j], false);
-	      continue;
-	   }
-//
-//	wow, it seems we have something here
-	   update_view (&m [j], true);
-
-//	update statistics
-	   if (mm. errorbit == -1) {	// no corrections
 	      if (mm. is_crcok ()) {
-	         stat_goodcrc++;
-	         goodCrc	-> display ((int)stat_goodcrc);
-	      }
-	   }
-	   else {
-	      stat_fixed++;
-	      fixed	-> display ((int)stat_fixed);
-	      if (mm. errorbit < LONG_MSG_BITS) {
-	         stat_single_bit_fix++;
-	         single_bit_fixed -> display ((int)stat_single_bit_fix);
-	      }
-	      else {
-	         stat_two_bits_fix++;
-	         two_bit_fixed -> display ((int)stat_two_bits_fix);
-	      }
-	   }
-//
-//	prepare for the next round
-	   if (mm. is_crcok ()) {
-	      j += (PREAMBLE_US + (msglen * 8)) * 2;
-	      if (phaseCorrected) {
-	         stat_phase_corrected ++;
-	         phase_corrected -> display ((int)stat_phase_corrected);
-	         phaseCorrected = false;
-	      }
+	         if (singleView)
+	            viewer -> Display_1 (&m [j], bitstoShow);
+	         else
+	            viewer -> Display_2 (m, (16 + 2 * bytelen * 8) * 6 / 5);
+//	update statistics
+	         if (mm. errorbit == -1) {    // no corrections
+	            if (mm. is_crcok ()) {
+	               stat_goodcrc++;
+	               goodCrc        -> display ((int)stat_goodcrc);
+	            }
+	         }
+	         else {
+	            stat_fixed++;
+	            fixed     -> display ((int)stat_fixed);
+	            if (mm. errorbit < LONG_MSG_BITS) {
+	               stat_single_bit_fix++;
+	               single_bit_fixed -> display ((int)stat_single_bit_fix);
+	            }
+	            else {
+	               stat_two_bits_fix++;
+	               two_bit_fixed -> display ((int)stat_two_bits_fix);
+	            }
+	         }
 
-	      table [msgtype & 0x1F] ++;	
-	      update_table (msgtype & 0x1F, table [msgtype & 0x1F]);
+	         j += (PREAMBLE_US  + bytelen * 8) * 2 * 8 * 6/5;
+	         table [msgType & 0x1F] ++;	
+	         update_table (msgType & 0x1F, table [msgType & 0x1F]);
+	         phase_corrected -> display ((int)try_phase);
+	         
 /*
  *	Track aircrafts in interactive mode or if the HTTP
  *	interface is enabled.
  */
-	      if (interactive || stat_http_requests > 0) 
-	         planeList = interactiveReceiveData (planeList, &mm);
+	         if (interactive || stat_http_requests > 0) 
+	            planeList = interactiveReceiveData (planeList, &mm);
 /*
  *	In non-interactive way, display messages on standard output.
  */
-	      if (!interactive) {
-	         mm. displayMessage (check_crc);
-	         printf ("\n");
+	         if (!interactive) {
+	            mm. displayMessage (check_crc);
+	            printf ("\n");
+	         }
+	         break;
 	      }
 	   }
-	}
+        }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -442,10 +545,6 @@ void	qt1090::updateScreen (void) {
 }
 //
 ///////////////////////////////////////////////////////////////////////
-
-void	qt1090::update_view (uint16_t *m, bool flag) {
-	viewer -> Display (m, flag);
-}
 
 #include <QCloseEvent>
 void	qt1090::closeEvent (QCloseEvent *event) {
@@ -541,14 +640,13 @@ void	qt1090::update_table	(int16_t index, int newval) {
 	   case 21:
 	      DF21	-> display (newval);
 	      break;
+	   case 24:
+	      DF24	-> display (newval);
+	      break;
 	   default:
-	      fprintf (stderr, "DF%d -> %d\n", index, newval);
+//	      fprintf (stderr, "DF%d -> %d\n", index, newval);
 	      break;
 	}
-}
-
-void	qt1090::handle_show_preamblesButton (void) {
-	show_preambles	= !show_preambles;
 }
 
 void    qt1090::handleRequest (QHttpRequest *request,
@@ -589,7 +687,7 @@ int	fileSize	= getFileSize ("gmap.html");
 	if (fileSize != -1) {
 	   fd = fopen ("gmap.html", "r");
 	   body = new char [fileSize];
-	   if (fread (body, 1, fileSize, fd) < fileSize) {
+	   if (fread (body, 1, fileSize, fd) < (uint32_t)fileSize) {
 	      (void)snprintf (body, fileSize,
                               "Error reading from file: %s",
                                                       strerror(errno));
@@ -698,4 +796,9 @@ void	qt1090::handle_dumpButton (void) {
 	   dumpButton	-> setText ("dumping");
 }
 
-	
+
+void	qt1090::handle_viewButton (void) {
+	singleView = !singleView;
+	viewButton -> setText (singleView ? "single view" : "sequence view");
+}
+

@@ -1,6 +1,5 @@
 #
 /*
- *
  *      qt-1090 is based on and contains source code from dump1090
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
  *      all rights acknowledged.

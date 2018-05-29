@@ -70,7 +70,7 @@ class	icaoCache;
 
 #define NOTUSED(V) ((void) V)
 
-#define	CURRENT_VERSION	"0.7"
+#define	CURRENT_VERSION	"0.8"
 
 #define	NO_ERRORFIX	0
 #define	NORMAL_ERRORFIX	1

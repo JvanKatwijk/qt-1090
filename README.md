@@ -4,14 +4,31 @@
 
 **qt-1090** is a variant of the Dump1090 program. The latter was
 designed  as a command line utility for RTLSDR devices. 
-This  version supports SDRplay devices, as well as RTLSDR devices and
+This version was created to allow the use of SDRplay devices,
+it supports SDRplay devices, RTLSDR devices and HACKRF One, and
 is equipped with a simple GUI.
 
-![qt-1090 ](/screenshot-qt-1090.png?raw=true)
+![qt-1090 ](/qt-1090-1.png?raw=true)
+
+![qt-1090 ](/qt-1090-2.png?raw=true)
+
+---------------------------------------------------------------------------
+The current version is 0.8: while it is running, it
+is still an experimental version and does not have its final functionality.
+----------------------------------------------------------------------------
+
+============================================================================
+
+dump1090 is a program developed by Salvatore Sanfilippo <antirez@gmail.com>
+and is released under the BSD three clause license.
+
+The idea and code of the bit decoder to work at 2400000 rather than at
+2000000 samples/second is
+Copyright (c) 2014,2015 Oliver Jowett <oliver@mutability.co.uk>
 
 
-The current version is 0.7: while it is running, it
-is still an experimental version.
+All rights gratefully acknowledged.
+
 
 =============================================================================
 
@@ -24,12 +41,6 @@ including the current version of the qt-1090 software.
 Installation is by - obviously - downloading the zipped folder
 unzipping and selecting the program to run.
 
---------------------------------------------------------------------------
-Issues with qhttpServer under Windows
---------------------------------------------------------------------------
-
-I am looking at other http libraries, since qhttpServer lib
-might give some issues when closing under windows.
 
 -----------------------------------------------------------------------------
 Installation under Linux
@@ -84,15 +95,18 @@ Devices
 ---------------------------------------------------------------------------
 
 Support can be configured for SDRplay, RTLSDR based
-devices and  the hackrf one. If all devices are configured, the
-software will first attempt to open the SDRplay, if that fails,
-an attempt is made to open the hackRF device, and if that fails
-an RTLSDR based device.
+devices and  the hackrf one. The
+software will attempt to open one of the configures devices,
+first the SDRplay, if that fails,
+an attempt is made to open the hackRF device (if configured),
+and if that fails
+an RTLSDR based device (if configured).
 If that fails, it is assumed that - since no devices are apparently connected -
 you want to read in a file, and a file selector will show.
 
 As a - yet - untested addition, a client for the rtl_tcp server is implemented.
 In order to select this, use a command line parameter "-n".
+Note that the server should run at 2400000 samples/second.
 
 ---------------------------------------------------------------------------
 Normal usage
@@ -107,7 +121,7 @@ Next on the list is the HACKRF One. If connecting fails here as well,
 the basic assumption is that you want to open a file and a menu appears
 allowing you to select a file with the extension ".iq".
 
-If a device  is found and initialized, a widget for the
+If/when a device  is found and initialized, a widget for the
 control of the device appears. Depending on the device,
 device parameters, such as gain, autogain and ppm offset can be set.
 
@@ -131,7 +145,7 @@ File input
 ----------------------------------------------------------------------------
 
 It is assumed that the file
-is created as raw file with elements of 2 * 8 bits, speed 2 Mhz.
+is created as raw file with elements of 2 * 8 bits, speed 2.4 Mhz.
 Such a file can be created
 with various rtlsdr based tools.
 
@@ -160,15 +174,9 @@ pulses. Each pulse has a length of 0.5 micro seconds,
 	*      4.5 - 5   usec: last impulse.
 
 
-The display on the GUI shows samples from a preamble (with on the
-X axis -16 .. 0, and a user specified amount of samples from the accompanying
-message.)
-
-In normal use, only green bars are shown, indicating that the message
-these values were taken from passed a CRC check. Switching the pushbutton
-labeled "preambles" causes all messages, passing some elementary checks
-on the preamble, to be shown. In that case the bars are green for a message
-passing the CRC check, red otherwise,
+The display on the GUI shows pulses from a preamble (with on the
+X axis -16 .. 0, and the pulses for a user specified amount of
+samples from the accompanying message.)
 
 The amount of bits of the message shown is default 16, it can be changed by
 setting the value for "bitstoShow" in the ini file. This ini file is to be
@@ -185,11 +193,12 @@ The buttons from left to right:
 is sent to a predefined port. A a browser, listening to this port,
 will show a google map with planes (i.e. a "flight plane radar").
 * d.	a combobox for selecting the degree of error correction. Options are 
-"no correction", "normal correction" (i.e. single bit), or "strong correction"
-(i.e. 2 bit correction). It goes without saying that the latter is pretty cpu
+"no correction", "1 bit correction", or "2 bit correction".
+It goes without saying that the latter is pretty cpu
 intensive;
 * e	a push button switching between metrics and non metrics data in interactive mode;
-* f	a push button switching between "all preambles shown" and "preambles with good crc" shown. The distinction is in the color, green is "crc ok".
+* f	a push button switching between displaying (part of) a single
+recognized frame, or a sequence of frames.
 
 The bottom line contains a button "dump", pushing this button causes
 some data to be written onto a file. This data described the entry and
@@ -231,15 +240,20 @@ DLL implementing the http library.
 On the todo list:
 
 * a. Generate an AppImage for use under Linux (x64) and the RPI 2/3
+* b. Generate output to use with "radar" programs.
+* c. Generating database output
 
 ---------------------------------------------------------------------------
 Copyrights
 ---------------------------------------------------------------------------
 
-
+qt-1090 uses source code from Dump1090, both the 
+original version (Salvatore Sanfilippo) and a derived version (Oliver Jowett),
 Dump1090 was written by Salvatore Sanfilippo <antirez@gmail.com> and is
-released under the BSD three clause license. qt-1090 uses source code
-from Dump1090.
+released under the BSD three clause license.
+dump1090  as derived version is Copyright (c) 2014,2015 Oliver Jowett
+<oliver@mutability.co.uk>
+
 Copyright of the httplibrary Nikhil Marathe <nsm.nikhil@gmail.com>
 Copyright of the modifications is J van Katwijk, Lazy Chair computing
 

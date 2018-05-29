@@ -36,7 +36,7 @@ int	res;
 	this	-> myFrame		= new QFrame (NULL);
 	setupUi (this -> myFrame);
 	this	-> myFrame	-> show ();
-	this	-> inputRate		= 2048000;
+	this	-> inputRate		= 2400000;
 	_I_Buffer			= NULL;
 
 #ifdef  __MINGW32__

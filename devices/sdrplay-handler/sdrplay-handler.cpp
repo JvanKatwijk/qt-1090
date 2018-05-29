@@ -225,7 +225,7 @@ int   err;
 int	samplesPerPacket;
 
 	err  = my_mir_sdr_StreamInit (&localGRed,
-                                   (double)(2000000) / 1000000.0,
+                                   (double)(2400000) / 1000000.0,
                                    (double)(freq) / 1000000.0,
                                    mir_sdr_BW_5_000,
                                    mir_sdr_IF_Zero,
