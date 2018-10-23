@@ -504,6 +504,13 @@ bool	sdrplayHandler::loadFunctions	(void) {
 	   return false;
 	}
 
+	my_mir_sdr_RSP_SetGr    = (pfn_mir_sdr_RSP_SetGr)
+                            GETPROCADDRESS (Handle, "mir_sdr_RSP_SetGr");
+        if (my_mir_sdr_RSP_SetGr == NULL) {
+           fprintf (stderr, "Could not find mir_sdr_RSP_SetGr\n");
+           return false;
+        }
+
 	my_mir_sdr_SetDcMode	= (pfn_mir_sdr_SetDcMode)
 	                    GETPROCADDRESS (Handle, "mir_sdr_SetDcMode");
 	if (my_mir_sdr_SetDcMode == NULL) {

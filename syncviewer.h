@@ -36,14 +36,18 @@
 #include        <QBrush>
 #include        <QTimer>
 #include        <stdint.h>
+#include	<vector>
 
 class syncViewer {
 public:
-	syncViewer	(QwtPlot *);
+	syncViewer	(QwtPlot *, int);
         ~syncViewer	(void);
-void    Display_1	(uint16_t *, int);
+void    Display_1	(uint16_t *);
 void    Display_2	(uint16_t *, int);
 private:
+	std::vector<double>	X_AXIS;
+	std::vector<double>	Y_AXIS;
+	int		bitstoShow;
         QwtPlot         *plotgrid;
         uint16_t        displaySize;
         QwtPlotGrid     *grid;

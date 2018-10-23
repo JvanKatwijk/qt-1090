@@ -75,7 +75,7 @@ int	i;
 
 	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
-	viewer		= new syncViewer (dumpview);
+	viewer		= new syncViewer (dumpview, bitstoShow);
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;
 	net		= false;
@@ -471,7 +471,7 @@ uint32_t j;
 
 	      if (mm. is_crcok ()) {
 	         if (singleView)
-	            viewer -> Display_1 (&m [j], bitstoShow);
+	            viewer -> Display_1 (&m [j]);
 	         else
 	            viewer -> Display_2 (m, (16 + 2 * bytelen * 8) * 6 / 5);
 //	update statistics

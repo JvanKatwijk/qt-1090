@@ -24,8 +24,9 @@
 #include	"syncviewer.h"
 #include	<QBrush>
 
-	syncViewer::syncViewer (QwtPlot		*plot) {
+	syncViewer::syncViewer (QwtPlot	*plot, int bitstoShow) {
         plotgrid	= plot;
+	this	-> bitstoShow	= bitstoShow;
 	plotgrid	-> setCanvasBackground (Qt::black);
 	grid		= new QwtPlotGrid;
 #if defined QWT_VERSION && ((QWT_VERSION >> 8) < 0x0601)
@@ -52,6 +53,10 @@
         greenBrush        -> setStyle (Qt::Dense3Pattern);
         SpectrumCurve   -> setBrush (*redBrush);
         SpectrumCurve   -> attach (plotgrid);
+
+	displaySize	= 16 + 2 * bitstoShow;
+	X_AXIS. resize (displaySize * 8);
+	Y_AXIS. resize (displaySize * 8);
 }
 
 double	x_buffer [2048];
@@ -94,14 +99,11 @@ int	mmax	= 0;
 }
 //
 //	show the samples of the prefix of a message, including the preamble
-void	syncViewer::Display_1 (uint16_t *mag, int bitstoShow) {
+void	syncViewer::Display_1 (uint16_t *mag) {
 int i, j;
 double mmax	= 0;
 double samples [16 + 2 * bitstoShow];
 int	phase	= 5;
-int	displaySize	= 16 + 2 * bitstoShow;
-double X_AXIS [displaySize * 8];
-double Y_AXIS [displaySize * 8];
 int	incr	= 1;
 //
 //	we have 6 samples on 2.4M for 5 periods of 0.5 usec
@@ -130,7 +132,7 @@ int	incr	= 1;
               X_AXIS [8 * (i + 16) + j] = (float)i  + (float)j / 8;
               Y_AXIS [8 * (i + 16) + j] = samples [16 + i] / mmax * 100;
            }
-        }
+	}
 
 	SpectrumCurve -> setPen (QPen (Qt::green));
         SpectrumCurve   -> setBrush (*greenBrush);
@@ -142,7 +144,8 @@ int	incr	= 1;
 
 	Y_AXIS [0]	= 0;
 	Y_AXIS [displaySize * 8 - 2] = 0;
-	SpectrumCurve	-> setSamples (X_AXIS, Y_AXIS, displaySize * 8 - 1);
+	SpectrumCurve	-> setSamples (X_AXIS. data (),
+	                               Y_AXIS. data (), displaySize * 8 - 1);
 	plotgrid	-> replot ();
 }
 
