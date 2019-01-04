@@ -8,12 +8,12 @@ TEMPLATE	= app
 TARGET          = qt-1090
 QT		+= widgets network
 CONFIG		+= console
-#QMAKE_CFLAGS	+= -flto -ffast-math
-#QMAKE_CXXFLAGS	+= -flto -ffast-math
-#QMAKE_LFLAGS	+= -flto
-QMAKE_CFLAGS	+= -g
-QMAKE_CXXFLAGS	+= -g
-QMAKE_LFLAGS	+= -g
+QMAKE_CFLAGS	+= -O3 -ffast-math
+QMAKE_CXXFLAGS	+= -O3 -ffast-math
+QMAKE_LFLAGS	+= -O3
+#QMAKE_CFLAGS	+= -g
+#QMAKE_CXXFLAGS	+= -g
+#QMAKE_LFLAGS	+= -g
 RC_ICONS        =  qt-1090.ico
 RESOURCES       += resources.qrc
 
@@ -60,7 +60,7 @@ SOURCES += ./xclose.cpp   \
 #
 # for windows32 we use:
 win32 {
-DESTDIR	= ../../windows-bin
+DESTDIR	= ../../windows-qt1090
 exists ("./.git") {
    GITHASHSTRING = $$system(git rev-parse --short HEAD)
    !isEmpty(GITHASHSTRING) {
@@ -82,6 +82,7 @@ LIBS            += -lstdc++
 LIBS            += -lws2_32
 LIBS            += -lusb-1.0
 LIBS		+= -lqwt-qt5
+LIBS		+= -L .
 LIBS		+= -lqhttpserver
 
 }

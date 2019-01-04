@@ -15,42 +15,25 @@ in the incoming signal of a recognized message.
 ![qt-1090 ](/qt-1090-2.png?raw=true)
 the display shows the last few incoming (recognized) messages
 
----------------------------------------------------------------------------
-
 The current version is 0.8: while it is definitely running, it
-is still an experimental version and does not have all of 
+is still an experimental version and does not have all of
 its final functionality.
 
-----------------------------------------------------------------------------
+---------------------------------------------------------------------------
+Windows
+------------------------------------------------------------------------
 
-============================================================================
+For windows there is an installer, setup-qt1090.exe, in the releases
+section of this repository. The installer will install the executable
+and the required libraries (dll's). It will call upon the installer
+for the dll implementing the api to get access to the SDRplay devices,
+if that api is not installed already.
 
-dump1090 is a program developed by Salvatore Sanfilippo <antirez@gmail.com>
-and is released under the BSD three clause license.
+-----------------------------------------------------------------------
+Linux
+-----------------------------------------------------------------------
 
-The idea and code of the bit decoder to work at 2400000 rather than at
-2000000 samples/second is
-Copyright (c) 2014,2015 Oliver Jowett <oliver@mutability.co.uk>
-
-
-All rights gratefully acknowledged.
-
-
-=============================================================================
-
------------------------------------------------------------------------------
-Installation under Windows
------------------------------------------------------------------------------
-
-The releases section contains a zipped folder with sdr-j software,
-including the current version of the qt-1090 software.
-Installation is by - obviously - downloading the zipped folder
-unzipping and selecting the program to run.
-
-
------------------------------------------------------------------------------
-Installation under Linux
------------------------------------------------------------------------------
+For linux one has to create the executable
 
 Step 1 is of course downloading the sourcetree
 
@@ -96,6 +79,9 @@ A CMakeLists.txt file is available in the source directory with which
 an executable can be created using cmake.
 However, one needs to have the http library installed.
 
+----------------------------------------------------------------------------
+
+
 ---------------------------------------------------------------------------
 Devices
 ---------------------------------------------------------------------------
@@ -107,12 +93,6 @@ first the SDRplay, if that fails,
 an attempt is made to open the hackRF device (if configured),
 and if that fails
 an RTLSDR based device (if configured).
-If that fails, it is assumed that - since no devices are apparently connected -
-you want to read in a file, and a file selector will show.
-
-As a - yet - untested addition, a client for the rtl_tcp server is implemented.
-In order to select this, use a command line parameter "-n".
-Note that the server should run at 2400000 samples/second.
 
 ---------------------------------------------------------------------------
 Normal usage
@@ -252,6 +232,14 @@ On the todo list:
 ---------------------------------------------------------------------------
 Copyrights
 ---------------------------------------------------------------------------
+
+
+dump1090 is a program developed by Salvatore Sanfilippo <antirez@gmail.com>
+and is released under the BSD three clause license.
+
+The idea and code of the bit decoder to work at 2400000 rather than at
+2000000 samples/second is
+Copyright (c) 2014,2015 Oliver Jowett <oliver@mutability.co.uk>
 
 qt-1090 uses source code from Dump1090, both the 
 original version (Salvatore Sanfilippo) and a derived version (Oliver Jowett),
