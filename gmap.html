@@ -2,7 +2,7 @@
 
 <html>
   <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" charset="utf-8" />
     <style type="text/css">
       html { height: 100% }
       body { height: 100%; margin: 0; padding: 0 }
@@ -34,11 +34,9 @@
     </style>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js">
     </script>
-    <script type="text/javascript"
-      src="https://maps.googleapis.com/maps/api/js?sensor=true">
-    </script>
     <script type="text/javascript">
-    Map=null;
+	
+    map=null;
     CenterLat=45.0;
     CenterLon=9.0;
     Planes={};
@@ -123,7 +121,7 @@
                 } else {
                     marker = new google.maps.Marker({
                         position: new google.maps.LatLng(plane.lat, plane.lon),
-                        map: Map,
+                        map: map,
                         icon: getIconForPlane(plane)
                     });
                     plane.marker = marker;
@@ -150,25 +148,27 @@
         });
     }
 
-    function initialize() {
-        var mapOptions = {
-            center: new google.maps.LatLng(CenterLat, CenterLon),
-            zoom: 5,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
-        Map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-
-        /* Setup our timer to poll from the server. */
-        window.setInterval(function() {
-            fetchData();
-            refreshGeneralInfo();
-        }, 1000);
-    }
-
     </script>
   </head>
-  <body onload="initialize()">
-    <div id="map_canvas" style="width:80%; height:100%"></div>
+  <body>
+    <div id="map_canvas" style="width:80%; height:100%">
+		<script>
+			var map;
+			function initMap() {
+				map = new google.maps.Map(document.getElementById('map_canvas'), {
+					center: new google.maps.LatLng(CenterLat, CenterLon),
+					zoom: 5,
+					mapTypeId: google.maps.MapTypeId.ROADMAP
+				});
+				/* Setup our timer to poll from the server. */
+				window.setInterval(function() {
+					fetchData();
+					refreshGeneralInfo();
+				}, 1000);
+			}
+		</script>
+		<script src="https://maps.googleapis.com/maps/api/js?libraries=geometry&callback=initMap&key=__INSERT_YOUR_API_KEY_HERE__" async defer></script>
+	</div>
     <div id="info">
       <div>
         <h1>qt-1090</h1>
