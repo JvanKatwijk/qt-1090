@@ -99,6 +99,9 @@ bool	network		= false;
  *      Before we connect control to the gui, we have to
  *      instantiate
  */
+#if QT_VERSION >= 0x050600
+	QGuiApplication::setAttribute (Qt::AA_EnableHighDpiScaling);
+#endif
 	QApplication a (argc, argv);
 //	setting the language
 //	QString locale = QLocale::system (). name ();
@@ -110,9 +113,6 @@ bool	network		= false;
 	MyRadioInterface = new qt1090 (dumpSettings, freq, network);
 	MyRadioInterface -> show ();
 
-#if QT_VERSION >= 0x050600
-	QGuiApplication::setAttribute (Qt::AA_EnableHighDpiScaling);
-#endif
         a. exec ();
 /*
  *      done:

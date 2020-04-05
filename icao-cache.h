@@ -37,6 +37,7 @@
 
 class cacheDesc {
 public:
+	bool	inUse;
 	uint32_t addr;
 	uint32_t time;
 	cacheDesc (void) {

@@ -348,7 +348,6 @@ uint32_t j;
                preamble [18] >= high / 2) {
 	      continue;
 	   }
-
 	
 //	try phases until we find a good crc (if any)
 
@@ -682,10 +681,10 @@ std::ifstream file (fileName, std::ifstream::in | std::ifstream::binary);
 void	qt1090::sendMap (QHttpResponse *response) {
 FILE	*fd;
 char	*body;
-int	fileSize	= getFileSize ("gmap.html");
+int	fileSize	= getFileSize ("./gmap.html");
 	
 	if (fileSize != -1) {
-	   fd = fopen ("gmap.html", "r");
+	   fd = fopen ("./gmap.html", "r");
 	   body = new char [fileSize];
 	   if (fread (body, 1, fileSize, fd) < (uint32_t)fileSize) {
 	      (void)snprintf (body, fileSize,

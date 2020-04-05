@@ -109,6 +109,7 @@ uint32_t crc2;
 	aa2 = msg [2];
 	aa3 = msg [3];
 
+
 /*	DF 17 type (assuming this is a DF17, otherwise not used) */
 	metype = msg [4] >> 3;	/* Extended squitter message type. */
 	mesub  = msg [4] & 7;	/* Extended squitter message subtype. */
@@ -137,7 +138,7 @@ uint32_t crc2;
 /*
  *	We recovered the message, mark the checksum as valid.
  */
-	if (msgtype != 11 && msgtype != 17) {
+	if ((msgtype != 11) && (msgtype != 17)) {
 	   crcok = bruteForceAP (msg);
 	}
 	else {
