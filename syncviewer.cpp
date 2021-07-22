@@ -102,7 +102,8 @@ int	mmax	= 0;
 void	syncViewer::Display_1 (uint16_t *mag) {
 int i, j;
 double mmax	= 0;
-double samples [16 + 2 * bitstoShow];
+double samples [20 + 2 * bitstoShow];
+//double samples [16 + 2 * bitstoShow];
 int	phase	= 5;
 int	incr	= 1;
 //

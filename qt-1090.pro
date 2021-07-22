@@ -14,13 +14,17 @@ QMAKE_LFLAGS	+= -O3
 #QMAKE_CFLAGS	+= -g
 #QMAKE_CXXFLAGS	+= -g
 #QMAKE_LFLAGS	+= -g
+#QMAKE_CFLAGS   +=  -g -fsanitize=address
+#QMAKE_CXXFLAGS +=  -g -fsanitize=address
+#QMAKE_LFLAGS   +=  -g -fsanitize=address
+
 RC_ICONS        =  qt-1090.ico
 RESOURCES       += resources.qrc
 
 CONFIG	+= sdrplay
-CONFIG	+= dabstick
-CONFIG	+= hackrf
-CONFIG	+= rtl_tcp
+#CONFIG	+= dabstick
+#CONFIG	+= hackrf
+#CONFIG	+= rtl_tcp
 
 TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
 
@@ -43,7 +47,8 @@ HEADERS += ./xclose.h \
            ./message-handling.h \
            ./device-handler.h \
            ./devices/file-handler/file-handler.h \
-           ./syncviewer.h 
+           ./syncviewer.h  \
+	   ./http-handler.h
 
 FORMS	+= ./qt-1090.ui
 
@@ -56,7 +61,8 @@ SOURCES += ./xclose.cpp   \
            ./message-handling.cpp   \
            ./device-handler.cpp   \
            ./devices/file-handler/file-handler.cpp   \
-           ./syncviewer.cpp 
+           ./syncviewer.cpp \
+	   ./http-handler.cpp
 #
 # for windows32 we use:
 win32 {
@@ -83,7 +89,6 @@ LIBS            += -lws2_32
 LIBS            += -lusb-1.0
 LIBS		+= -lqwt-qt5
 LIBS		+= -L .
-LIBS		+= -lqhttpserver
 
 }
 #
@@ -104,7 +109,7 @@ DESTDIR		= ./linux-bin
 LIBS            += -L/usr/lib64
 LIBS            += -L/lib64
 INCLUDEPATH     += /usr/include/qt5/qwt
-LIBS            += -lqwt-qt5 -lqhttpserver -lusb-1.0 -ldl
+LIBS            += -lqwt-qt5 -lusb-1.0 -ldl
 }
 
 #	the devices:

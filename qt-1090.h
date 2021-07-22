@@ -36,10 +36,7 @@
 #include	<QCloseEvent>
 #include	<QTimer>
 #include	<stdio.h>
-#include	"qhttpserverfwd.h"
-#include	<qhttpserver.h>
-#include	<qhttprequest.h>
-#include	<qhttpresponse.h>
+#include	"http-handler.h"
 #include	"message-handling.h"
 #include	"ui_qt-1090.h"
 
@@ -60,7 +57,7 @@ private:
 	void		update_table	(int16_t, int);
 	deviceHandler	*setDevice	(int32_t, bool);
 	int		table [32];
-	QHttpServer	*httpServer;
+	httpHandler	*httpServer;
 	QTimer		screenTimer;
 public slots:
 	void		processData	(void);
@@ -89,8 +86,6 @@ public:
 //	Interactive mode */
 	aircraft	*planeList;
 	long long interactive_last_update;  /* Last screen update in milliseconds */
-	void            sendMap         (QHttpResponse *);
-        void            sendPlaneData   (QHttpResponse *, aircraft *);
 
 //	Statistics */
 public:
@@ -108,8 +103,6 @@ private slots:
 	void	handle_httpButton	(void);
 	void	set_ttl			(int);
 	void	handle_metricButton	(void);
-	void	handleRequest		(QHttpRequest *,
-	                                        QHttpResponse *);
 	void	updateScreen		(void);
 	void	handle_dumpButton	(void);
 	void	handle_viewButton	(void);

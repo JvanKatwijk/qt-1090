@@ -79,7 +79,7 @@ int	i;
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;
 	net		= false;
-	httpServer	= NULL;
+	httpServer	= nullptr;
 	metric		= false;
 	interactive	= false;
 	interactive_ttl	= INTERACTIVE_TTL;
@@ -88,7 +88,7 @@ int	i;
 	singleView	= true;
 //	Allocate the "working" vector
 	data_len	= DATA_LEN + (FULL_LEN - 1) * 4;
-	magnitudeVector	= new uint16_t [data_len / 2];
+	magnitudeVector	= new uint16_t [data_len / 2 + 10];
 
 //	Allocate the ICAO address cache.
 	icao_cache	= new icaoCache	();
@@ -150,11 +150,7 @@ int	i;
 void	qt1090::finalize	(void) {
 	net	= false;
 	if (httpServer != NULL) {
-	   httpServer	-> close ();
-	   disconnect	(httpServer,
-	                 SIGNAL (newRequest(QHttpRequest*, QHttpResponse*)),
-	                 this,
-	                 SLOT (handleRequest(QHttpRequest*, QHttpResponse*)));
+	   httpServer	-> stop ();
 	   delete httpServer;
 	   fprintf (stderr, "httpServer is now quiet\n");
 	   httpPortLabel	-> setText ("   ");
@@ -240,7 +236,7 @@ uint32_t j;
  *	8   --
  *	9   -------------------
  */
-	for (j = 0; j < mlen; j++) {
+	for (j = 0; j < mlen - 20; j++) {
 	   uint16_t *preamble = &m [j];
 	   int high;
 	   uint32_t base_signal, base_noise;
@@ -567,12 +563,8 @@ void	qt1090::handle_interactiveButton (void) {
 void	qt1090::handle_httpButton (void) {
 	net	= !net;
 	if (net) {
-	   httpServer	= new QHttpServer (this);
-	   httpServer -> listen (QHostAddress::Any, httpPort);
-	   connect	(httpServer,
-	                 SIGNAL (newRequest (QHttpRequest*, QHttpResponse*)),
-	                 this,
-	                 SLOT (handleRequest (QHttpRequest*, QHttpResponse*)));
+	   httpServer	= new httpHandler (this, "./gmap.html");
+	   httpServer -> start ();
 	   QString text = "port ";
 	   text. append (QString:: number (httpPort));
 	   stat_http_requests	= 0;
@@ -581,16 +573,12 @@ void	qt1090::handle_httpButton (void) {
 	}
 	else 
 	if (httpServer != NULL) {
-	   httpServer	-> close ();
-	   disconnect	(httpServer,
-	                 SIGNAL (newRequest(QHttpRequest*, QHttpResponse*)),
-	                 this,
-	                 SLOT (handleRequest(QHttpRequest*, QHttpResponse*)));
+	   httpServer	-> stop ();
 	   httpPortLabel	-> setText ("   ");
 	   httpButton	-> setText ("http off");
 	   stat_http_requests	= 0;
 	   delete httpServer;
-	   httpServer	= NULL;
+	   httpServer	= nullptr;
 	}
 }
 
@@ -648,76 +636,6 @@ void	qt1090::update_table	(int16_t index, int newval) {
 	}
 }
 
-void    qt1090::handleRequest (QHttpRequest *request,
-	                       QHttpResponse *response) {
-        if (request -> methodString () != "HTTP_GET")
-	   return;
-	
-	stat_http_requests ++;
-
-	if (request -> path () == "/data.json")
-	   sendPlaneData (response, planeList);
-	else
-	if (request -> path () == "/")
-	   sendMap (response);
-}
-
-#include	<fstream>
-
-int getFileSize (const char * fileName) {
-std::ifstream file (fileName, std::ifstream::in | std::ifstream::binary);
-
-	if (!file. is_open()) {
-	   return -1;
-	}
-
-	file. seekg (0, std::ios::end);
-	int fileSize = file. tellg ();
-	file.close();
-
-	return fileSize;
-}
-
-void	qt1090::sendMap (QHttpResponse *response) {
-FILE	*fd;
-char	*body;
-int	fileSize	= getFileSize ("./gmap.html");
-	
-	if (fileSize != -1) {
-	   fd = fopen ("./gmap.html", "r");
-	   body = new char [fileSize];
-	   if (fread (body, 1, fileSize, fd) < (uint32_t)fileSize) {
-	      (void)snprintf (body, fileSize,
-                              "Error reading from file: %s",
-                                                      strerror(errno));
-	   }
-	   fclose (fd);
-	}
-	else {
-	   body = new char [512];
-	   (void) snprintf (body, 512,
-                           "Error opening HTML file: %s", strerror(errno));
-	}
-
-	response -> setHeader ("Content-Type", "text/html");
-	response -> writeHead (200);
-	response -> end (body);
-	delete[] body;
-}
-
-void	qt1090::sendPlaneData (QHttpResponse *response,
-	                          aircraft *planeList) {
-QString	body;
-
-	body	= aircraftsToJson (planeList);	
-	response -> setHeader ("Content-Type",
-	                       "application/json;charset=utf-8");
-	response -> writeHead (200);
-	response -> end (body. toUtf8 ());
-}
-
-//
-//
 //	selecting a device
 deviceHandler	*qt1090::setDevice (int freq, bool network) {
 deviceHandler	*inputDevice	= NULL;

@@ -1,6 +1,5 @@
 #
 /*
- *
  *      qt-1090 is based on  and contains source code from the
  *	dump1090 program 
  *      Copyright (C) 2012 by Salvatore Sanfilippo <antirez@gmail.com>
@@ -38,19 +37,18 @@
 #include	<stdint.h>
 #include	<errno.h>
 #include	<unistd.h>
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#  include <time.h>
-#ifndef _TIMEVAL_DEFINED /* also in winsock[2].h */
-#define _TIMEVAL_DEFINED
-struct timeval {
-    long tv_sec;
-    long tv_usec;
-};
-#include	"gettimeofday.h"
-#endif /* _TIMEVAL_DEFINED */
+#ifdef  __MINGW32__
+//#include      "iostream.h"
+#include        "windows.h"
 #else
-#  include <sys/time.h>
+#ifndef __FREEBSD__
+//#include      "alloca.h"
 #endif
+#include        "dlfcn.h"
+typedef void    *HINSTANCE;
+#endif
+
+#include <sys/time.h>
 
 class	aircraft;
 class	icaoCache;
@@ -99,16 +97,5 @@ int	messageLenByType (int type) {
         else
            return SHORT_MSG_BITS;
 }
-#ifdef  __MINGW32__
-//#include      "iostream.h"
-#include        "windows.h"
-#else
-#ifndef __FREEBSD__
-#include        "alloca.h"
-#endif
-#include        "dlfcn.h"
-typedef void    *HINSTANCE;
-#endif
-
 #endif
 
