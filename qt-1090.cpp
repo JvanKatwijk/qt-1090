@@ -37,7 +37,6 @@
 #include	"qt-1090.h"
 #include	"icao-cache.h"
 #include	"xclose.h"
-#include	"syncviewer.h"
 
 #include	"device-handler.h"
 #ifdef	__HAVE_RTLTCP__
@@ -46,8 +45,11 @@
 #ifdef	__HAVE_RTLSDR__
 #include	"rtlsdr-handler.h"
 #endif
-#ifdef	__HAVE_SDRPLAY__
-#include	"sdrplay-handler.h"
+#ifdef	__HAVE_SDRPLAY_V2
+#include	"sdrplay-handler-v2.h"
+#endif
+#ifdef	__HAVE_SDRPLAY_V3
+#include	"sdrplay-handler-v3.h"
 #endif
 #ifdef	__HAVE_HACKRF__
 #include	"hackrf-handler.h"
@@ -58,46 +60,65 @@ static
 void	*readerThreadEntryPoint (void *arg) {
 deviceHandler	*theDevice = static_cast <deviceHandler *>(arg);
 	theDevice -> startDevice ();
-	return NULL;
+	return nullptr;
 }
 
-
-	qt1090::qt1090 (QSettings *qt1090Settings, int32_t freq, bool network):
-	                                              QMainWindow (NULL) {
+		qt1090::qt1090 (QSettings *qt1090Settings,
+	                        int32_t freq, bool network):
+	                                      QMainWindow (nullptr) {
 int	i;
 	this	-> qt1090Settings	= qt1090Settings;
-
+	this	-> frequency		= freq;
+	this	-> network		= network;
 	setupUi (this);
-
-	this	-> theDevice	= setDevice (freq, network);
+	this	-> viewer	= new spectrumViewer (plotgrid);
 	httpPort	= qt1090Settings -> value ("http_port", 8080). toInt ();
 	bitstoShow      = qt1090Settings -> value ("bitstoShow", 16). toInt ();
 
+#ifdef	__HAVE_RTLTCP__
+	deviceSelecctor	-> addItem ("rtl_tcp");
+#endif
+#ifdef	__HAVE_RTLSDR__
+	deviceSelector	-> addItem ("rtlsdr");
+#endif
+#ifdef	__HAVE_SDRPLAY_V2
+	deviceSelector	-> addItem ("sdrplay-v2");
+#endif
+#ifdef	__HAVE_SDRPLAY_V3
+	deviceSelector	-> addItem ("sdrplay-v3");
+#endif
+#ifdef	__HAVE_HACKRF__
+	deviceSelector	-> addItem ("hackrf");
+#endif
+#ifdef	__HAVE_PLUTO__
+	deviceSelector	-> addItem ("pluto"
+#endif
+//#include	"file-handler.h"
+
 	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
-	viewer		= new syncViewer (dumpview, bitstoShow);
 	handle_errors	= NO_ERRORFIX;
 	check_crc	= true;
 	net		= false;
 	httpServer	= nullptr;
 	metric		= false;
 	interactive	= false;
+	handle_interactiveButton ();
 	interactive_ttl	= INTERACTIVE_TTL;
-	dumpfilePointer	= NULL;
+	dumpfilePointer	= nullptr;
 
-	singleView	= true;
 //	Allocate the "working" vector
 	data_len	= DATA_LEN + (FULL_LEN - 1) * 4;
 	magnitudeVector	= new uint16_t [data_len / 2 + 10];
 
 //	Allocate the ICAO address cache.
 	icao_cache	= new icaoCache	();
-	planeList	= NULL;
+	planeList	= nullptr;
 	interactive_last_update = 0;
 
 	screenTimer. setInterval (2000);
-	connect (&screenTimer, SIGNAL (timeout (void)),
-                 this, SLOT (updateScreen (void)));
+	connect (&screenTimer, SIGNAL (timeout ()),
+                 this, SLOT (updateScreen ()));
         screenTimer. start (2000);
 
 /* Statistics */
@@ -112,26 +133,20 @@ int	i;
 	ttl_selector	-> setValue (INTERACTIVE_TTL);
 
 //	connect the device
-	connect (theDevice, SIGNAL (dataAvailable (void)),
-	         this, SLOT (processData (void)));
-	connect (interactiveButton, SIGNAL (clicked (void)),
-	         this, SLOT (handle_interactiveButton (void)));
+	connect (interactiveButton, SIGNAL (clicked ()),
+	         this, SLOT (handle_interactiveButton ()));
 	connect (errorhandlingCombo, SIGNAL (activated (const QString &)),
 	         this, SLOT (handle_errorhandlingCombo (const QString &)));
-	connect (httpButton, SIGNAL (clicked (void)),
-	         this, SLOT (handle_httpButton (void)));
+	connect (httpButton, SIGNAL (clicked ()),
+	         this, SLOT (handle_httpButton ()));
 	connect (ttl_selector, SIGNAL (valueChanged (int)),
 	         this, SLOT (set_ttl (int)));
-	connect (metricButton, SIGNAL (clicked (void)),
-	         this, SLOT (handle_metricButton (void)));
-	connect (dumpButton, SIGNAL (clicked (void)),
-	         this, SLOT (handle_dumpButton (void)));
-	connect (viewButton, SIGNAL (clicked (void)),
-	         this, SLOT (handle_viewButton (void)));
-	pthread_create (&reader_thread,
-	                NULL,
-	                readerThreadEntryPoint,
-	                (void *)(theDevice));
+	connect (metricButton, SIGNAL (clicked ()),
+	         this, SLOT (handle_metricButton ()));
+	connect (dumpButton, SIGNAL (clicked ()),
+	         this, SLOT (handle_dumpButton ()));
+	connect (deviceSelector, SIGNAL (activated (const QString &)),
+	         this, SLOT (setDevice (const QString &)));
 //	display the version
         QString v = "qt-1090 -" + QString (CURRENT_VERSION);
         QString versionText = "qt-1090 version: " + QString(CURRENT_VERSION);
@@ -149,21 +164,23 @@ int	i;
 
 void	qt1090::finalize	(void) {
 	net	= false;
-	if (httpServer != NULL) {
+	if (httpServer != nullptr) {
 	   httpServer	-> stop ();
 	   delete httpServer;
 	   fprintf (stderr, "httpServer is now quiet\n");
 	   httpPortLabel	-> setText ("   ");
-	   httpServer = NULL;
+	   httpServer = nullptr;
 	   stat_http_requests	= 0;
 	}
 
-	fprintf (stderr, "going to stop the input\n");
-	theDevice	-> stopDevice ();
 	screenTimer. stop ();
-	pthread_cancel (reader_thread);
-	pthread_join (reader_thread, NULL);
-	fprintf (stderr, "reader is quiet\n");
+	if (theDevice != nullptr) {
+	   fprintf (stderr, "going to stop the input\n");
+	   theDevice	-> stopDevice ();
+	   pthread_cancel (reader_thread);
+	   pthread_join (reader_thread, nullptr);
+	   fprintf (stderr, "reader is quiet\n");
+	}
 }
 
 /*
@@ -465,10 +482,6 @@ uint32_t j;
 	      message mm (handle_errors, icao_cache, msg);
 
 	      if (mm. is_crcok ()) {
-	         if (singleView)
-	            viewer -> Display_1 (&m [j]);
-	         else
-	            viewer -> Display_2 (m, (16 + 2 * bytelen * 8) * 6 / 5);
 //	update statistics
 	         if (mm. errorbit == -1) {    // no corrections
 	            if (mm. is_crcok ()) {
@@ -514,19 +527,33 @@ uint32_t j;
 }
 
 //////////////////////////////////////////////////////////////////////////
+static inline
+uint16_t jan_abs (std::complex<float> s) {
+int16_t  res	= real (s) < 0 ? - real (s) : real (s);
+	res += imag (s) < 0  ? - imag (s) : imag (s);
+	return res;
+}
 
 //	this slot is called upon the arrival of data
 void	qt1090::processData (void) {
-int16_t lbuf [DATA_LEN / 2];
+std::complex<float> lbuf [DATA_LEN / 2];
+static int flipper	= 0;
 
 	while (theDevice -> Samples () > DATA_LEN / 2) {
 	   theDevice -> getSamples (lbuf, DATA_LEN / 2);
 	   memcpy (&magnitudeVector [0],
 	           &magnitudeVector [DATA_LEN / 2],
 	           ((FULL_LEN - 1) * sizeof (uint16_t)) * 4 / 2);
-	   memcpy (&magnitudeVector [(FULL_LEN - 1) * 4 / 2],
-	           lbuf, DATA_LEN / 2 * sizeof (int16_t));
+	   for (int i = 0; i < DATA_LEN / 2; i ++)
+	      magnitudeVector [(FULL_LEN - 1) * 4 /  2 + i] =
+	                               (int16_t) (jan_abs (lbuf [i]));
 	   detectModeS	(magnitudeVector, data_len / 2);
+	   flipper ++;
+	   if (flipper >= 4) {
+	      viewer -> Display (lbuf, DATA_LEN / 2,
+	                          amplitudeSlider -> value ());
+	      flipper = 0;
+	   }
 	}
 }
 //
@@ -558,6 +585,10 @@ void	qt1090::closeEvent (QCloseEvent *event) {
 
 void	qt1090::handle_interactiveButton (void) {
 	interactive = !interactive;
+	if (interactive)
+	   interactiveButton -> setText ("Streaming");
+	else
+	   interactiveButton	-> setText ("plane list");
 }
 
 void	qt1090::handle_httpButton (void) {
@@ -572,7 +603,7 @@ void	qt1090::handle_httpButton (void) {
 	   httpButton	-> setText ("http on");
 	}
 	else 
-	if (httpServer != NULL) {
+	if (httpServer != nullptr) {
 	   httpServer	-> stop ();
 	   httpPortLabel	-> setText ("   ");
 	   httpButton	-> setText ("http off");
@@ -637,68 +668,85 @@ void	qt1090::update_table	(int16_t index, int newval) {
 }
 
 //	selecting a device
-deviceHandler	*qt1090::setDevice (int freq, bool network) {
-deviceHandler	*inputDevice	= NULL;
+void	qt1090::setDevice (const QString &device) {
+theDevice	= nullptr;
 
 #ifdef	__HAVE_RTLTCP__
-	if (network) {
+	if (device = "network") {
 	   try {
-	      inputDevice = new rtltcpHandler (qt1090Settings, freq);
-	      return inputDevice;
+	      theDevice = new rtltcpHandler (qt1090Settings, this -> frequency);
 	   } catch (int e) {
 	      fprintf (stderr, "no valid network connection, trying devices\n");
+	      return;
 	   }
 	}
+	else
 #endif
 	
 #ifdef	__HAVE_HACKRF__
-	try {
-	   inputDevice	= new hackrfHandler (qt1090Settings, freq);
-	   return inputDevice;
-	} catch (int e) {
-	   fprintf (stderr, "no hackrf detected, going on\n");
+	if  (device == "hackrf") {
+	   try {
+	      theDevice	= new hackrfHandler (qt1090Settings, this -> frequency);
+	   } catch (int e) {
+	      fprintf (stderr, "no hackrf detected, try again\n");
+	      return;
+	   }
 	}
+	else
 #endif
-#ifdef	__HAVE_SDRPLAY__
-	try {
-	   inputDevice	= new sdrplayHandler (qt1090Settings, freq);
-	   return inputDevice;
-	} catch (int e) {
-	   fprintf (stderr, "no sdrplay detected, going on\n");}
+#ifdef	__HAVE_SDRPLAY_V2
+	if (device == "sdrplay-v2") {
+	   try {
+	      theDevice	= new sdrplayHandler_v2 (qt1090Settings, this -> frequency);
+	   } catch (int e) {
+	      fprintf (stderr, "no sdrplay detected, try again\n");
+	      return;
+	   }
+	}
+	else
+#endif
+#ifdef	__HAVE_SDRPLAY_V3
+	if (device == "sdrplay-v3") {
+	   try {
+	      theDevice	= new sdrplayHandler_v3 (qt1090Settings, this -> frequency);
+	   } catch (int e) {
+	      fprintf (stderr, "no sdrplay detected, try again\n");
+	      return;
+	   }
+	}
+	else
 #endif
 #ifdef	__HAVE_RTLSDR__
-	try {
-	   inputDevice	= new rtlsdrHandler (qt1090Settings, freq);
-	   return inputDevice;
-	} catch (int e) {
-	   fprintf (stderr, "no rtlsdr device detected, going on\n");
+	if (device == "rtlsdr") {
+	   try {
+	      theDevice	= new rtlsdrHandler (qt1090Settings, this -> frequency);
+	   } catch (int e) {
+	      fprintf (stderr, "no rtlsdr device detected, try again\n");
+	      return;
+	   }
 	}
 #endif
+	if (theDevice == nullptr)
+	   return;
 //
-//	if everything fails, the user probably meant to read from
-//	a file
-	QString file = QFileDialog::getOpenFileName (this,
-	                                                tr ("Open file ..."),
-	                                                QDir::homePath (),
-	                                                tr ("iq data (*.iq)"));
-	file		= QDir::toNativeSeparators (file);
-	try {
-	   inputDevice	= new fileHandler (file, true);
-	}
-	catch (int e) {
-	   QMessageBox::warning (this, tr ("Warning"),
-	                               tr ("file not found"));
-	   return NULL;
-	}
-	
-	return new  deviceHandler ();
+//	we have a device, 
+	disconnect (deviceSelector, SIGNAL (activated (const QString &)),
+	            this, SLOT (setDevice (const QString &)));
+	deviceSelector	-> hide ();
+
+	connect (theDevice, SIGNAL (dataAvailable ()),
+	         this, SLOT (processData ()));
+	pthread_create (&reader_thread,
+	                nullptr,
+	                readerThreadEntryPoint,
+	                (void *)(theDevice));
 }
 
-void	qt1090::handle_dumpButton (void) {
+void	qt1090::handle_dumpButton () {
 
 	if (dumpfilePointer != 0) {
 	   fclose (dumpfilePointer);
-	   dumpfilePointer	= NULL;
+	   dumpfilePointer	= nullptr;
 	   dumpButton	-> setText ("dump");
 	   return;
 	}
@@ -709,13 +757,7 @@ void	qt1090::handle_dumpButton (void) {
 	                                             tr ("txt data (*.txt)"));
 	file		= QDir::toNativeSeparators (file);
 	dumpfilePointer	= fopen (file. toLatin1 (). data (), "w");
-	if (dumpfilePointer != NULL)
+	if (dumpfilePointer != nullptr)
 	   dumpButton	-> setText ("dumping");
-}
-
-
-void	qt1090::handle_viewButton (void) {
-	singleView = !singleView;
-	viewButton -> setText (singleView ? "single view" : "sequence view");
 }
 

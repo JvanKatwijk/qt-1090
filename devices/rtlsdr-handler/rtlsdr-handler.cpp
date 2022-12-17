@@ -2,7 +2,7 @@
 /*
  *    Copyright (C) 2018
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair Programming
+ *    Lazy Chair Computing
  *
  *    This file is part of the dump1090 program
  *
@@ -37,7 +37,7 @@ static
 void rtlsdrCallback (unsigned char *buf, uint32_t len, void *ctx) {
 rtlsdrHandler *theStick = static_cast<rtlsdrHandler *>(ctx);
 uint32_t i;
-int16_t	lbuf [READLEN_DEFAULT / 2];
+std::complex<float>	lbuf [READLEN_DEFAULT / 2];
 //	"len" denotes incoming bytes here
 	if (len > READLEN_DEFAULT)
 	   len = READLEN_DEFAULT;
@@ -45,7 +45,7 @@ int16_t	lbuf [READLEN_DEFAULT / 2];
 	for (i = 0; i < len / 2; i ++) {
 	   int16_t re = (int16_t)((int8_t)(buf [2 * i] - 128));
 	   int16_t im = (int16_t)((int8_t)(buf [2 * i + 1] - 128));
-	   lbuf [i] = (re < 0 ? -re : re) + (im < 0 ? -im : im);
+	   lbuf [i] = std::complex<float> (re, im);
 	}
 
         theStick -> _I_Buffer -> putDataIntoBuffer (lbuf, len / 2);
@@ -86,9 +86,9 @@ int	deviceCount;
 int	deviceIndex;
 
 	this	-> freq		= freq;
-	workerHandle		= NULL;
+	workerHandle		= nullptr;
 	rtlsdrSettings		= s;
-	this	-> myFrame	= new QFrame (NULL);
+	this	-> myFrame	= new QFrame (nullptr);
 	setupUi (this -> myFrame);
 	myFrame	-> show ();
 

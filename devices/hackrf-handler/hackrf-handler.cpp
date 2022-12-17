@@ -29,7 +29,8 @@
 
 #define	DEFAULT_GAIN	30
 
-	hackrfHandler::hackrfHandler  (QSettings *s, int freq) {
+	hackrfHandler::hackrfHandler  (QSettings *s, int freq):
+	                                         _I_Buffer (1024 * 1024) {
 int	err;
 int	res;
 	hackrfSettings			= s;
@@ -37,7 +38,6 @@ int	res;
 	setupUi (this -> myFrame);
 	this	-> myFrame	-> show ();
 	this	-> inputRate		= 2400000;
-	_I_Buffer			= NULL;
 
 #ifdef  __MINGW32__
         const char *libraryString = "libhackrf.dll";
@@ -66,7 +66,6 @@ int	res;
 //
 //	From here we have the library functions available
 
-	_I_Buffer	= new RingBuffer <int16_t> (1024 * 1024);
 //
 //	See if there are settings from previous incarnations
 	hackrfSettings		-> beginGroup ("hackrfSettings");
@@ -147,11 +146,9 @@ int	res;
 	running. store (false);
 }
 
-	hackrfHandler::~hackrfHandler	(void) {
+	hackrfHandler::~hackrfHandler	() {
 	stopDevice ();
 	delete myFrame;
-	if (_I_Buffer != NULL)
-	   delete _I_Buffer;
 	hackrfSettings	-> beginGroup ("hackrfSettings");
 	hackrfSettings	-> setValue ("hack_lnaGain",
 	                                 lnagainSlider -> value ());
@@ -199,13 +196,12 @@ int	callback (hackrf_transfer *transfer) {
 hackrfHandler *ctx = static_cast <hackrfHandler *>(transfer -> rx_ctx);
 int	i;
 uint8_t *p	= transfer -> buffer;
-RingBuffer<int16_t> * q = ctx -> _I_Buffer;
+RingBuffer<std::complex<float>> *q = &(ctx -> _I_Buffer);
 
 	for (i = 0; i < transfer -> valid_length / 2; i ++) {
 	   int16_t re	= (int16_t)(((int8_t *)p) [2 * i]);
 	   int16_t im	= (int16_t)(((int8_t *)p) [2 * i + 1]);
-//	   buffer [i]	= sqrt (re * re + im * im);
-	   buffer [i]	= (re < 0 ? -re : re) + (im < 0 ? -im : im); 
+	   buffer [i]	= std::complex<float> ((float)re, (float)im);
 	}
 	q	-> putDataIntoBuffer (buffer, transfer -> valid_length / 2);
 	if (q -> GetRingBufferReadAvailable () > 256000)
@@ -213,7 +209,7 @@ RingBuffer<int16_t> * q = ctx -> _I_Buffer;
 	return 0;
 }
 
-void	hackrfHandler::startDevice	(void) {
+void	hackrfHandler::startDevice	() {
 int	res;
 
 	if (running. load ())
@@ -230,7 +226,7 @@ int	res;
 	running. store (this -> hackrf_is_streaming (theDevice));
 }
 
-void	hackrfHandler::stopDevice	(void) {
+void	hackrfHandler::stopDevice	() {
 int	res;
 
 	if (!running. load ())
@@ -247,22 +243,19 @@ int	res;
 	running. store (false);
 }
 
-
-//	The brave old getSamples. For the hackrf, we get
-//	size still in I/Q pairs
-int32_t	hackrfHandler::getSamples (int16_t *V, int32_t size) { 
-	return _I_Buffer	-> getDataFromBuffer (V, size);
+int32_t	hackrfHandler::getSamples (std::complex<float> *V, int32_t size) { 
+	return _I_Buffer. getDataFromBuffer (V, size);
 }
 
-int32_t	hackrfHandler::Samples	(void) {
-	return _I_Buffer	-> GetRingBufferReadAvailable ();
+int32_t	hackrfHandler::Samples	() {
+	return _I_Buffer. GetRingBufferReadAvailable ();
 }
 
-void	hackrfHandler::signalData	(void) {
+void	hackrfHandler::signalData	() {
 	emit dataAvailable ();
 }
 
-bool	hackrfHandler::load_hackrfFunctions (void) {
+bool	hackrfHandler::load_hackrfFunctions () {
 //
 //	link the required procedures
 	this -> hackrf_init	= (pfn_hackrf_init)

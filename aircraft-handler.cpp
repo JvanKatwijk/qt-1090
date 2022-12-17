@@ -139,28 +139,28 @@ double cprDlonFunction (double lat, int isodd) {
 	even_cprtime 	= 0;
 	lat		= 0;
 	lon		= 0;
-	seen		= time (NULL);
+	seen		= time (nullptr);
 	messages	= 0;
-	next		= NULL;
-	entryTime	= time (NULL);
+	next		= nullptr;
+	entryTime	= time (nullptr);
 	lon_in		= 0.0;
 	lat_in		= 0.0;
 	altitude_in	= 0;
 }
 
-	aircraft::~aircraft (void) {}
+	aircraft::~aircraft () {}
 
 /*
  *	Return the aircraft with the specified address, or NULL if no aircraft
  *	exists with this address.
  */
 aircraft *findAircraft (aircraft *a, uint32_t addr) {
-	while (a != NULL) {
+	while (a != nullptr) {
 	   if (a -> addr == addr)
 	      return a;
 	   a = a -> next;
 	}
-	return NULL;
+	return nullptr;
 }
 
 /* Receive new messages and populate the interactive mode with more info. */
@@ -173,7 +173,7 @@ aircraft *thePlane, *aux;
 //	Lookup our aircraft or create a new one. */
 	locker. lock ();
 	thePlane = findAircraft (list, addr);
-	if (thePlane == NULL) {
+	if (thePlane == nullptr) {
 	   thePlane = new aircraft (addr);
 	   thePlane -> next = list;
 	   list = thePlane;
@@ -194,7 +194,7 @@ aircraft *thePlane, *aux;
          * useless shuffle of positions on the screen.
 	 */
 	aux = list;
-	if ((time (NULL) - aux -> seen) < 2) {
+	if ((time (nullptr) - aux -> seen) < 2) {
 	   locker. unlock ();
 	   return list;
 	}
@@ -203,7 +203,7 @@ aircraft *thePlane, *aux;
 //	OK, we have to reorder the list
 	while (aux -> next != thePlane) {
 	   aux = aux -> next;
-	   if (aux == NULL)	// should not happen, the plane is there
+	   if (aux == nullptr)	// should not happen, the plane is there
 	      break;
 	}
 //	Now we are a node before the aircraft to remove. */
@@ -216,7 +216,7 @@ aircraft *thePlane, *aux;
 }
 
 void	aircraft::fillData (message *mm) {
-	this -> seen = time (NULL);
+	this -> seen = time (nullptr);
 	this ->  messages++;
 
 	if (mm -> msgtype == 0 ||
@@ -331,10 +331,10 @@ double rlat1 = AirDlat1 * (cprModFunction (j, 59) + lat1 / 131072);
 aircraft *removeStaleAircrafts (aircraft *list,
 	                        int wtime, FILE *dumpfilePointer) {
 aircraft *currentPlane = list;
-aircraft *prev = NULL;
-time_t now = time(NULL);
+aircraft *prev = nullptr;
+time_t now	= time (nullptr);
 
-	while (currentPlane != NULL) {
+	while (currentPlane != nullptr) {
 	   if ((now - currentPlane -> seen) > wtime ) {
 	      aircraft *next = currentPlane -> next;
 //	Remove the element from the linked list, be careful
@@ -345,7 +345,7 @@ time_t now = time(NULL);
 	                 
 	      delete currentPlane;
 	   
-	      if (prev == NULL)
+	      if (prev == nullptr)
 	         list = next;
 	      else
 	         prev -> next = next;
@@ -374,9 +374,9 @@ int speed	= this -> speed;
 }
 
 void	aircraft:: showPlaneonExit (FILE *dumpfilePointer) {
-	if (dumpfilePointer != NULL) {
+	if (dumpfilePointer != nullptr) {
 	   std::string time_in	= ctime (&entryTime);
-	   const time_t currentTime = time (NULL);
+	   const time_t currentTime = time (nullptr);
 	   std::string time_out = ctime (&currentTime);
 	   fprintf (dumpfilePointer,
 	            "Plane  %-6s %-8s \n", hexaddr, flight);
@@ -402,12 +402,12 @@ void	clearScreen	(void) {
 void	showPlanes (aircraft *aircrafts, bool metric) {
 int amount	= 15;
 //int amount	= getTermRows ();
-time_t now	= time (NULL);
+time_t now	= time (nullptr);
 char progress [4];
 int count = 0;
 
 	memset (progress, ' ', 3);
-	progress [time (NULL) % 3] = '.';
+	progress [time (nullptr) % 3] = '.';
 	progress [3] = '\0';
 
 	clearScreen ();
@@ -416,7 +416,7 @@ int count = 0;
 "--------------------------------------------------------------------------------\n",
         progress);
 
-	while (aircrafts != NULL && count < amount) {
+	while (aircrafts != nullptr && count < amount) {
 	   aircraft *a = aircrafts;
 	   a -> showPlane (metric, now);
 	   aircrafts = aircrafts -> next;
@@ -443,7 +443,7 @@ QString Jsontxt;
 
 	Jsontxt.append ("[\n");
 	locker. lock ();
-	while (plane != NULL) {
+	while (plane != nullptr) {
 	   if (plane -> lat != 0 && plane -> lon != 0) {
 	      Jsontxt. append (plane -> toJson ());
 	   }
@@ -457,5 +457,6 @@ QString Jsontxt;
 	   Jsontxt. push_back ('\n');
 	}
 	Jsontxt. append ("]\n");
+//	fprintf (stderr, "the text %s\n", Jsontxt. toLatin1 (). data ());
 	return Jsontxt;
 }

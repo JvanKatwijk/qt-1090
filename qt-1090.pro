@@ -8,12 +8,12 @@ TEMPLATE	= app
 TARGET          = qt-1090
 QT		+= widgets network
 CONFIG		+= console
-QMAKE_CFLAGS	+= -O3 -ffast-math
-QMAKE_CXXFLAGS	+= -O3 -ffast-math
-QMAKE_LFLAGS	+= -O3
-#QMAKE_CFLAGS	+= -g
-#QMAKE_CXXFLAGS	+= -g
-#QMAKE_LFLAGS	+= -g
+#QMAKE_CFLAGS	+= -O3 -ffast-math
+#QMAKE_CXXFLAGS	+= -O3 -ffast-math
+#QMAKE_LFLAGS	+= -O3
+QMAKE_CFLAGS	+= -g
+QMAKE_CXXFLAGS	+= -g
+QMAKE_LFLAGS	+= -g
 #QMAKE_CFLAGS   +=  -g -fsanitize=address
 #QMAKE_CXXFLAGS +=  -g -fsanitize=address
 #QMAKE_LFLAGS   +=  -g -fsanitize=address
@@ -21,9 +21,11 @@ QMAKE_LFLAGS	+= -O3
 RC_ICONS        =  qt-1090.ico
 RESOURCES       += resources.qrc
 
-CONFIG	+= sdrplay
+CONFIG	+= sdrplay-v2
+CONFIG	+= sdrplay-v3
 #CONFIG	+= dabstick
 #CONFIG	+= hackrf
+#CONFIG	+= pluto
 #CONFIG	+= rtl_tcp
 
 TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
@@ -47,7 +49,7 @@ HEADERS += ./xclose.h \
            ./message-handling.h \
            ./device-handler.h \
            ./devices/file-handler/file-handler.h \
-           ./syncviewer.h  \
+           ./spectrumviewer.h  \
 	   ./http-handler.h
 
 FORMS	+= ./qt-1090.ui
@@ -61,7 +63,7 @@ SOURCES += ./xclose.cpp   \
            ./message-handling.cpp   \
            ./device-handler.cpp   \
            ./devices/file-handler/file-handler.cpp   \
-           ./syncviewer.cpp \
+           ./spectrumviewer.cpp \
 	   ./http-handler.cpp
 #
 # for windows32 we use:
@@ -109,7 +111,7 @@ DESTDIR		= ./linux-bin
 LIBS            += -L/usr/lib64
 LIBS            += -L/lib64
 INCLUDEPATH     += /usr/include/qt5/qwt
-LIBS            += -lqwt-qt5 -lusb-1.0 -ldl
+LIBS            += -lqwt-qt5 -lusb-1.0 -ldl -lfftw3f
 }
 
 #	the devices:
@@ -127,12 +129,21 @@ dabstick {
 #
 #	the SDRplay
 #
-sdrplay {
-	DEFINES		+= __HAVE_SDRPLAY__
-	INCLUDEPATH	+= ./devices/sdrplay-handler
-	HEADERS		+= ./devices/sdrplay-handler/sdrplay-handler.h 
-	SOURCES		+= ./devices/sdrplay-handler/sdrplay-handler.cpp 
-	FORMS		+= ./devices/sdrplay-handler/sdrplay-widget.ui
+sdrplay-v2 {
+	DEFINES		+= __HAVE_SDRPLAY_V2
+	INCLUDEPATH	+= ./devices/sdrplay-handler-v2
+	HEADERS		+= ./devices/sdrplay-handler-v2/sdrplay-handler-v2.h 
+	SOURCES		+= ./devices/sdrplay-handler-v2/sdrplay-handler-v2.cpp 
+	FORMS		+= ./devices/sdrplay-handler-v2/sdrplay-widget-v2.ui
+}
+#
+sdrplay-v3 {
+	DEFINES		+= __HAVE_SDRPLAY_V3
+	INCLUDEPATH	+= ./devices/sdrplay-handler-v3
+	HEADERS		+= ./devices/sdrplay-handler-v3/sdrplay-handler-v3.h \
+	                   ./devices/sdrplay-handler-v3/sdrplay-commands.h
+	SOURCES		+= ./devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp 
+	FORMS		+= ./devices/sdrplay-handler-v3/sdrplay-widget-v3.ui
 }
 #
 #	the HACKRF One

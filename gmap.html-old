@@ -127,7 +127,7 @@
                 stillhere[plane.hex] = true;
                 plane.flight = $.trim(plane.flight);
 
-                if (Planes[plane.hex]) {
+                if (Planes [plane.hex]) {
                     var myplane = Planes[plane.hex];
                     marker = myplane.marker;
                     marker.setLatLng([plane.lat,plane.lon]);

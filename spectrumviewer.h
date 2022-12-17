@@ -2,7 +2,7 @@
 /*
  *    Copyright (C) 2010, 2011, 2012
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair Programming
+ *    Lazy Chair Computing
  *
  *    This file is part of the qt-1090 program
  *
@@ -25,6 +25,9 @@
 #define	__SYNC_VIEWER__
 
 
+#include	<complex>
+#include	<vector>
+#include	<fftw3.h>
 #include        <QObject>
 #include        <qwt.h>
 #include        <qwt_plot.h>
@@ -36,25 +39,37 @@
 #include        <QBrush>
 #include        <QTimer>
 #include        <stdint.h>
-#include	<vector>
 
-class syncViewer {
+#include	"adsb-constants.h"
+
+class spectrumViewer {
 public:
-	syncViewer	(QwtPlot *, int);
-        ~syncViewer	(void);
-void    Display_1	(uint16_t *);
-void    Display_2	(uint16_t *, int);
+				spectrumViewer	(QwtPlot *);
+        			~spectrumViewer	();
+	void			Display		(std::complex<float> *,
+	                                               int, int);
+	void			setBitDepth	(int16_t);
 private:
-	std::vector<double>	X_AXIS;
-	std::vector<double>	Y_AXIS;
-	int		bitstoShow;
-        QwtPlot         *plotgrid;
-        uint16_t        displaySize;
-        QwtPlotGrid     *grid;
-        QwtPlotCurve    *SpectrumCurve;
-        QwtPlotMarker   *Marker;
-	QBrush          *greenBrush;
-	QBrush          *redBrush;
+
+	QColor			displayColor;
+	QColor			gridColor;
+	QColor			curveColor;
+
+	int16_t			displaySize;
+	int16_t			spectrumSize;
+	std::complex<float>	*spectrum;
+	std::vector<double>	displayBuffer;
+	std::vector<float>	Window;
+	fftwf_plan		plan;
+	QwtPlotMarker		*Marker;
+	QwtPlot			*plotgrid;
+	QwtPlotGrid		*grid;
+	QwtPlotCurve		*spectrumCurve;
+	QBrush			*ourBrush;
+	int32_t			indexforMarker;
+	void			ViewSpectrum	(double *, double *, double, int);
+	float			get_db		(float);
+	int32_t			normalizer;
 };
 
 #endif

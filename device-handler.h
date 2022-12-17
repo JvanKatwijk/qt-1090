@@ -29,20 +29,22 @@
  *	to be transparent
  */
 #include	"adsb-constants.h"
-#include	<QObject>
+#include	<complex>
+#include	<QThread>
 using namespace std;
 
-class	deviceHandler: public QObject {
+class	deviceHandler: public QThread {
 Q_OBJECT
 public:
-			deviceHandler 	(void);
-virtual			~deviceHandler 	(void);
-virtual	void		startDevice	(void);
-virtual	void		stopDevice	(void);
-virtual	int		getSamples	(int16_t *, int);
-virtual	int		Samples		(void);
+			deviceHandler 	();
+virtual			~deviceHandler 	();
+virtual	void		startDevice	();
+virtual	void		stopDevice	();
+virtual	int		getSamples	(std::complex<float> *, int);
+virtual	int		Samples		();
+virtual	int		nrBits		();
 signals:
-	void		dataAvailable	(void);
+	void		dataAvailable	();
 };
 #endif
 

@@ -53,6 +53,7 @@ typedef void    *HINSTANCE;
 class	aircraft;
 class	icaoCache;
 
+#define	INPUT_RATE	2400000
 #define DATA_LEN             (16*16384)   /* 256k */
 
 #define PREAMBLE_US 8       /* microseconds */
@@ -68,7 +69,7 @@ class	icaoCache;
 
 #define NOTUSED(V) ((void) V)
 
-#define	CURRENT_VERSION	"0.8"
+#define	CURRENT_VERSION	"1.0"
 
 #define	NO_ERRORFIX	0
 #define	NORMAL_ERRORFIX	1

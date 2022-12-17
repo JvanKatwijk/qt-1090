@@ -2,7 +2,7 @@
 /*
  *    Copyright (C) 2012 .. 2017
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair Programming
+ *    Lazy Chair Computing
  *
  *    This file is part of the dump1090 program
  *
@@ -69,15 +69,15 @@ class	rtlsdrHandler: public deviceHandler, public  Ui_dabstickWidget {
 Q_OBJECT
 public:
 			rtlsdrHandler	(QSettings *, int);
-			~rtlsdrHandler	(void);
-	void		startDevice	(void);
-	void		stopDevice	(void);
-	int		getSamples	(int16_t *buffer, int);
-	int		Samples		(void);
+			~rtlsdrHandler	();
+	void		startDevice	();
+	void		stopDevice	();
+	int		getSamples	(std::complex<float> *buffer, int);
+	int		Samples		();
 	RingBuffer<int16_t>	*_I_Buffer;
 	pfnrtlsdr_read_async    rtlsdr_read_async;
 	struct rtlsdr_dev       *theDevice;
-	void		signalData	(void);
+	void		signalData	();
 
 private:
 	dll_driver	*workerHandle;

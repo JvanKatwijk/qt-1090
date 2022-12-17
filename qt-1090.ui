@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>803</width>
-    <height>413</height>
+    <height>411</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,26 +16,53 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QwtPlot" name="dumpview">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QSlider" name="amplitudeSlider">
+        <property name="value">
+         <number>50</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QwtPlot" name="plotgrid">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>151</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QPushButton" name="interactiveButton">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose between looking at a sequence of messages or a list of currently visible planes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>interactive</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="ttl_selector"/>
+       <widget class="QSpinBox" name="ttl_selector">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;selector for the duration that a visible is still listed while waiting for messages to be received&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="httpButton">
@@ -84,10 +111,15 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="viewButton">
-        <property name="text">
-         <string>single view</string>
+       <widget class="QComboBox" name="deviceSelector">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a device. Software can handle a variety of devices - depending on the configuration.&lt;/p&gt;&lt;p&gt;Once a device is selected and could be opened, the combobox will be hidden.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
+        <item>
+         <property name="text">
+          <string>device</string>
+         </property>
+        </item>
        </widget>
       </item>
      </layout>
@@ -118,13 +150,6 @@
         </property>
         <property name="segmentStyle">
          <enum>QLCDNumber::Flat</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>number of bit error correction</string>
         </property>
        </widget>
       </item>
@@ -193,6 +218,13 @@
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>two bit error corrections</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>number of bit error correction</string>
         </property>
        </widget>
       </item>

@@ -2,7 +2,7 @@
 /*
  *    Copyright (C) 2018
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair Programming
+ *    Lazy Chair Computing
  *
  *    This file is part of the qt-1090 program
  *
@@ -29,9 +29,11 @@
 #include	<stdio.h>
 #include	"device-handler.h"
 
-	deviceHandler::deviceHandler 	(void) {}
-	deviceHandler::~deviceHandler 	(void) {}
-void	deviceHandler::startDevice	(void) { fprintf (stderr, "dummy gestart\n");}
-void	deviceHandler::stopDevice	(void) {}
-int	deviceHandler::getSamples	(int16_t *, int) { return 0; }
-int	deviceHandler::Samples		(void) {return 0;}
+	deviceHandler::deviceHandler 	() {}
+	deviceHandler::~deviceHandler 	() {}
+void	deviceHandler::startDevice	() { fprintf (stderr, "dummy gestart\n");}
+void	deviceHandler::stopDevice	() {}
+int	deviceHandler::getSamples	(std::complex<float> *, int) { return 0; }
+int	deviceHandler::Samples		() {return 0;}
+
+int	deviceHandler::nrBits		() {return 8;}

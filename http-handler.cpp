@@ -30,8 +30,8 @@
 #include	<stdlib.h>
 #include	<unistd.h>
 #include	<sys/types.h> 
-#include	<sys/socket.h>
-#include	<netinet/in.h>
+//#include	<sys/socket.h>
+//#include	<netinet/in.h>
 #include	<netdb.h>
 #include	<arpa/inet.h>
 #include	<err.h>
@@ -105,21 +105,21 @@ std::string	ctype;
 	   while (running) {
 	      if (read (client_fd, buffer, 4096) < 0)
 	         break;
-	      fprintf (stderr, "%s\n", buffer);
-	      int httpver = (strstr (buffer, "HTTP/1.1") != NULL) ? 11 : 10;
+//	      fprintf (stderr, "%s\n", buffer);
+	      int httpver = (strstr (buffer, "HTTP/1.1") != nullptr) ? 11 : 10;
 	      if (httpver == 11) 
 //	HTTP 1.1 defaults to keep-alive, unless close is specified. 
-	         keepalive = strstr (buffer, "Connection: close") == NULL;
+	         keepalive = strstr (buffer, "Connection: close") == nullptr;
 	      else // httpver == 10
-	         keepalive = strstr (buffer, "Connection: keep-alive") != NULL;
+	         keepalive = strstr (buffer, "Connection: keep-alive") != nullptr;
 
 	/* Identify he URL. */
 	      char *p = strchr (buffer,' ');
-	      if (p == NULL) 
+	      if (p == nullptr) 
 	         break;
 	      url = ++p; // Now this should point to the requested URL. 
 	      p = strchr (p, ' ');
-	      if (p == NULL)
+	      if (p == nullptr)
 	         break;
 	      *p = '\0';
 
@@ -152,10 +152,10 @@ std::string	ctype;
 	               keepalive ? "keep-alive" : "close",
 	               (int)(strlen (content. c_str ())));
 	      int hdrlen = strlen (hdr);
-	      fprintf (stderr, "%s \n", hdr);
+//	      fprintf (stderr, "%s \n", hdr);
 	      if (jsonUpdate) {
-	         fprintf (stderr, "Json update requested\n");
-	         fprintf (stderr, "%s\n", content. c_str ());
+//	         fprintf (stderr, "Json update requested\n");
+//	         fprintf (stderr, "%s\n", content. c_str ());
 	      }
 //	and send the reply
 	      if (write (client_fd, hdr, hdrlen) != hdrlen ||

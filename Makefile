@@ -14,10 +14,10 @@ EQ            = =
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DGITHASH=\"712b23f\" -D__HAVE_SDRPLAY__ -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
-CFLAGS        = -pipe -O3 -ffast-math -O2 -Wall -Wextra -D_REENTRANT -fPIC $(DEFINES)
-CXXFLAGS      = -pipe -O3 -ffast-math -O2 -Wall -Wextra -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -I. -Idevices -Idevices/file-handler -I../../../include/qt5/qwt -Idevices/sdrplay-handler -I../../../include/qt5 -I../../../include/qt5/QtWidgets -I../../../include/qt5/QtGui -I../../../include/qt5/QtNetwork -I../../../include/qt5/QtCore -I. -I. -I/../lib64/qt5/mkspecs/linux-g++
+DEFINES       = -DGITHASH=\"6dd03dd\" -D__HAVE_SDRPLAY_V2 -D__HAVE_SDRPLAY_V3 -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
+CFLAGS        = -pipe -g -O2 -Wall -Wextra -D_REENTRANT -fPIC $(DEFINES)
+CXXFLAGS      = -pipe -g -O2 -Wall -Wextra -D_REENTRANT -fPIC $(DEFINES)
+INCPATH       = -I. -I. -Idevices -Idevices/file-handler -I../../../include/qt5/qwt -Idevices/sdrplay-handler-v2 -Idevices/sdrplay-handler-v3 -I../../../include/qt5 -I../../../include/qt5/QtWidgets -I../../../include/qt5/QtGui -I../../../include/qt5/QtNetwork -I../../../include/qt5/QtCore -I. -I. -I/../lib64/qt5/mkspecs/linux-g++
 QMAKE         = /usr/bin/qmake-qt5
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -39,8 +39,8 @@ COMPRESS      = gzip -9f
 DISTNAME      = qt-10901.0.0
 DISTDIR = /usr/shared/systems/qt-1090/.tmp/qt-10901.0.0
 LINK          = g++
-LFLAGS        = -O3 -Wl,-O1
-LIBS          = $(SUBLIBS) -L/usr/lib64 -L/lib64 -lqwt-qt5 -lusb-1.0 -ldl /usr/lib64/libQt5Widgets.so /usr/lib64/libQt5Gui.so /usr/lib64/libQt5Network.so /usr/lib64/libQt5Core.so -lGL -lpthread   
+LFLAGS        = -g -Wl,-O1
+LIBS          = $(SUBLIBS) -L/usr/lib64 -L/lib64 -lqwt-qt5 -lusb-1.0 -ldl -lfftw3f /usr/lib64/libQt5Widgets.so /usr/lib64/libQt5Gui.so /usr/lib64/libQt5Network.so /usr/lib64/libQt5Core.so -lGL -lpthread   
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -61,12 +61,14 @@ SOURCES       = xclose.cpp \
 		message-handling.cpp \
 		device-handler.cpp \
 		devices/file-handler/file-handler.cpp \
-		syncviewer.cpp \
+		spectrumviewer.cpp \
 		http-handler.cpp \
-		devices/sdrplay-handler/sdrplay-handler.cpp qrc_resources.cpp \
+		devices/sdrplay-handler-v2/sdrplay-handler-v2.cpp \
+		devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp qrc_resources.cpp \
 		moc_qt-1090.cpp \
 		moc_device-handler.cpp \
-		moc_sdrplay-handler.cpp
+		moc_sdrplay-handler-v2.cpp \
+		moc_sdrplay-handler-v3.cpp
 OBJECTS       = xclose.o \
 		main.o \
 		qt-1090.o \
@@ -76,13 +78,15 @@ OBJECTS       = xclose.o \
 		message-handling.o \
 		device-handler.o \
 		file-handler.o \
-		syncviewer.o \
+		spectrumviewer.o \
 		http-handler.o \
-		sdrplay-handler.o \
+		sdrplay-handler-v2.o \
+		sdrplay-handler-v3.o \
 		qrc_resources.o \
 		moc_qt-1090.o \
 		moc_device-handler.o \
-		moc_sdrplay-handler.o
+		moc_sdrplay-handler-v2.o \
+		moc_sdrplay-handler-v3.o
 DIST          = /../lib64/qt5/mkspecs/features/spec_pre.prf \
 		../../../lib64/qt5/mkspecs/common/unix.conf \
 		../../../lib64/qt5/mkspecs/common/linux.conf \
@@ -116,15 +120,42 @@ DIST          = /../lib64/qt5/mkspecs/features/spec_pre.prf \
 		/../lib64/qt5/mkspecs/modules/qt_lib_input_support_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_kms_support_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_linuxaccessibility_support_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimedia.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimedia_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimediagsttools_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimediawidgets.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimediawidgets_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_network.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_network_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_opengl.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_opengl_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_openglextensions.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_openglextensions_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_packetprotocol_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_platformcompositor_support_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_printsupport.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_printsupport_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qml.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qml_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmldebug_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmldevtools_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmlmodels.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmlmodels_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmltest.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmltest_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmlworkerscript.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmlworkerscript_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qtmultimediaquicktools_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quick.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quick_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickcontrols2.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickcontrols2_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickparticles_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickshapes_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quicktemplates2.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quicktemplates2_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickwidgets.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickwidgets_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_service_support_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_sql_private.pri \
@@ -174,9 +205,11 @@ DIST          = /../lib64/qt5/mkspecs/features/spec_pre.prf \
 		message-handling.h \
 		device-handler.h \
 		devices/file-handler/file-handler.h \
-		syncviewer.h \
+		spectrumviewer.h \
 		http-handler.h \
-		devices/sdrplay-handler/sdrplay-handler.h xclose.cpp \
+		devices/sdrplay-handler-v2/sdrplay-handler-v2.h \
+		devices/sdrplay-handler-v3/sdrplay-handler-v3.h \
+		devices/sdrplay-handler-v3/sdrplay-commands.h xclose.cpp \
 		main.cpp \
 		qt-1090.cpp \
 		aircraft-handler.cpp \
@@ -185,9 +218,10 @@ DIST          = /../lib64/qt5/mkspecs/features/spec_pre.prf \
 		message-handling.cpp \
 		device-handler.cpp \
 		devices/file-handler/file-handler.cpp \
-		syncviewer.cpp \
+		spectrumviewer.cpp \
 		http-handler.cpp \
-		devices/sdrplay-handler/sdrplay-handler.cpp
+		devices/sdrplay-handler-v2/sdrplay-handler-v2.cpp \
+		devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp
 QMAKE_TARGET  = qt-1090
 DESTDIR       = linux-bin/
 TARGET        = linux-bin/qt-1090
@@ -196,7 +230,7 @@ TARGET        = linux-bin/qt-1090
 first: all
 ####### Build rules
 
-linux-bin/qt-1090: ui_qt-1090.h ui_sdrplay-widget.h $(OBJECTS)  
+linux-bin/qt-1090: ui_qt-1090.h ui_sdrplay-widget-v2.h ui_sdrplay-widget-v3.h $(OBJECTS)  
 	@test -d linux-bin/ || mkdir -p linux-bin/
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJCOMP) $(LIBS)
 
@@ -233,15 +267,42 @@ Makefile: qt-1090.pro /../lib64/qt5/mkspecs/linux-g++/qmake.conf /../lib64/qt5/m
 		/../lib64/qt5/mkspecs/modules/qt_lib_input_support_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_kms_support_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_linuxaccessibility_support_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimedia.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimedia_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimediagsttools_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimediawidgets.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_multimediawidgets_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_network.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_network_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_opengl.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_opengl_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_openglextensions.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_openglextensions_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_packetprotocol_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_platformcompositor_support_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_printsupport.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_printsupport_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qml.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qml_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmldebug_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmldevtools_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmlmodels.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmlmodels_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmltest.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmltest_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmlworkerscript.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qmlworkerscript_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_qtmultimediaquicktools_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quick.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quick_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickcontrols2.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickcontrols2_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickparticles_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickshapes_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quicktemplates2.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quicktemplates2_private.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickwidgets.pri \
+		/../lib64/qt5/mkspecs/modules/qt_lib_quickwidgets_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_service_support_private.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/../lib64/qt5/mkspecs/modules/qt_lib_sql_private.pri \
@@ -317,15 +378,42 @@ Makefile: qt-1090.pro /../lib64/qt5/mkspecs/linux-g++/qmake.conf /../lib64/qt5/m
 /../lib64/qt5/mkspecs/modules/qt_lib_input_support_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_kms_support_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_linuxaccessibility_support_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_multimedia.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_multimedia_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_multimediagsttools_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_multimediawidgets.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_multimediawidgets_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_network.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_network_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_opengl.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_opengl_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_openglextensions.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_openglextensions_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_packetprotocol_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_platformcompositor_support_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_printsupport.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_printsupport_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qml.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qml_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qmldebug_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qmldevtools_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qmlmodels.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qmlmodels_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qmltest.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qmltest_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qmlworkerscript.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qmlworkerscript_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_qtmultimediaquicktools_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quick.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quick_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quickcontrols2.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quickcontrols2_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quickparticles_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quickshapes_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quicktemplates2.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quicktemplates2_private.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quickwidgets.pri:
+/../lib64/qt5/mkspecs/modules/qt_lib_quickwidgets_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_service_support_private.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_sql.pri:
 /../lib64/qt5/mkspecs/modules/qt_lib_sql_private.pri:
@@ -383,9 +471,9 @@ distdir: FORCE
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents resources.qrc $(DISTDIR)/
 	$(COPY_FILE) --parents /../lib64/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents xclose.h qt-1090.h ringbuffer.h adsb-constants.h aircraft-handler.h icao-cache.h crc-handling.h message-handling.h device-handler.h devices/file-handler/file-handler.h syncviewer.h http-handler.h devices/sdrplay-handler/sdrplay-handler.h $(DISTDIR)/
-	$(COPY_FILE) --parents xclose.cpp main.cpp qt-1090.cpp aircraft-handler.cpp icao-cache.cpp crc-handling.cpp message-handling.cpp device-handler.cpp devices/file-handler/file-handler.cpp syncviewer.cpp http-handler.cpp devices/sdrplay-handler/sdrplay-handler.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents qt-1090.ui devices/sdrplay-handler/sdrplay-widget.ui $(DISTDIR)/
+	$(COPY_FILE) --parents xclose.h qt-1090.h ringbuffer.h adsb-constants.h aircraft-handler.h icao-cache.h crc-handling.h message-handling.h device-handler.h devices/file-handler/file-handler.h spectrumviewer.h http-handler.h devices/sdrplay-handler-v2/sdrplay-handler-v2.h devices/sdrplay-handler-v3/sdrplay-handler-v3.h devices/sdrplay-handler-v3/sdrplay-commands.h $(DISTDIR)/
+	$(COPY_FILE) --parents xclose.cpp main.cpp qt-1090.cpp aircraft-handler.cpp icao-cache.cpp crc-handling.cpp message-handling.cpp device-handler.cpp devices/file-handler/file-handler.cpp spectrumviewer.cpp http-handler.cpp devices/sdrplay-handler-v2/sdrplay-handler-v2.cpp devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents qt-1090.ui devices/sdrplay-handler-v2/sdrplay-widget-v2.ui devices/sdrplay-handler-v3/sdrplay-widget-v3.ui $(DISTDIR)/
 	$(COPY_FILE) --parents i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts $(DISTDIR)/
 
 
@@ -427,11 +515,11 @@ compiler_moc_predefs_make_all: moc_predefs.h
 compiler_moc_predefs_clean:
 	-$(DEL_FILE) moc_predefs.h
 moc_predefs.h: /../lib64/qt5/mkspecs/features/data/dummy.cpp
-	g++ -pipe -O3 -ffast-math -O2 -Wall -Wextra -dM -E -o moc_predefs.h /../lib64/qt5/mkspecs/features/data/dummy.cpp
+	g++ -pipe -g -O2 -Wall -Wextra -dM -E -o moc_predefs.h /../lib64/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_qt-1090.cpp moc_device-handler.cpp moc_sdrplay-handler.cpp
+compiler_moc_header_make_all: moc_qt-1090.cpp moc_device-handler.cpp moc_sdrplay-handler-v2.cpp moc_sdrplay-handler-v3.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_qt-1090.cpp moc_device-handler.cpp moc_sdrplay-handler.cpp
+	-$(DEL_FILE) moc_qt-1090.cpp moc_device-handler.cpp moc_sdrplay-handler-v2.cpp moc_sdrplay-handler-v3.cpp
 moc_qt-1090.cpp: qt-1090.h \
 		adsb-constants.h \
 		../../../include/qt5/QtWidgets/QMainWindow \
@@ -555,50 +643,10 @@ moc_qt-1090.cpp: qt-1090.h \
 		message-handling.h \
 		crc-handling.h \
 		ui_qt-1090.h \
-		../../../include/qt5/QtCore/QVariant \
-		../../../include/qt5/QtWidgets/QApplication \
-		../../../include/qt5/QtWidgets/qapplication.h \
-		../../../include/qt5/QtCore/qcoreapplication.h \
-		../../../include/qt5/QtCore/qeventloop.h \
-		../../../include/qt5/QtWidgets/qdesktopwidget.h \
-		../../../include/qt5/QtGui/qguiapplication.h \
-		../../../include/qt5/QtGui/qinputmethod.h \
-		../../../include/qt5/QtWidgets/QComboBox \
-		../../../include/qt5/QtWidgets/qcombobox.h \
-		../../../include/qt5/QtWidgets/qabstractitemdelegate.h \
-		../../../include/qt5/QtWidgets/qstyleoption.h \
-		../../../include/qt5/QtWidgets/qabstractspinbox.h \
-		../../../include/qt5/QtGui/qvalidator.h \
-		../../../include/qt5/QtCore/qregularexpression.h \
-		../../../include/qt5/QtWidgets/qslider.h \
-		../../../include/qt5/QtWidgets/qabstractslider.h \
-		../../../include/qt5/QtWidgets/qstyle.h \
-		../../../include/qt5/QtWidgets/qtabbar.h \
-		../../../include/qt5/QtWidgets/qrubberband.h \
-		../../../include/qt5/QtWidgets/qframe.h \
-		../../../include/qt5/QtCore/qabstractitemmodel.h \
-		../../../include/qt5/QtWidgets/QGridLayout \
-		../../../include/qt5/QtWidgets/qgridlayout.h \
-		../../../include/qt5/QtWidgets/qlayout.h \
-		../../../include/qt5/QtWidgets/qlayoutitem.h \
-		../../../include/qt5/QtWidgets/qboxlayout.h \
-		../../../include/qt5/QtWidgets/QHBoxLayout \
-		../../../include/qt5/QtWidgets/QLCDNumber \
-		../../../include/qt5/QtWidgets/qlcdnumber.h \
-		../../../include/qt5/QtWidgets/QLabel \
-		../../../include/qt5/QtWidgets/qlabel.h \
-		../../../include/qt5/QtWidgets/QPushButton \
-		../../../include/qt5/QtWidgets/qpushbutton.h \
-		../../../include/qt5/QtWidgets/qabstractbutton.h \
-		../../../include/qt5/QtWidgets/QSpacerItem \
-		../../../include/qt5/QtWidgets/QSpinBox \
-		../../../include/qt5/QtWidgets/qspinbox.h \
-		../../../include/qt5/QtWidgets/QStatusBar \
-		../../../include/qt5/QtWidgets/qstatusbar.h \
-		../../../include/qt5/QtWidgets/QVBoxLayout \
-		../../../include/qt5/QtWidgets/QWidget \
-		../../../include/qt5/qwt/qwt_plot.h \
+		spectrumviewer.h \
+		../../../include/qt5/qwt/qwt.h \
 		../../../include/qt5/qwt/qwt_global.h \
+		../../../include/qt5/qwt/qwt_plot.h \
 		../../../include/qt5/qwt/qwt_text.h \
 		../../../include/qt5/qwt/qwt_plot_dict.h \
 		../../../include/qt5/qwt/qwt_plot_item.h \
@@ -612,9 +660,28 @@ moc_qt-1090.cpp: qt-1090.h \
 		../../../include/qt5/qwt/qwt_scale_map.h \
 		../../../include/qt5/qwt/qwt_transform.h \
 		../../../include/qt5/qwt/qwt_interval.h \
+		../../../include/qt5/QtWidgets/qframe.h \
+		../../../include/qt5/qwt/qwt_plot_curve.h \
+		../../../include/qt5/qwt/qwt_plot_seriesitem.h \
+		../../../include/qt5/qwt/qwt_scale_div.h \
+		../../../include/qt5/qwt/qwt_series_data.h \
+		../../../include/qt5/qwt/qwt_samples.h \
+		../../../include/qt5/qwt/qwt_point_3d.h \
+		../../../include/qt5/qwt/qwt_point_polar.h \
+		../../../include/qt5/qwt/qwt_math.h \
+		../../../include/qt5/QtCore/qmath.h \
+		../../../include/qt5/qwt/qwt_series_store.h \
+		../../../include/qt5/qwt/qwt_plot_marker.h \
+		../../../include/qt5/qwt/qwt_plot_grid.h \
+		../../../include/qt5/qwt/qwt_color_map.h \
+		../../../include/qt5/qwt/qwt_plot_picker.h \
+		../../../include/qt5/qwt/qwt_picker.h \
+		../../../include/qt5/qwt/qwt_event_pattern.h \
+		../../../include/qt5/QtGui/qpainterpath.h \
+		../../../include/qt5/QtGui/QBrush \
 		moc_predefs.h \
 		/../lib64/qt5/bin/moc
-	/../lib64/qt5/bin/moc $(DEFINES) --include /usr/shared/systems/qt-1090/moc_predefs.h -I/../lib64/qt5/mkspecs/linux-g++ -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090/devices -I/usr/shared/systems/qt-1090/devices/file-handler -I/usr/include/qt5/qwt -I/usr/shared/systems/qt-1090/devices/sdrplay-handler -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I/usr/include/c++/10 -I/usr/include/c++/10/x86_64-redhat-linux -I/usr/include/c++/10/backward -I/usr/lib/gcc/x86_64-redhat-linux/10/include -I/usr/local/include -I/usr/include qt-1090.h -o moc_qt-1090.cpp
+	/../lib64/qt5/bin/moc $(DEFINES) --include /usr/shared/systems/qt-1090/moc_predefs.h -I/../lib64/qt5/mkspecs/linux-g++ -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090/devices -I/usr/shared/systems/qt-1090/devices/file-handler -I/usr/include/qt5/qwt -I/usr/shared/systems/qt-1090/devices/sdrplay-handler-v2 -I/usr/shared/systems/qt-1090/devices/sdrplay-handler-v3 -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/c++/11/x86_64-redhat-linux -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-redhat-linux/11/include -I/usr/local/include -I/usr/include qt-1090.h -o moc_qt-1090.cpp
 
 moc_device-handler.cpp: device-handler.h \
 		adsb-constants.h \
@@ -674,9 +741,9 @@ moc_device-handler.cpp: device-handler.h \
 		../../../include/qt5/QtCore/qobject_impl.h \
 		moc_predefs.h \
 		/../lib64/qt5/bin/moc
-	/../lib64/qt5/bin/moc $(DEFINES) --include /usr/shared/systems/qt-1090/moc_predefs.h -I/../lib64/qt5/mkspecs/linux-g++ -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090/devices -I/usr/shared/systems/qt-1090/devices/file-handler -I/usr/include/qt5/qwt -I/usr/shared/systems/qt-1090/devices/sdrplay-handler -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I/usr/include/c++/10 -I/usr/include/c++/10/x86_64-redhat-linux -I/usr/include/c++/10/backward -I/usr/lib/gcc/x86_64-redhat-linux/10/include -I/usr/local/include -I/usr/include device-handler.h -o moc_device-handler.cpp
+	/../lib64/qt5/bin/moc $(DEFINES) --include /usr/shared/systems/qt-1090/moc_predefs.h -I/../lib64/qt5/mkspecs/linux-g++ -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090/devices -I/usr/shared/systems/qt-1090/devices/file-handler -I/usr/include/qt5/qwt -I/usr/shared/systems/qt-1090/devices/sdrplay-handler-v2 -I/usr/shared/systems/qt-1090/devices/sdrplay-handler-v3 -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/c++/11/x86_64-redhat-linux -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-redhat-linux/11/include -I/usr/local/include -I/usr/include device-handler.h -o moc_device-handler.cpp
 
-moc_sdrplay-handler.cpp: devices/sdrplay-handler/sdrplay-handler.h \
+moc_sdrplay-handler-v2.cpp: devices/sdrplay-handler-v2/sdrplay-handler-v2.h \
 		../../../include/qt5/QtCore/QObject \
 		../../../include/qt5/QtCore/qobject.h \
 		../../../include/qt5/QtCore/qobjectdefs.h \
@@ -788,52 +855,142 @@ moc_sdrplay-handler.cpp: devices/sdrplay-handler/sdrplay-handler.h \
 		ringbuffer.h \
 		device-handler.h \
 		adsb-constants.h \
-		ui_sdrplay-widget.h \
-		../../../include/qt5/QtCore/QVariant \
-		../../../include/qt5/QtWidgets/QApplication \
-		../../../include/qt5/QtWidgets/qapplication.h \
-		../../../include/qt5/QtCore/qcoreapplication.h \
-		../../../include/qt5/QtCore/qeventloop.h \
-		../../../include/qt5/QtWidgets/qdesktopwidget.h \
-		../../../include/qt5/QtGui/qguiapplication.h \
-		../../../include/qt5/QtGui/qinputmethod.h \
-		../../../include/qt5/QtWidgets/QCheckBox \
-		../../../include/qt5/QtWidgets/qcheckbox.h \
-		../../../include/qt5/QtWidgets/qabstractbutton.h \
-		../../../include/qt5/QtGui/qicon.h \
-		../../../include/qt5/QtWidgets/QComboBox \
-		../../../include/qt5/QtWidgets/qcombobox.h \
-		../../../include/qt5/QtWidgets/qabstractitemdelegate.h \
-		../../../include/qt5/QtWidgets/qstyleoption.h \
-		../../../include/qt5/QtWidgets/qabstractspinbox.h \
-		../../../include/qt5/QtGui/qvalidator.h \
-		../../../include/qt5/QtCore/qregularexpression.h \
-		../../../include/qt5/QtWidgets/qslider.h \
-		../../../include/qt5/QtWidgets/qabstractslider.h \
-		../../../include/qt5/QtWidgets/qstyle.h \
-		../../../include/qt5/QtWidgets/qtabbar.h \
-		../../../include/qt5/QtWidgets/qtabwidget.h \
-		../../../include/qt5/QtWidgets/qrubberband.h \
-		../../../include/qt5/QtCore/qabstractitemmodel.h \
-		../../../include/qt5/QtWidgets/QLCDNumber \
-		../../../include/qt5/QtWidgets/qlcdnumber.h \
-		../../../include/qt5/QtWidgets/QLabel \
-		../../../include/qt5/QtWidgets/qlabel.h \
-		../../../include/qt5/QtWidgets/QSpinBox \
-		../../../include/qt5/QtWidgets/qspinbox.h \
-		../../../include/qt5/QtWidgets/QWidget \
-		devices/sdrplay-handler/mirsdrapi-rsp.h \
+		ui_sdrplay-widget-v2.h \
+		devices/sdrplay-handler-v2/mirsdrapi-rsp.h \
 		moc_predefs.h \
 		/../lib64/qt5/bin/moc
-	/../lib64/qt5/bin/moc $(DEFINES) --include /usr/shared/systems/qt-1090/moc_predefs.h -I/../lib64/qt5/mkspecs/linux-g++ -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090/devices -I/usr/shared/systems/qt-1090/devices/file-handler -I/usr/include/qt5/qwt -I/usr/shared/systems/qt-1090/devices/sdrplay-handler -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I/usr/include/c++/10 -I/usr/include/c++/10/x86_64-redhat-linux -I/usr/include/c++/10/backward -I/usr/lib/gcc/x86_64-redhat-linux/10/include -I/usr/local/include -I/usr/include devices/sdrplay-handler/sdrplay-handler.h -o moc_sdrplay-handler.cpp
+	/../lib64/qt5/bin/moc $(DEFINES) --include /usr/shared/systems/qt-1090/moc_predefs.h -I/../lib64/qt5/mkspecs/linux-g++ -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090/devices -I/usr/shared/systems/qt-1090/devices/file-handler -I/usr/include/qt5/qwt -I/usr/shared/systems/qt-1090/devices/sdrplay-handler-v2 -I/usr/shared/systems/qt-1090/devices/sdrplay-handler-v3 -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/c++/11/x86_64-redhat-linux -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-redhat-linux/11/include -I/usr/local/include -I/usr/include devices/sdrplay-handler-v2/sdrplay-handler-v2.h -o moc_sdrplay-handler-v2.cpp
+
+moc_sdrplay-handler-v3.cpp: devices/sdrplay-handler-v3/sdrplay-handler-v3.h \
+		../../../include/qt5/QtCore/QThread \
+		../../../include/qt5/QtCore/qthread.h \
+		../../../include/qt5/QtCore/qobject.h \
+		../../../include/qt5/QtCore/qobjectdefs.h \
+		../../../include/qt5/QtCore/qnamespace.h \
+		../../../include/qt5/QtCore/qglobal.h \
+		../../../include/qt5/QtCore/qconfig-bootstrapped.h \
+		../../../include/qt5/QtCore/qconfig.h \
+		../../../include/qt5/QtCore/qconfig-64.h \
+		../../../include/qt5/QtCore/qtcore-config.h \
+		../../../include/qt5/QtCore/qsystemdetection.h \
+		../../../include/qt5/QtCore/qprocessordetection.h \
+		../../../include/qt5/QtCore/qcompilerdetection.h \
+		../../../include/qt5/QtCore/qtypeinfo.h \
+		../../../include/qt5/QtCore/qsysinfo.h \
+		../../../include/qt5/QtCore/qlogging.h \
+		../../../include/qt5/QtCore/qflags.h \
+		../../../include/qt5/QtCore/qatomic.h \
+		../../../include/qt5/QtCore/qbasicatomic.h \
+		../../../include/qt5/QtCore/qatomic_bootstrap.h \
+		../../../include/qt5/QtCore/qgenericatomic.h \
+		../../../include/qt5/QtCore/qatomic_cxx11.h \
+		../../../include/qt5/QtCore/qatomic_msvc.h \
+		../../../include/qt5/QtCore/qglobalstatic.h \
+		../../../include/qt5/QtCore/qmutex.h \
+		../../../include/qt5/QtCore/qnumeric.h \
+		../../../include/qt5/QtCore/qversiontagging.h \
+		../../../include/qt5/QtCore/qobjectdefs_impl.h \
+		../../../include/qt5/QtCore/qstring.h \
+		../../../include/qt5/QtCore/qchar.h \
+		../../../include/qt5/QtCore/qbytearray.h \
+		../../../include/qt5/QtCore/qrefcount.h \
+		../../../include/qt5/QtCore/qarraydata.h \
+		../../../include/qt5/QtCore/qstringliteral.h \
+		../../../include/qt5/QtCore/qstringalgorithms.h \
+		../../../include/qt5/QtCore/qstringview.h \
+		../../../include/qt5/QtCore/qstringbuilder.h \
+		../../../include/qt5/QtCore/qlist.h \
+		../../../include/qt5/QtCore/qalgorithms.h \
+		../../../include/qt5/QtCore/qiterator.h \
+		../../../include/qt5/QtCore/qhashfunctions.h \
+		../../../include/qt5/QtCore/qpair.h \
+		../../../include/qt5/QtCore/qvector.h \
+		../../../include/qt5/QtCore/qcontainertools_impl.h \
+		../../../include/qt5/QtCore/qpoint.h \
+		../../../include/qt5/QtCore/qbytearraylist.h \
+		../../../include/qt5/QtCore/qstringlist.h \
+		../../../include/qt5/QtCore/qregexp.h \
+		../../../include/qt5/QtCore/qstringmatcher.h \
+		../../../include/qt5/QtCore/qcoreevent.h \
+		../../../include/qt5/QtCore/qscopedpointer.h \
+		../../../include/qt5/QtCore/qmetatype.h \
+		../../../include/qt5/QtCore/qvarlengtharray.h \
+		../../../include/qt5/QtCore/qcontainerfwd.h \
+		../../../include/qt5/QtCore/qobject_impl.h \
+		../../../include/qt5/QtCore/qdeadlinetimer.h \
+		../../../include/qt5/QtCore/qelapsedtimer.h \
+		../../../include/qt5/QtWidgets/QFrame \
+		../../../include/qt5/QtWidgets/qframe.h \
+		../../../include/qt5/QtWidgets/qtwidgetsglobal.h \
+		../../../include/qt5/QtGui/qtguiglobal.h \
+		../../../include/qt5/QtGui/qtgui-config.h \
+		../../../include/qt5/QtWidgets/qtwidgets-config.h \
+		../../../include/qt5/QtWidgets/qwidget.h \
+		../../../include/qt5/QtGui/qwindowdefs.h \
+		../../../include/qt5/QtGui/qwindowdefs_win.h \
+		../../../include/qt5/QtCore/qmargins.h \
+		../../../include/qt5/QtGui/qpaintdevice.h \
+		../../../include/qt5/QtCore/qrect.h \
+		../../../include/qt5/QtCore/qsize.h \
+		../../../include/qt5/QtGui/qpalette.h \
+		../../../include/qt5/QtGui/qcolor.h \
+		../../../include/qt5/QtGui/qrgb.h \
+		../../../include/qt5/QtGui/qrgba64.h \
+		../../../include/qt5/QtGui/qbrush.h \
+		../../../include/qt5/QtGui/qmatrix.h \
+		../../../include/qt5/QtGui/qpolygon.h \
+		../../../include/qt5/QtGui/qregion.h \
+		../../../include/qt5/QtCore/qdatastream.h \
+		../../../include/qt5/QtCore/qiodevice.h \
+		../../../include/qt5/QtCore/qline.h \
+		../../../include/qt5/QtGui/qtransform.h \
+		../../../include/qt5/QtGui/qimage.h \
+		../../../include/qt5/QtGui/qpixelformat.h \
+		../../../include/qt5/QtGui/qpixmap.h \
+		../../../include/qt5/QtCore/qsharedpointer.h \
+		../../../include/qt5/QtCore/qshareddata.h \
+		../../../include/qt5/QtCore/qhash.h \
+		../../../include/qt5/QtCore/qsharedpointer_impl.h \
+		../../../include/qt5/QtGui/qfont.h \
+		../../../include/qt5/QtGui/qfontmetrics.h \
+		../../../include/qt5/QtGui/qfontinfo.h \
+		../../../include/qt5/QtWidgets/qsizepolicy.h \
+		../../../include/qt5/QtGui/qcursor.h \
+		../../../include/qt5/QtGui/qkeysequence.h \
+		../../../include/qt5/QtGui/qevent.h \
+		../../../include/qt5/QtCore/qvariant.h \
+		../../../include/qt5/QtCore/qmap.h \
+		../../../include/qt5/QtCore/qdebug.h \
+		../../../include/qt5/QtCore/qtextstream.h \
+		../../../include/qt5/QtCore/qlocale.h \
+		../../../include/qt5/QtCore/qset.h \
+		../../../include/qt5/QtCore/qcontiguouscache.h \
+		../../../include/qt5/QtCore/qurl.h \
+		../../../include/qt5/QtCore/qurlquery.h \
+		../../../include/qt5/QtCore/qfile.h \
+		../../../include/qt5/QtCore/qfiledevice.h \
+		../../../include/qt5/QtGui/qvector2d.h \
+		../../../include/qt5/QtGui/qtouchdevice.h \
+		../../../include/qt5/QtCore/QSettings \
+		../../../include/qt5/QtCore/qsettings.h \
+		../../../include/qt5/QtCore/QSemaphore \
+		../../../include/qt5/QtCore/qsemaphore.h \
+		ringbuffer.h \
+		device-handler.h \
+		adsb-constants.h \
+		../../../include/qt5/QtCore/QObject \
+		ui_sdrplay-widget-v3.h \
+		moc_predefs.h \
+		/../lib64/qt5/bin/moc
+	/../lib64/qt5/bin/moc $(DEFINES) --include /usr/shared/systems/qt-1090/moc_predefs.h -I/../lib64/qt5/mkspecs/linux-g++ -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090 -I/usr/shared/systems/qt-1090/devices -I/usr/shared/systems/qt-1090/devices/file-handler -I/usr/include/qt5/qwt -I/usr/shared/systems/qt-1090/devices/sdrplay-handler-v2 -I/usr/shared/systems/qt-1090/devices/sdrplay-handler-v3 -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I/usr/include/c++/11 -I/usr/include/c++/11/x86_64-redhat-linux -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-redhat-linux/11/include -I/usr/local/include -I/usr/include devices/sdrplay-handler-v3/sdrplay-handler-v3.h -o moc_sdrplay-handler-v3.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
-compiler_uic_make_all: ui_qt-1090.h ui_sdrplay-widget.h
+compiler_uic_make_all: ui_qt-1090.h ui_sdrplay-widget-v2.h ui_sdrplay-widget-v3.h
 compiler_uic_clean:
-	-$(DEL_FILE) ui_qt-1090.h ui_sdrplay-widget.h
+	-$(DEL_FILE) ui_qt-1090.h ui_sdrplay-widget-v2.h ui_sdrplay-widget-v3.h
 ui_qt-1090.h: qt-1090.ui \
 		/../lib64/qt5/bin/uic \
 		../../../include/qt5/qwt/qwt_plot.h \
@@ -957,9 +1114,13 @@ ui_qt-1090.h: qt-1090.ui \
 		../../../include/qt5/QtGui/qtouchdevice.h
 	/../lib64/qt5/bin/uic qt-1090.ui -o ui_qt-1090.h
 
-ui_sdrplay-widget.h: devices/sdrplay-handler/sdrplay-widget.ui \
+ui_sdrplay-widget-v2.h: devices/sdrplay-handler-v2/sdrplay-widget-v2.ui \
 		/../lib64/qt5/bin/uic
-	/../lib64/qt5/bin/uic devices/sdrplay-handler/sdrplay-widget.ui -o ui_sdrplay-widget.h
+	/../lib64/qt5/bin/uic devices/sdrplay-handler-v2/sdrplay-widget-v2.ui -o ui_sdrplay-widget-v2.h
+
+ui_sdrplay-widget-v3.h: devices/sdrplay-handler-v3/sdrplay-widget-v3.ui \
+		/../lib64/qt5/bin/uic
+	/../lib64/qt5/bin/uic devices/sdrplay-handler-v3/sdrplay-widget-v3.ui -o ui_sdrplay-widget-v3.h
 
 compiler_yacc_decl_make_all:
 compiler_yacc_decl_clean:
@@ -1110,43 +1271,10 @@ main.o: main.cpp ../../../include/qt5/QtWidgets/QApplication \
 		message-handling.h \
 		crc-handling.h \
 		ui_qt-1090.h \
-		../../../include/qt5/QtCore/QVariant \
-		../../../include/qt5/QtWidgets/QComboBox \
-		../../../include/qt5/QtWidgets/qcombobox.h \
-		../../../include/qt5/QtWidgets/qabstractitemdelegate.h \
-		../../../include/qt5/QtWidgets/qstyleoption.h \
-		../../../include/qt5/QtWidgets/qabstractspinbox.h \
-		../../../include/qt5/QtGui/qvalidator.h \
-		../../../include/qt5/QtCore/qregularexpression.h \
-		../../../include/qt5/QtWidgets/qslider.h \
-		../../../include/qt5/QtWidgets/qabstractslider.h \
-		../../../include/qt5/QtWidgets/qstyle.h \
-		../../../include/qt5/QtWidgets/qtabbar.h \
-		../../../include/qt5/QtWidgets/qrubberband.h \
-		../../../include/qt5/QtWidgets/qframe.h \
-		../../../include/qt5/QtCore/qabstractitemmodel.h \
-		../../../include/qt5/QtWidgets/QGridLayout \
-		../../../include/qt5/QtWidgets/qgridlayout.h \
-		../../../include/qt5/QtWidgets/qlayout.h \
-		../../../include/qt5/QtWidgets/qlayoutitem.h \
-		../../../include/qt5/QtWidgets/qboxlayout.h \
-		../../../include/qt5/QtWidgets/QHBoxLayout \
-		../../../include/qt5/QtWidgets/QLCDNumber \
-		../../../include/qt5/QtWidgets/qlcdnumber.h \
-		../../../include/qt5/QtWidgets/QLabel \
-		../../../include/qt5/QtWidgets/qlabel.h \
-		../../../include/qt5/QtWidgets/QPushButton \
-		../../../include/qt5/QtWidgets/qpushbutton.h \
-		../../../include/qt5/QtWidgets/qabstractbutton.h \
-		../../../include/qt5/QtWidgets/QSpacerItem \
-		../../../include/qt5/QtWidgets/QSpinBox \
-		../../../include/qt5/QtWidgets/qspinbox.h \
-		../../../include/qt5/QtWidgets/QStatusBar \
-		../../../include/qt5/QtWidgets/qstatusbar.h \
-		../../../include/qt5/QtWidgets/QVBoxLayout \
-		../../../include/qt5/QtWidgets/QWidget \
-		../../../include/qt5/qwt/qwt_plot.h \
+		spectrumviewer.h \
+		../../../include/qt5/qwt/qwt.h \
 		../../../include/qt5/qwt/qwt_global.h \
+		../../../include/qt5/qwt/qwt_plot.h \
 		../../../include/qt5/qwt/qwt_text.h \
 		../../../include/qt5/qwt/qwt_plot_dict.h \
 		../../../include/qt5/qwt/qwt_plot_item.h \
@@ -1159,7 +1287,26 @@ main.o: main.cpp ../../../include/qt5/QtWidgets/QApplication \
 		../../../include/qt5/QtGui/qpen.h \
 		../../../include/qt5/qwt/qwt_scale_map.h \
 		../../../include/qt5/qwt/qwt_transform.h \
-		../../../include/qt5/qwt/qwt_interval.h
+		../../../include/qt5/qwt/qwt_interval.h \
+		../../../include/qt5/QtWidgets/qframe.h \
+		../../../include/qt5/qwt/qwt_plot_curve.h \
+		../../../include/qt5/qwt/qwt_plot_seriesitem.h \
+		../../../include/qt5/qwt/qwt_scale_div.h \
+		../../../include/qt5/qwt/qwt_series_data.h \
+		../../../include/qt5/qwt/qwt_samples.h \
+		../../../include/qt5/qwt/qwt_point_3d.h \
+		../../../include/qt5/qwt/qwt_point_polar.h \
+		../../../include/qt5/qwt/qwt_math.h \
+		../../../include/qt5/QtCore/qmath.h \
+		../../../include/qt5/qwt/qwt_series_store.h \
+		../../../include/qt5/qwt/qwt_plot_marker.h \
+		../../../include/qt5/qwt/qwt_plot_grid.h \
+		../../../include/qt5/qwt/qwt_color_map.h \
+		../../../include/qt5/qwt/qwt_plot_picker.h \
+		../../../include/qt5/qwt/qwt_picker.h \
+		../../../include/qt5/qwt/qwt_event_pattern.h \
+		../../../include/qt5/QtGui/qpainterpath.h \
+		../../../include/qt5/QtGui/QBrush
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 qt-1090.o: qt-1090.cpp ../../../include/qt5/QtWidgets/QMessageBox \
@@ -1291,50 +1438,10 @@ qt-1090.o: qt-1090.cpp ../../../include/qt5/QtWidgets/QMessageBox \
 		http-handler.h \
 		message-handling.h \
 		ui_qt-1090.h \
-		../../../include/qt5/QtCore/QVariant \
-		../../../include/qt5/QtWidgets/QApplication \
-		../../../include/qt5/QtWidgets/qapplication.h \
-		../../../include/qt5/QtCore/qcoreapplication.h \
-		../../../include/qt5/QtCore/qeventloop.h \
-		../../../include/qt5/QtWidgets/qdesktopwidget.h \
-		../../../include/qt5/QtGui/qguiapplication.h \
-		../../../include/qt5/QtGui/qinputmethod.h \
-		../../../include/qt5/QtWidgets/QComboBox \
-		../../../include/qt5/QtWidgets/qcombobox.h \
-		../../../include/qt5/QtWidgets/qabstractitemdelegate.h \
-		../../../include/qt5/QtWidgets/qstyleoption.h \
-		../../../include/qt5/QtWidgets/qabstractspinbox.h \
-		../../../include/qt5/QtGui/qvalidator.h \
-		../../../include/qt5/QtCore/qregularexpression.h \
-		../../../include/qt5/QtWidgets/qslider.h \
-		../../../include/qt5/QtWidgets/qabstractslider.h \
-		../../../include/qt5/QtWidgets/qstyle.h \
-		../../../include/qt5/QtWidgets/qtabbar.h \
-		../../../include/qt5/QtWidgets/qrubberband.h \
-		../../../include/qt5/QtWidgets/qframe.h \
-		../../../include/qt5/QtCore/qabstractitemmodel.h \
-		../../../include/qt5/QtWidgets/QGridLayout \
-		../../../include/qt5/QtWidgets/qgridlayout.h \
-		../../../include/qt5/QtWidgets/qlayout.h \
-		../../../include/qt5/QtWidgets/qlayoutitem.h \
-		../../../include/qt5/QtWidgets/qboxlayout.h \
-		../../../include/qt5/QtWidgets/QHBoxLayout \
-		../../../include/qt5/QtWidgets/QLCDNumber \
-		../../../include/qt5/QtWidgets/qlcdnumber.h \
-		../../../include/qt5/QtWidgets/QLabel \
-		../../../include/qt5/QtWidgets/qlabel.h \
-		../../../include/qt5/QtWidgets/QPushButton \
-		../../../include/qt5/QtWidgets/qpushbutton.h \
-		../../../include/qt5/QtWidgets/qabstractbutton.h \
-		../../../include/qt5/QtWidgets/QSpacerItem \
-		../../../include/qt5/QtWidgets/QSpinBox \
-		../../../include/qt5/QtWidgets/qspinbox.h \
-		../../../include/qt5/QtWidgets/QStatusBar \
-		../../../include/qt5/QtWidgets/qstatusbar.h \
-		../../../include/qt5/QtWidgets/QVBoxLayout \
-		../../../include/qt5/QtWidgets/QWidget \
-		../../../include/qt5/qwt/qwt_plot.h \
+		spectrumviewer.h \
+		../../../include/qt5/qwt/qwt.h \
 		../../../include/qt5/qwt/qwt_global.h \
+		../../../include/qt5/qwt/qwt_plot.h \
 		../../../include/qt5/qwt/qwt_text.h \
 		../../../include/qt5/qwt/qwt_plot_dict.h \
 		../../../include/qt5/qwt/qwt_plot_item.h \
@@ -1348,10 +1455,7 @@ qt-1090.o: qt-1090.cpp ../../../include/qt5/QtWidgets/QMessageBox \
 		../../../include/qt5/qwt/qwt_scale_map.h \
 		../../../include/qt5/qwt/qwt_transform.h \
 		../../../include/qt5/qwt/qwt_interval.h \
-		icao-cache.h \
-		xclose.h \
-		syncviewer.h \
-		../../../include/qt5/qwt/qwt.h \
+		../../../include/qt5/QtWidgets/qframe.h \
 		../../../include/qt5/qwt/qwt_plot_curve.h \
 		../../../include/qt5/qwt/qwt_plot_seriesitem.h \
 		../../../include/qt5/qwt/qwt_scale_div.h \
@@ -1370,14 +1474,22 @@ qt-1090.o: qt-1090.cpp ../../../include/qt5/QtWidgets/QMessageBox \
 		../../../include/qt5/qwt/qwt_event_pattern.h \
 		../../../include/qt5/QtGui/qpainterpath.h \
 		../../../include/qt5/QtGui/QBrush \
+		icao-cache.h \
+		xclose.h \
 		device-handler.h \
-		devices/sdrplay-handler/sdrplay-handler.h \
+		devices/sdrplay-handler-v2/sdrplay-handler-v2.h \
 		../../../include/qt5/QtWidgets/QFrame \
 		ringbuffer.h \
-		ui_sdrplay-widget.h \
-		../../../include/qt5/QtWidgets/QCheckBox \
-		../../../include/qt5/QtWidgets/qcheckbox.h \
-		devices/sdrplay-handler/mirsdrapi-rsp.h \
+		ui_sdrplay-widget-v2.h \
+		devices/sdrplay-handler-v2/mirsdrapi-rsp.h \
+		devices/sdrplay-handler-v3/sdrplay-handler-v3.h \
+		../../../include/qt5/QtCore/QThread \
+		../../../include/qt5/QtCore/qthread.h \
+		../../../include/qt5/QtCore/qdeadlinetimer.h \
+		../../../include/qt5/QtCore/qelapsedtimer.h \
+		../../../include/qt5/QtCore/QSemaphore \
+		../../../include/qt5/QtCore/qsemaphore.h \
+		ui_sdrplay-widget-v3.h \
 		devices/file-handler/file-handler.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qt-1090.o qt-1090.cpp
 
@@ -1553,50 +1665,10 @@ message-handling.o: message-handling.cpp message-handling.h \
 		../../../include/qt5/QtCore/qbasictimer.h \
 		http-handler.h \
 		ui_qt-1090.h \
-		../../../include/qt5/QtCore/QVariant \
-		../../../include/qt5/QtWidgets/QApplication \
-		../../../include/qt5/QtWidgets/qapplication.h \
-		../../../include/qt5/QtCore/qcoreapplication.h \
-		../../../include/qt5/QtCore/qeventloop.h \
-		../../../include/qt5/QtWidgets/qdesktopwidget.h \
-		../../../include/qt5/QtGui/qguiapplication.h \
-		../../../include/qt5/QtGui/qinputmethod.h \
-		../../../include/qt5/QtWidgets/QComboBox \
-		../../../include/qt5/QtWidgets/qcombobox.h \
-		../../../include/qt5/QtWidgets/qabstractitemdelegate.h \
-		../../../include/qt5/QtWidgets/qstyleoption.h \
-		../../../include/qt5/QtWidgets/qabstractspinbox.h \
-		../../../include/qt5/QtGui/qvalidator.h \
-		../../../include/qt5/QtCore/qregularexpression.h \
-		../../../include/qt5/QtWidgets/qslider.h \
-		../../../include/qt5/QtWidgets/qabstractslider.h \
-		../../../include/qt5/QtWidgets/qstyle.h \
-		../../../include/qt5/QtWidgets/qtabbar.h \
-		../../../include/qt5/QtWidgets/qrubberband.h \
-		../../../include/qt5/QtWidgets/qframe.h \
-		../../../include/qt5/QtCore/qabstractitemmodel.h \
-		../../../include/qt5/QtWidgets/QGridLayout \
-		../../../include/qt5/QtWidgets/qgridlayout.h \
-		../../../include/qt5/QtWidgets/qlayout.h \
-		../../../include/qt5/QtWidgets/qlayoutitem.h \
-		../../../include/qt5/QtWidgets/qboxlayout.h \
-		../../../include/qt5/QtWidgets/QHBoxLayout \
-		../../../include/qt5/QtWidgets/QLCDNumber \
-		../../../include/qt5/QtWidgets/qlcdnumber.h \
-		../../../include/qt5/QtWidgets/QLabel \
-		../../../include/qt5/QtWidgets/qlabel.h \
-		../../../include/qt5/QtWidgets/QPushButton \
-		../../../include/qt5/QtWidgets/qpushbutton.h \
-		../../../include/qt5/QtWidgets/qabstractbutton.h \
-		../../../include/qt5/QtWidgets/QSpacerItem \
-		../../../include/qt5/QtWidgets/QSpinBox \
-		../../../include/qt5/QtWidgets/qspinbox.h \
-		../../../include/qt5/QtWidgets/QStatusBar \
-		../../../include/qt5/QtWidgets/qstatusbar.h \
-		../../../include/qt5/QtWidgets/QVBoxLayout \
-		../../../include/qt5/QtWidgets/QWidget \
-		../../../include/qt5/qwt/qwt_plot.h \
+		spectrumviewer.h \
+		../../../include/qt5/qwt/qwt.h \
 		../../../include/qt5/qwt/qwt_global.h \
+		../../../include/qt5/qwt/qwt_plot.h \
 		../../../include/qt5/qwt/qwt_text.h \
 		../../../include/qt5/qwt/qwt_plot_dict.h \
 		../../../include/qt5/qwt/qwt_plot_item.h \
@@ -1609,7 +1681,26 @@ message-handling.o: message-handling.cpp message-handling.h \
 		../../../include/qt5/QtGui/qpen.h \
 		../../../include/qt5/qwt/qwt_scale_map.h \
 		../../../include/qt5/qwt/qwt_transform.h \
-		../../../include/qt5/qwt/qwt_interval.h
+		../../../include/qt5/qwt/qwt_interval.h \
+		../../../include/qt5/QtWidgets/qframe.h \
+		../../../include/qt5/qwt/qwt_plot_curve.h \
+		../../../include/qt5/qwt/qwt_plot_seriesitem.h \
+		../../../include/qt5/qwt/qwt_scale_div.h \
+		../../../include/qt5/qwt/qwt_series_data.h \
+		../../../include/qt5/qwt/qwt_samples.h \
+		../../../include/qt5/qwt/qwt_point_3d.h \
+		../../../include/qt5/qwt/qwt_point_polar.h \
+		../../../include/qt5/qwt/qwt_math.h \
+		../../../include/qt5/QtCore/qmath.h \
+		../../../include/qt5/qwt/qwt_series_store.h \
+		../../../include/qt5/qwt/qwt_plot_marker.h \
+		../../../include/qt5/qwt/qwt_plot_grid.h \
+		../../../include/qt5/qwt/qwt_color_map.h \
+		../../../include/qt5/qwt/qwt_plot_picker.h \
+		../../../include/qt5/qwt/qwt_picker.h \
+		../../../include/qt5/qwt/qwt_event_pattern.h \
+		../../../include/qt5/QtGui/qpainterpath.h \
+		../../../include/qt5/QtGui/QBrush
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o message-handling.o message-handling.cpp
 
 device-handler.o: device-handler.cpp device-handler.h \
@@ -1731,7 +1822,7 @@ file-handler.o: devices/file-handler/file-handler.cpp devices/file-handler/file-
 		../../../include/qt5/QtCore/qobject_impl.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o file-handler.o devices/file-handler/file-handler.cpp
 
-syncviewer.o: syncviewer.cpp syncviewer.h \
+spectrumviewer.o: spectrumviewer.cpp spectrumviewer.h \
 		../../../include/qt5/QtCore/QObject \
 		../../../include/qt5/QtCore/qobject.h \
 		../../../include/qt5/QtCore/qobjectdefs.h \
@@ -1873,8 +1964,9 @@ syncviewer.o: syncviewer.cpp syncviewer.h \
 		../../../include/qt5/QtGui/QBrush \
 		../../../include/qt5/QtCore/QTimer \
 		../../../include/qt5/QtCore/qtimer.h \
-		../../../include/qt5/QtCore/qbasictimer.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o syncviewer.o syncviewer.cpp
+		../../../include/qt5/QtCore/qbasictimer.h \
+		adsb-constants.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o spectrumviewer.o spectrumviewer.cpp
 
 http-handler.o: http-handler.cpp http-handler.h \
 		qt-1090.h \
@@ -1999,50 +2091,10 @@ http-handler.o: http-handler.cpp http-handler.h \
 		message-handling.h \
 		crc-handling.h \
 		ui_qt-1090.h \
-		../../../include/qt5/QtCore/QVariant \
-		../../../include/qt5/QtWidgets/QApplication \
-		../../../include/qt5/QtWidgets/qapplication.h \
-		../../../include/qt5/QtCore/qcoreapplication.h \
-		../../../include/qt5/QtCore/qeventloop.h \
-		../../../include/qt5/QtWidgets/qdesktopwidget.h \
-		../../../include/qt5/QtGui/qguiapplication.h \
-		../../../include/qt5/QtGui/qinputmethod.h \
-		../../../include/qt5/QtWidgets/QComboBox \
-		../../../include/qt5/QtWidgets/qcombobox.h \
-		../../../include/qt5/QtWidgets/qabstractitemdelegate.h \
-		../../../include/qt5/QtWidgets/qstyleoption.h \
-		../../../include/qt5/QtWidgets/qabstractspinbox.h \
-		../../../include/qt5/QtGui/qvalidator.h \
-		../../../include/qt5/QtCore/qregularexpression.h \
-		../../../include/qt5/QtWidgets/qslider.h \
-		../../../include/qt5/QtWidgets/qabstractslider.h \
-		../../../include/qt5/QtWidgets/qstyle.h \
-		../../../include/qt5/QtWidgets/qtabbar.h \
-		../../../include/qt5/QtWidgets/qrubberband.h \
-		../../../include/qt5/QtWidgets/qframe.h \
-		../../../include/qt5/QtCore/qabstractitemmodel.h \
-		../../../include/qt5/QtWidgets/QGridLayout \
-		../../../include/qt5/QtWidgets/qgridlayout.h \
-		../../../include/qt5/QtWidgets/qlayout.h \
-		../../../include/qt5/QtWidgets/qlayoutitem.h \
-		../../../include/qt5/QtWidgets/qboxlayout.h \
-		../../../include/qt5/QtWidgets/QHBoxLayout \
-		../../../include/qt5/QtWidgets/QLCDNumber \
-		../../../include/qt5/QtWidgets/qlcdnumber.h \
-		../../../include/qt5/QtWidgets/QLabel \
-		../../../include/qt5/QtWidgets/qlabel.h \
-		../../../include/qt5/QtWidgets/QPushButton \
-		../../../include/qt5/QtWidgets/qpushbutton.h \
-		../../../include/qt5/QtWidgets/qabstractbutton.h \
-		../../../include/qt5/QtWidgets/QSpacerItem \
-		../../../include/qt5/QtWidgets/QSpinBox \
-		../../../include/qt5/QtWidgets/qspinbox.h \
-		../../../include/qt5/QtWidgets/QStatusBar \
-		../../../include/qt5/QtWidgets/qstatusbar.h \
-		../../../include/qt5/QtWidgets/QVBoxLayout \
-		../../../include/qt5/QtWidgets/QWidget \
-		../../../include/qt5/qwt/qwt_plot.h \
+		spectrumviewer.h \
+		../../../include/qt5/qwt/qwt.h \
 		../../../include/qt5/qwt/qwt_global.h \
+		../../../include/qt5/qwt/qwt_plot.h \
 		../../../include/qt5/qwt/qwt_text.h \
 		../../../include/qt5/qwt/qwt_plot_dict.h \
 		../../../include/qt5/qwt/qwt_plot_item.h \
@@ -2056,11 +2108,30 @@ http-handler.o: http-handler.cpp http-handler.h \
 		../../../include/qt5/qwt/qwt_scale_map.h \
 		../../../include/qt5/qwt/qwt_transform.h \
 		../../../include/qt5/qwt/qwt_interval.h \
+		../../../include/qt5/QtWidgets/qframe.h \
+		../../../include/qt5/qwt/qwt_plot_curve.h \
+		../../../include/qt5/qwt/qwt_plot_seriesitem.h \
+		../../../include/qt5/qwt/qwt_scale_div.h \
+		../../../include/qt5/qwt/qwt_series_data.h \
+		../../../include/qt5/qwt/qwt_samples.h \
+		../../../include/qt5/qwt/qwt_point_3d.h \
+		../../../include/qt5/qwt/qwt_point_polar.h \
+		../../../include/qt5/qwt/qwt_math.h \
+		../../../include/qt5/QtCore/qmath.h \
+		../../../include/qt5/qwt/qwt_series_store.h \
+		../../../include/qt5/qwt/qwt_plot_marker.h \
+		../../../include/qt5/qwt/qwt_plot_grid.h \
+		../../../include/qt5/qwt/qwt_color_map.h \
+		../../../include/qt5/qwt/qwt_plot_picker.h \
+		../../../include/qt5/qwt/qwt_picker.h \
+		../../../include/qt5/qwt/qwt_event_pattern.h \
+		../../../include/qt5/QtGui/qpainterpath.h \
+		../../../include/qt5/QtGui/QBrush \
 		aircraft-handler.h \
 		../../../include/qt5/QtCore/QString
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o http-handler.o http-handler.cpp
 
-sdrplay-handler.o: devices/sdrplay-handler/sdrplay-handler.cpp devices/sdrplay-handler/sdrplay-handler.h \
+sdrplay-handler-v2.o: devices/sdrplay-handler-v2/sdrplay-handler-v2.cpp devices/sdrplay-handler-v2/sdrplay-handler-v2.h \
 		../../../include/qt5/QtCore/QObject \
 		../../../include/qt5/QtCore/qobject.h \
 		../../../include/qt5/QtCore/qobjectdefs.h \
@@ -2172,42 +2243,141 @@ sdrplay-handler.o: devices/sdrplay-handler/sdrplay-handler.cpp devices/sdrplay-h
 		ringbuffer.h \
 		device-handler.h \
 		adsb-constants.h \
-		ui_sdrplay-widget.h \
-		../../../include/qt5/QtCore/QVariant \
-		../../../include/qt5/QtWidgets/QApplication \
-		../../../include/qt5/QtWidgets/qapplication.h \
-		../../../include/qt5/QtCore/qcoreapplication.h \
-		../../../include/qt5/QtCore/qeventloop.h \
-		../../../include/qt5/QtWidgets/qdesktopwidget.h \
-		../../../include/qt5/QtGui/qguiapplication.h \
-		../../../include/qt5/QtGui/qinputmethod.h \
-		../../../include/qt5/QtWidgets/QCheckBox \
-		../../../include/qt5/QtWidgets/qcheckbox.h \
-		../../../include/qt5/QtWidgets/qabstractbutton.h \
-		../../../include/qt5/QtGui/qicon.h \
-		../../../include/qt5/QtWidgets/QComboBox \
-		../../../include/qt5/QtWidgets/qcombobox.h \
-		../../../include/qt5/QtWidgets/qabstractitemdelegate.h \
-		../../../include/qt5/QtWidgets/qstyleoption.h \
-		../../../include/qt5/QtWidgets/qabstractspinbox.h \
-		../../../include/qt5/QtGui/qvalidator.h \
-		../../../include/qt5/QtCore/qregularexpression.h \
-		../../../include/qt5/QtWidgets/qslider.h \
-		../../../include/qt5/QtWidgets/qabstractslider.h \
-		../../../include/qt5/QtWidgets/qstyle.h \
-		../../../include/qt5/QtWidgets/qtabbar.h \
-		../../../include/qt5/QtWidgets/qtabwidget.h \
-		../../../include/qt5/QtWidgets/qrubberband.h \
-		../../../include/qt5/QtCore/qabstractitemmodel.h \
-		../../../include/qt5/QtWidgets/QLCDNumber \
-		../../../include/qt5/QtWidgets/qlcdnumber.h \
+		ui_sdrplay-widget-v2.h \
+		devices/sdrplay-handler-v2/mirsdrapi-rsp.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o sdrplay-handler-v2.o devices/sdrplay-handler-v2/sdrplay-handler-v2.cpp
+
+sdrplay-handler-v3.o: devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp ../../../include/qt5/QtCore/QThread \
+		../../../include/qt5/QtCore/qthread.h \
+		../../../include/qt5/QtCore/qobject.h \
+		../../../include/qt5/QtCore/qobjectdefs.h \
+		../../../include/qt5/QtCore/qnamespace.h \
+		../../../include/qt5/QtCore/qglobal.h \
+		../../../include/qt5/QtCore/qconfig-bootstrapped.h \
+		../../../include/qt5/QtCore/qconfig.h \
+		../../../include/qt5/QtCore/qconfig-64.h \
+		../../../include/qt5/QtCore/qtcore-config.h \
+		../../../include/qt5/QtCore/qsystemdetection.h \
+		../../../include/qt5/QtCore/qprocessordetection.h \
+		../../../include/qt5/QtCore/qcompilerdetection.h \
+		../../../include/qt5/QtCore/qtypeinfo.h \
+		../../../include/qt5/QtCore/qsysinfo.h \
+		../../../include/qt5/QtCore/qlogging.h \
+		../../../include/qt5/QtCore/qflags.h \
+		../../../include/qt5/QtCore/qatomic.h \
+		../../../include/qt5/QtCore/qbasicatomic.h \
+		../../../include/qt5/QtCore/qatomic_bootstrap.h \
+		../../../include/qt5/QtCore/qgenericatomic.h \
+		../../../include/qt5/QtCore/qatomic_cxx11.h \
+		../../../include/qt5/QtCore/qatomic_msvc.h \
+		../../../include/qt5/QtCore/qglobalstatic.h \
+		../../../include/qt5/QtCore/qmutex.h \
+		../../../include/qt5/QtCore/qnumeric.h \
+		../../../include/qt5/QtCore/qversiontagging.h \
+		../../../include/qt5/QtCore/qobjectdefs_impl.h \
+		../../../include/qt5/QtCore/qstring.h \
+		../../../include/qt5/QtCore/qchar.h \
+		../../../include/qt5/QtCore/qbytearray.h \
+		../../../include/qt5/QtCore/qrefcount.h \
+		../../../include/qt5/QtCore/qarraydata.h \
+		../../../include/qt5/QtCore/qstringliteral.h \
+		../../../include/qt5/QtCore/qstringalgorithms.h \
+		../../../include/qt5/QtCore/qstringview.h \
+		../../../include/qt5/QtCore/qstringbuilder.h \
+		../../../include/qt5/QtCore/qlist.h \
+		../../../include/qt5/QtCore/qalgorithms.h \
+		../../../include/qt5/QtCore/qiterator.h \
+		../../../include/qt5/QtCore/qhashfunctions.h \
+		../../../include/qt5/QtCore/qpair.h \
+		../../../include/qt5/QtCore/qvector.h \
+		../../../include/qt5/QtCore/qcontainertools_impl.h \
+		../../../include/qt5/QtCore/qpoint.h \
+		../../../include/qt5/QtCore/qbytearraylist.h \
+		../../../include/qt5/QtCore/qstringlist.h \
+		../../../include/qt5/QtCore/qregexp.h \
+		../../../include/qt5/QtCore/qstringmatcher.h \
+		../../../include/qt5/QtCore/qcoreevent.h \
+		../../../include/qt5/QtCore/qscopedpointer.h \
+		../../../include/qt5/QtCore/qmetatype.h \
+		../../../include/qt5/QtCore/qvarlengtharray.h \
+		../../../include/qt5/QtCore/qcontainerfwd.h \
+		../../../include/qt5/QtCore/qobject_impl.h \
+		../../../include/qt5/QtCore/qdeadlinetimer.h \
+		../../../include/qt5/QtCore/qelapsedtimer.h \
+		../../../include/qt5/QtCore/QSettings \
+		../../../include/qt5/QtCore/qsettings.h \
+		../../../include/qt5/QtCore/qvariant.h \
+		../../../include/qt5/QtCore/qmap.h \
+		../../../include/qt5/QtCore/qdebug.h \
+		../../../include/qt5/QtCore/qhash.h \
+		../../../include/qt5/QtCore/qtextstream.h \
+		../../../include/qt5/QtCore/qiodevice.h \
+		../../../include/qt5/QtCore/qlocale.h \
+		../../../include/qt5/QtCore/qshareddata.h \
+		../../../include/qt5/QtCore/qset.h \
+		../../../include/qt5/QtCore/qcontiguouscache.h \
+		../../../include/qt5/QtCore/qsharedpointer.h \
+		../../../include/qt5/QtCore/qsharedpointer_impl.h \
+		../../../include/qt5/QtCore/QTime \
+		../../../include/qt5/QtCore/qdatetime.h \
+		../../../include/qt5/QtCore/QDate \
 		../../../include/qt5/QtWidgets/QLabel \
 		../../../include/qt5/QtWidgets/qlabel.h \
-		../../../include/qt5/QtWidgets/QSpinBox \
-		../../../include/qt5/QtWidgets/qspinbox.h \
-		../../../include/qt5/QtWidgets/QWidget \
-		devices/sdrplay-handler/mirsdrapi-rsp.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o sdrplay-handler.o devices/sdrplay-handler/sdrplay-handler.cpp
+		../../../include/qt5/QtWidgets/qtwidgetsglobal.h \
+		../../../include/qt5/QtGui/qtguiglobal.h \
+		../../../include/qt5/QtGui/qtgui-config.h \
+		../../../include/qt5/QtWidgets/qtwidgets-config.h \
+		../../../include/qt5/QtWidgets/qframe.h \
+		../../../include/qt5/QtWidgets/qwidget.h \
+		../../../include/qt5/QtGui/qwindowdefs.h \
+		../../../include/qt5/QtGui/qwindowdefs_win.h \
+		../../../include/qt5/QtCore/qmargins.h \
+		../../../include/qt5/QtGui/qpaintdevice.h \
+		../../../include/qt5/QtCore/qrect.h \
+		../../../include/qt5/QtCore/qsize.h \
+		../../../include/qt5/QtGui/qpalette.h \
+		../../../include/qt5/QtGui/qcolor.h \
+		../../../include/qt5/QtGui/qrgb.h \
+		../../../include/qt5/QtGui/qrgba64.h \
+		../../../include/qt5/QtGui/qbrush.h \
+		../../../include/qt5/QtGui/qmatrix.h \
+		../../../include/qt5/QtGui/qpolygon.h \
+		../../../include/qt5/QtGui/qregion.h \
+		../../../include/qt5/QtCore/qdatastream.h \
+		../../../include/qt5/QtCore/qline.h \
+		../../../include/qt5/QtGui/qtransform.h \
+		../../../include/qt5/QtGui/qimage.h \
+		../../../include/qt5/QtGui/qpixelformat.h \
+		../../../include/qt5/QtGui/qpixmap.h \
+		../../../include/qt5/QtGui/qfont.h \
+		../../../include/qt5/QtGui/qfontmetrics.h \
+		../../../include/qt5/QtGui/qfontinfo.h \
+		../../../include/qt5/QtWidgets/qsizepolicy.h \
+		../../../include/qt5/QtGui/qcursor.h \
+		../../../include/qt5/QtGui/qkeysequence.h \
+		../../../include/qt5/QtGui/qevent.h \
+		../../../include/qt5/QtCore/qurl.h \
+		../../../include/qt5/QtCore/qurlquery.h \
+		../../../include/qt5/QtCore/qfile.h \
+		../../../include/qt5/QtCore/qfiledevice.h \
+		../../../include/qt5/QtGui/qvector2d.h \
+		../../../include/qt5/QtGui/qtouchdevice.h \
+		../../../include/qt5/QtWidgets/QFileDialog \
+		../../../include/qt5/QtWidgets/qfiledialog.h \
+		../../../include/qt5/QtCore/qdir.h \
+		../../../include/qt5/QtCore/qfileinfo.h \
+		../../../include/qt5/QtWidgets/qdialog.h \
+		devices/sdrplay-handler-v3/sdrplay-handler-v3.h \
+		../../../include/qt5/QtWidgets/QFrame \
+		../../../include/qt5/QtCore/QSemaphore \
+		../../../include/qt5/QtCore/qsemaphore.h \
+		ringbuffer.h \
+		device-handler.h \
+		adsb-constants.h \
+		../../../include/qt5/QtCore/QObject \
+		ui_sdrplay-widget-v3.h \
+		devices/sdrplay-handler-v3/sdrplay-commands.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o sdrplay-handler-v3.o devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp
 
 qrc_resources.o: qrc_resources.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qrc_resources.o qrc_resources.cpp
@@ -2218,8 +2388,11 @@ moc_qt-1090.o: moc_qt-1090.cpp
 moc_device-handler.o: moc_device-handler.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_device-handler.o moc_device-handler.cpp
 
-moc_sdrplay-handler.o: moc_sdrplay-handler.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_sdrplay-handler.o moc_sdrplay-handler.cpp
+moc_sdrplay-handler-v2.o: moc_sdrplay-handler-v2.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_sdrplay-handler-v2.o moc_sdrplay-handler-v2.cpp
+
+moc_sdrplay-handler-v3.o: moc_sdrplay-handler-v3.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_sdrplay-handler-v3.o moc_sdrplay-handler-v3.cpp
 
 ####### Install
 

@@ -57,11 +57,11 @@ uint32_t	icaoCache::ICAOCacheHashAddress (uint32_t a) {
 void	icaoCache::addRecentlySeenICAOAddr (uint32_t addr) {
 uint32_t h = ICAOCacheHashAddress (addr);
 	icao_cache [h]. addr	= addr;
-	icao_cache [h]. time	= (uint32_t) time(NULL);
+	icao_cache [h]. time	= (uint32_t) time (nullptr);
 	icao_cache [h]. inUse	= true;
 	for (int i = 0; i < ICAO_CACHE_LEN; i ++)
 	   if (icao_cache [i]. inUse &&
-	             (time (NULL) - icao_cache [i]. time > ICAO_CACHE_TTL))
+	             (time (nullptr) - icao_cache [i]. time > ICAO_CACHE_TTL))
 	      icao_cache [i]. inUse = false;
 //	fprintf (stderr, "\n");
 //	for (int i = 0; i < ICAO_CACHE_LEN; i ++)
@@ -83,7 +83,7 @@ uint32_t h = ICAOCacheHashAddress (addr);
 uint32_t a = icao_cache  [h]. addr;
 uint32_t t = icao_cache  [h]. time;
 
-	return a && a == addr && time (NULL) - t <= ICAO_CACHE_TTL;
+	return a && a == addr && time (nullptr) - t <= ICAO_CACHE_TTL;
 }
 
 

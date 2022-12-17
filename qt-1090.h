@@ -39,9 +39,9 @@
 #include	"http-handler.h"
 #include	"message-handling.h"
 #include	"ui_qt-1090.h"
+#include	"spectrumviewer.h"
 
 class	deviceHandler;
-class	syncViewer;
 
 
 class	qt1090: public QMainWindow, private Ui_mainwindow {
@@ -55,21 +55,21 @@ private:
 	int		decodeBits	(uint8_t *bits, uint16_t *m);
 	void		detectModeS	(uint16_t *m, uint32_t mlen);
 	void		update_table	(int16_t, int);
-	deviceHandler	*setDevice	(int32_t, bool);
 	int		table [32];
 	httpHandler	*httpServer;
 	QTimer		screenTimer;
 public slots:
-	void		processData	(void);
+	void		processData	();
 private:
+	spectrumViewer	*viewer;
 	pthread_t	reader_thread;
+	int		frequency;
+	bool		network;
 	deviceHandler	*theDevice;
 	QSettings	*qt1090Settings;
 	uint16_t	*magnitudeVector;
 	uint32_t	data_len;	/* Buffer length. */
 	int		httpPort;
-	syncViewer	*viewer;
-	bool		singleView;
 //	Configuration */
 	bool		net;		/* Enable networking. */
 	bool		interactive;	/* Interactive mode */
@@ -98,14 +98,14 @@ public:
 	long long stat_http_requests;
 	long long stat_phase_corrected;
 private slots:
-	void	handle_interactiveButton (void);
+	void	handle_interactiveButton ();
 	void	handle_errorhandlingCombo	(const QString &);
-	void	handle_httpButton	(void);
+	void	handle_httpButton	();
 	void	set_ttl			(int);
-	void	handle_metricButton	(void);
-	void	updateScreen		(void);
-	void	handle_dumpButton	(void);
-	void	handle_viewButton	(void);
+	void	handle_metricButton	();
+	void	updateScreen		();
+	void	handle_dumpButton	();
+	void	setDevice		(const QString &);
 };
 
 #endif

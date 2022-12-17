@@ -179,7 +179,7 @@ int j;
 	fprintf (stdout, "*");
 	for (j = 0; j < msgbits / 8; j++)
 	   fprintf (stdout, "%02x", msg [j]);
-	time_t t = time (NULL);
+	time_t t = time (nullptr);
 	const char *s = ctime (&t);
 	fprintf (stdout, "; received at %s\n", s);
 //
@@ -471,31 +471,31 @@ void	message::print_msgtype_17 (void) {
 	                               "Aircraft Type A"
 	      };
 
-	      fprintf (stdout, "    Aircraft Type  : %s\n",
-	                           ac_type_str [aircraft_type]);
-	      fprintf (stdout, "    Identification : %s\n", flight);
+//	      fprintf (stdout, "    Aircraft Type  : %s\n",
+//	                           ac_type_str [aircraft_type]);
+//	      fprintf (stdout, "    Identification : %s\n", flight);
 	   } else
 	   if (metype >= 9 && metype <= 18) {
-	      fprintf (stdout, "    F flag   : %s\n", fflag ? "odd" : "even");
-	      fprintf (stdout, "    T flag   : %s\n", tflag ? "UTC" : "non-UTC");
-	      fprintf (stdout, "    Altitude : %d feet\n", altitude);
-	      fprintf (stdout, "    Latitude : %d (not decoded)\n", raw_latitude);
-	      fprintf (stdout, "    Longitude: %d (not decoded)\n", raw_longitude);
+//	      fprintf (stdout, "    F flag   : %s\n", fflag ? "odd" : "even");
+//	      fprintf (stdout, "    T flag   : %s\n", tflag ? "UTC" : "non-UTC");
+//	      fprintf (stdout, "    Altitude : %d feet\n", altitude);
+//	      fprintf (stdout, "    Latitude : %d (not decoded)\n", raw_latitude);
+//	      fprintf (stdout, "    Longitude: %d (not decoded)\n", raw_longitude);
 	   } else
 	   if (metype == 19 && mesub >= 1 && mesub <= 4) {
 	      if (mesub == 1 || mesub == 2) {
 //	Velocity */
-                fprintf (stdout, "    EW direction      : %d\n", ew_dir);
-                fprintf (stdout, "    EW velocity       : %d\n", ew_velocity);
-                fprintf (stdout, "    NS direction      : %d\n", ns_dir);
-                fprintf (stdout, "    NS velocity       : %d\n", ns_velocity);
-                fprintf (stdout, "    Vertical rate src : %d\n", vert_rate_source);
-                fprintf (stdout, "    Vertical rate sign: %d\n", vert_rate_sign);
-                fprintf (stdout, "    Vertical rate     : %d\n", vert_rate);
+//                fprintf (stdout, "    EW direction      : %d\n", ew_dir);
+//                fprintf (stdout, "    EW velocity       : %d\n", ew_velocity);
+//                fprintf (stdout, "    NS direction      : %d\n", ns_dir);
+//                fprintf (stdout, "    NS velocity       : %d\n", ns_velocity);
+//                fprintf (stdout, "    Vertical rate src : %d\n", vert_rate_source);
+//                fprintf (stdout, "    Vertical rate sign: %d\n", vert_rate_sign);
+//                fprintf (stdout, "    Vertical rate     : %d\n", vert_rate);
 	      } else
 	      if (mesub == 3 || mesub == 4) {
-	         fprintf (stdout, "    Heading status: %d", heading_is_valid);
-	         fprintf (stdout, "    Heading: %d", heading);
+//	         fprintf (stdout, "    Heading status: %d", heading_is_valid);
+//	         fprintf (stdout, "    Heading: %d", heading);
 	      }
 	   } else {
 	      fprintf (stdout, "    Unrecognized ME type: %d subtype: %d\n", 

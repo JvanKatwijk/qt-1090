@@ -2,7 +2,7 @@
 /*
  *    Copyright (C) 2018
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
- *    Lazy Chair programming
+ *    Lazy Chair Computing
  *
  *    This file is part of the dump1090 program
  *
@@ -21,8 +21,8 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __SDRPLAY_HANDLER__
-#define	__SDRPLAY_HANDLER__
+#ifndef __SDRPLAY_HANDLER_V2
+#define	__SDRPLAY_HANDLER_V2
 
 #include        <QObject>
 #include        <QFrame>
@@ -31,7 +31,7 @@
 #include	"ringbuffer.h"
 #include	<pthread.h>
 #include	"device-handler.h"
-#include        "ui_sdrplay-widget.h"
+#include        "ui_sdrplay-widget-v2.h"
 #include	"mirsdrapi-rsp.h"
 
 typedef void (*mir_sdr_StreamCallback_t)(int16_t	*xi,
@@ -91,17 +91,18 @@ typedef mir_sdr_ErrT (*pfn_mir_sdr_ReleaseDeviceIdx) (unsigned int);
 
 
 ///////////////////////////////////////////////////////////////////////////
-class	sdrplayHandler: public deviceHandler, public Ui_sdrplayWidget {
+class	sdrplayHandler_v2: public deviceHandler, public Ui_sdrplayWidget {
 Q_OBJECT
 public:
-		sdrplayHandler          (QSettings *, int);
-		~sdrplayHandler		(void);
-	void	startDevice		(void);
-	void	stopDevice		(void);
-	int	getSamples		(int16_t *buffer, int amount);
-	int	Samples			(void);
-	RingBuffer<int16_t> *_I_Buffer;
-	void		signalData	(void);
+		sdrplayHandler_v2	(QSettings *, int);
+		~sdrplayHandler_v2	();
+	void	startDevice		();
+	void	stopDevice		();
+	int	getSamples		(std::complex<float> *buffer, int amount);
+	RingBuffer<int16_t> _I_Buffer;
+	int	Samples			();
+	int	nrBits			();
+	void		signalData	();
 private:
 	pfn_mir_sdr_StreamInit	my_mir_sdr_StreamInit;
 	pfn_mir_sdr_Reinit	my_mir_sdr_Reinit;

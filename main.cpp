@@ -41,6 +41,16 @@
 #define	GITHASH	"      "
 #endif
 
+static const QString styleSheet_1 =
+//      #include "./stylesheets/Adaptic.qss"
+        #include "./stylesheets/Combinear.qss"
+;
+
+static const QString styleSheet_2 =
+	#include "./stylesheets/Adaptic.qss"
+//	#include "./stylesheets/Combinear.qss"
+;
+
 QString fullPathfor (QString v, QString aa) {
 QString fileName;
 
@@ -68,7 +78,7 @@ QString initFileName	= fullPathfor (QString (DEFAULT_INI), ".ini");
 qt1090  *MyRadioInterface;
 QSettings       *dumpSettings;           // ini file
 int     j;
-char	*fileName	= NULL;
+char	*fileName	= nullptr;
 int	deviceIndex	= 0;
 int	freq		= 1090000000;
 int	opt;
@@ -80,8 +90,8 @@ bool	network		= false;
 	QCoreApplication::setApplicationVersion (QString (CURRENT_VERSION) + " Git: " + GITHASH);
 
 //	Parse the command line options 
-
-	while ((opt = getopt (argc, argv, "f:F:n")) != -1) {
+	int	sheet	= 0;
+	while ((opt = getopt (argc, argv, "f:F:nAB")) != -1) {
 	   switch (opt) {	// there aren't many
 	      case 'f':
 	      case 'F':	
@@ -90,10 +100,17 @@ bool	network		= false;
 	      case 'n':
 	         network	= true;
 	         break;
+	      case 'A':
+	         sheet		= 1;
+	         break;
+	      case 'B':
+	         sheet		= 2;
+	         break;
 	      default:
 	         break;
 	   }
 	}
+
 	dumpSettings =  new QSettings (initFileName, QSettings::IniFormat);
 /*
  *      Before we connect control to the gui, we have to
@@ -103,6 +120,12 @@ bool	network		= false;
 	QGuiApplication::setAttribute (Qt::AA_EnableHighDpiScaling);
 #endif
 	QApplication a (argc, argv);
+	if (sheet != 0)
+	   dumpSettings  -> setValue ("style-sheet", sheet);
+	else
+	   sheet  = dumpSettings -> value ("style-sheet", 1). toInt ();
+	a.setStyleSheet (sheet == 1 ? styleSheet_1 : styleSheet_2);
+
 //	setting the language
 //	QString locale = QLocale::system (). name ();
 //	qDebug() << "main:" <<  "Detected system language" << locale;

@@ -43,14 +43,14 @@ typedef int (*hackrf_sample_block_cb_fn)(hackrf_transfer *transfer);
 //
 //	Dll and ".so" function prototypes
 
-typedef	int	(*pfn_hackrf_init)	(void);
+typedef	int	(*pfn_hackrf_init)	();
 typedef	int	(*pfn_hackrf_open)	(hackrf_device ** device);
 typedef	int	(*pfn_hackrf_close)	(hackrf_device *device);
-typedef	int	(*pfn_hackrf_exit)	(void);
+typedef	int	(*pfn_hackrf_exit)	();
 typedef	int	(*pfn_hackrf_start_rx)	(hackrf_device *,
 	                                 hackrf_sample_block_cb_fn, void *);
 typedef	int	(*pfn_hackrf_stop_rx)	(hackrf_device *);
-typedef	hackrf_device_list_t	*(*pfn_hackrf_device_list)	(void);
+typedef	hackrf_device_list_t	*(*pfn_hackrf_device_list)	();
 typedef	int	(*pfn_hackrf_set_baseband_filter_bandwidth) (hackrf_device *,
 	                                 const uint32_t bandwidth_hz);
 typedef	int	(*pfn_hackrf_set_lna_gain) (hackrf_device *, uint32_t);
@@ -68,20 +68,20 @@ class	hackrfHandler: public deviceHandler, public Ui_hackrfWidget {
 Q_OBJECT
 public:
 			hackrfHandler		(QSettings *, int freq);
-			~hackrfHandler		(void);
+			~hackrfHandler		();
 
-	void		startDevice		(void);
-	void		stopDevice		(void);
-	int32_t		getSamples		(int16_t *, int32_t);
-	int32_t		Samples			(void);
+	void		startDevice		();
+	void		stopDevice		();
+	int32_t		getSamples		(std::complex<float> *, int32_t);
+	int32_t		Samples			();
 //
 //	The buffer should be visible by the callback function
-	RingBuffer<int16_t>	*_I_Buffer;
-	void		signalData		(void);
+	RingBuffer<std::complex<float>>	_I_Buffer;
+	void		signalData		();
 	hackrf_device	*theDevice;
 private:
 
-	bool			load_hackrfFunctions	(void);
+	bool			load_hackrfFunctions	();
 	pfn_hackrf_init		hackrf_init;
 	pfn_hackrf_open		hackrf_open;
 	pfn_hackrf_close	hackrf_close;
