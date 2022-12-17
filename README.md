@@ -8,7 +8,7 @@ This version was created to allow the use of SDRplay devices,
 it supports SDRplay devices, RTLSDR devices and HACKRF One, and
 is equipped with a simple GUI.
 
-![qt-1090 ](/qt-1090-1.png?raw=true)
+![qt-1090 ](/qt-1090-B.png?raw=true)
 The display shows the frequency spectrum of the region of 1090 MHz.
 
 The default choice is to show the list of visible planes on the command window,
@@ -94,7 +94,21 @@ exit points of planes in the system, data as given below
 	Plane  484557 KLM19P
 	14900     51.964  4.753    entered at Fri May 25 16:50:33 2018
 	18100     51.953  4.749    left at Fri May 25 16:55:01 2018
-	
+
+---------------------------------------------------------------------------
+Changing the appearance
+---------------------------------------------------------------------------
+
+One may choose among three appearances of the control widget,
+Passing a '-A' or a '-B' parameter a stylesheet will be used to
+color the elements in the control  widget.
+Passing a 'C' as parameter will show a widget without any color (other than the
+color of the brush on the display).
+
+The settings will be saved.
+
+![qt-1090 ](/qt-1090-A.png?raw=true)
+![qt-1090 ](/qt-1090-C.png?raw=true)
 
 ----------------------------------------------------------------------------
 Showing planes on google maps

@@ -91,7 +91,7 @@ bool	network		= false;
 
 //	Parse the command line options 
 	int	sheet	= 0;
-	while ((opt = getopt (argc, argv, "f:F:nAB")) != -1) {
+	while ((opt = getopt (argc, argv, "f:F:nABC")) != -1) {
 	   switch (opt) {	// there aren't many
 	      case 'f':
 	      case 'F':	
@@ -105,6 +105,9 @@ bool	network		= false;
 	         break;
 	      case 'B':
 	         sheet		= 2;
+	         break;
+	      case 'C':
+	         sheet		= 3;
 	         break;
 	      default:
 	         break;
@@ -124,7 +127,8 @@ bool	network		= false;
 	   dumpSettings  -> setValue ("style-sheet", sheet);
 	else
 	   sheet  = dumpSettings -> value ("style-sheet", 1). toInt ();
-	a.setStyleSheet (sheet == 1 ? styleSheet_1 : styleSheet_2);
+	if ((sheet == 1) || (sheet == 2))
+	   a.setStyleSheet (sheet == 1 ? styleSheet_1 : styleSheet_2);
 
 //	setting the language
 //	QString locale = QLocale::system (). name ();
