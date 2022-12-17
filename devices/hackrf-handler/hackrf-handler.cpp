@@ -190,7 +190,7 @@ int	res;
 //
 //	we use a static large buffer, rather than trying to allocate
 //	a buffer on the stack
-static int16_t buffer [32 * 32768];
+static std::complex<float> buffer [32 * 32768];
 static
 int	callback (hackrf_transfer *transfer) {
 hackrfHandler *ctx = static_cast <hackrfHandler *>(transfer -> rx_ctx);

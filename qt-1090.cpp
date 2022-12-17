@@ -54,6 +54,12 @@
 #ifdef	__HAVE_HACKRF__
 #include	"hackrf-handler.h"
 #endif
+#ifdef	__HAVE_PLUTO__
+#include	"pluto-handler.h"
+#endif
+#ifdef	__HAVE_LIME__
+#include	"lime-handler.h"
+#endif
 #include	"file-handler.h"
 
 static
@@ -76,7 +82,7 @@ int	i;
 	bitstoShow      = qt1090Settings -> value ("bitstoShow", 16). toInt ();
 
 #ifdef	__HAVE_RTLTCP__
-	deviceSelecctor	-> addItem ("rtl_tcp");
+	deviceSelector	-> addItem ("rtl_tcp");
 #endif
 #ifdef	__HAVE_RTLSDR__
 	deviceSelector	-> addItem ("rtlsdr");
@@ -91,7 +97,10 @@ int	i;
 	deviceSelector	-> addItem ("hackrf");
 #endif
 #ifdef	__HAVE_PLUTO__
-	deviceSelector	-> addItem ("pluto"
+	deviceSelector	-> addItem ("pluto");
+#endif
+#ifdef	__HAVE_LIME__
+	deviceSelector	-> addItem ("lime");
 #endif
 //#include	"file-handler.h"
 
@@ -173,13 +182,17 @@ void	qt1090::finalize	(void) {
 	   stat_http_requests	= 0;
 	}
 
+	running. store (false);
 	screenTimer. stop ();
 	if (theDevice != nullptr) {
 	   fprintf (stderr, "going to stop the input\n");
 	   theDevice	-> stopDevice ();
+	   usleep (1000);
 	   pthread_cancel (reader_thread);
 	   pthread_join (reader_thread, nullptr);
 	   fprintf (stderr, "reader is quiet\n");
+	   delete theDevice;
+	   theDevice	= nullptr;
 	}
 }
 
@@ -535,10 +548,11 @@ int16_t  res	= real (s) < 0 ? - real (s) : real (s);
 }
 
 //	this slot is called upon the arrival of data
-void	qt1090::processData (void) {
+void	qt1090::processData () {
 std::complex<float> lbuf [DATA_LEN / 2];
 static int flipper	= 0;
-
+	if (!running. load ())
+	   return;
 	while (theDevice -> Samples () > DATA_LEN / 2) {
 	   theDevice -> getSamples (lbuf, DATA_LEN / 2);
 	   memcpy (&magnitudeVector [0],
@@ -672,7 +686,7 @@ void	qt1090::setDevice (const QString &device) {
 theDevice	= nullptr;
 
 #ifdef	__HAVE_RTLTCP__
-	if (device = "network") {
+	if (device == "network") {
 	   try {
 	      theDevice = new rtltcpHandler (qt1090Settings, this -> frequency);
 	   } catch (int e) {
@@ -725,6 +739,28 @@ theDevice	= nullptr;
 	      return;
 	   }
 	}
+	else
+#endif
+#ifdef	__HAVE_PLUTO__
+	if (device == "pluto") {
+	   try {
+	      theDevice	= new plutoHandler (qt1090Settings, this -> frequency);
+	   } catch (int e) {
+	      fprintf (stderr, "no pluto device detected, try again\n");
+	      return;
+	   }
+	}
+	else
+#endif
+#ifdef	__HAVE_LIME__
+	if (device == "lime") {
+	   try {
+	      theDevice	= new limeHandler (qt1090Settings, this -> frequency);
+	   } catch (int e) {
+	      fprintf (stderr, "no lime device detected, try again\n");
+	      return;
+	   }
+	}
 #endif
 	if (theDevice == nullptr)
 	   return;
@@ -733,13 +769,14 @@ theDevice	= nullptr;
 	disconnect (deviceSelector, SIGNAL (activated (const QString &)),
 	            this, SLOT (setDevice (const QString &)));
 	deviceSelector	-> hide ();
-
+	this	-> viewer	-> setBitDepth (theDevice -> nrBits ());
 	connect (theDevice, SIGNAL (dataAvailable ()),
 	         this, SLOT (processData ()));
 	pthread_create (&reader_thread,
 	                nullptr,
 	                readerThreadEntryPoint,
 	                (void *)(theDevice));
+	running.  store (true);
 }
 
 void	qt1090::handle_dumpButton () {

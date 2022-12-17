@@ -63,6 +63,7 @@ public slots:
 private:
 	spectrumViewer	*viewer;
 	pthread_t	reader_thread;
+	std::atomic<bool>	running;;
 	int		frequency;
 	bool		network;
 	deviceHandler	*theDevice;

@@ -266,7 +266,7 @@ void	rtlsdrHandler::stopDevice	(void) {
 	myFrame	-> hide ();
 }
 
-int	rtlsdrHandler::getSamples (int16_t *buffer, int amount) {
+int	rtlsdrHandler::getSamples (std::complex<float> *buffer, int amount) {
 	_I_Buffer      -> getDataFromBuffer (buffer, amount);
 	return amount;
 }

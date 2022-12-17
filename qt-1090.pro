@@ -23,9 +23,10 @@ RESOURCES       += resources.qrc
 
 CONFIG	+= sdrplay-v2
 CONFIG	+= sdrplay-v3
-#CONFIG	+= dabstick
-#CONFIG	+= hackrf
-#CONFIG	+= pluto
+CONFIG	+= dabstick
+CONFIG	+= pluto
+CONFIG	+= lime
+CONFIG	+= hackrf
 #CONFIG	+= rtl_tcp
 
 TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
@@ -146,6 +147,29 @@ sdrplay-v3 {
 	FORMS		+= ./devices/sdrplay-handler-v3/sdrplay-widget-v3.ui
 }
 #
+#	pluto
+#
+pluto	{
+	DEFINES		+= __HAVE_PLUTO__
+	INCLUDEPATH	+= ./devices/pluto-handler
+	HEADERS		+= ./devices/pluto-handler/pluto-handler.h \
+	                   ./devices/pluto-handler/fmFilter.h
+	SOURCES		+= ./devices/pluto-handler/pluto-handler.cpp 
+	FORMS		+= ./devices/pluto-handler/pluto-widget.ui
+}
+#
+#	pluto
+#
+lime	{
+	DEFINES		+= __HAVE_LIME__
+	INCLUDEPATH	+= ./devices/lime-handler
+	HEADERS		+= ./devices/lime-handler/lime-handler.h \
+	                   ./devices/lime-handler/lime-widget.h \
+	                   ./devices/lime-handler/limeSuite.h \
+	                   ./devices/lime-handler/LMS7002M_parameters.h
+	SOURCES		+= ./devices/lime-handler/lime-handler.cpp 
+
+}
 #	the HACKRF One
 #
 hackrf {
