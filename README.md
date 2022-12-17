@@ -54,6 +54,8 @@ edit qt-1090.pro to select your device(s) by commenting out or uncommenting
 	CONFIG  += sdrplay-v3
 	CONFIG  += dabstick
 	CONFIG  += hackrf
+    CONFIG  += lime
+    CONFIG  += pluto
 
 Later versions will include driver support for the Adalm pluto and the
 lime device.

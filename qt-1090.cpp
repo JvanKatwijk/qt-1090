@@ -39,11 +39,11 @@
 #include	"xclose.h"
 
 #include	"device-handler.h"
-#ifdef	__HAVE_RTLTCP__
-#include	"rtl_tcp-handler.h"
-#endif
 #ifdef	__HAVE_RTLSDR__
 #include	"rtlsdr-handler.h"
+#endif
+#ifdef	__HAVE_AIRSPY__
+#include	"airspy-handler.h"
 #endif
 #ifdef	__HAVE_SDRPLAY_V2
 #include	"sdrplay-handler-v2.h"
@@ -59,6 +59,9 @@
 #endif
 #ifdef	__HAVE_LIME__
 #include	"lime-handler.h"
+#endif
+#ifdef	__HAVE_RTLTCP__
+#include	"rtl_tcp-handler.h"
 #endif
 #include	"file-handler.h"
 
@@ -81,11 +84,11 @@ int	i;
 	httpPort	= qt1090Settings -> value ("http_port", 8080). toInt ();
 	bitstoShow      = qt1090Settings -> value ("bitstoShow", 16). toInt ();
 
-#ifdef	__HAVE_RTLTCP__
-	deviceSelector	-> addItem ("rtl_tcp");
-#endif
 #ifdef	__HAVE_RTLSDR__
 	deviceSelector	-> addItem ("rtlsdr");
+#endif
+#ifdef	__HAVE_AIRSPY__
+	deviceSelector	-> addItem ("airspy");
 #endif
 #ifdef	__HAVE_SDRPLAY_V2
 	deviceSelector	-> addItem ("sdrplay-v2");
@@ -101,6 +104,9 @@ int	i;
 #endif
 #ifdef	__HAVE_LIME__
 	deviceSelector	-> addItem ("lime");
+#endif
+#ifdef	__HAVE_RTLTCP__
+	deviceSelector	-> addItem ("rtl_tcp");
 #endif
 //#include	"file-handler.h"
 
@@ -736,6 +742,17 @@ theDevice	= nullptr;
 	      theDevice	= new rtlsdrHandler (qt1090Settings, this -> frequency);
 	   } catch (int e) {
 	      fprintf (stderr, "no rtlsdr device detected, try again\n");
+	      return;
+	   }
+	}
+	else
+#endif
+#ifdef	__HAVE_AIRSPY__
+	if (device == "airspy") {
+	   try {
+	      theDevice	= new airspyHandler (qt1090Settings, this -> frequency);
+	   } catch (int e) {
+	      fprintf (stderr, "no airspy device detected, try again\n");
 	      return;
 	   }
 	}

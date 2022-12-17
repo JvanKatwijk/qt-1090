@@ -24,6 +24,7 @@ RESOURCES       += resources.qrc
 CONFIG	+= sdrplay-v2
 CONFIG	+= sdrplay-v3
 CONFIG	+= dabstick
+CONFIG	+= airspy
 CONFIG	+= pluto
 CONFIG	+= lime
 CONFIG	+= hackrf
@@ -126,6 +127,19 @@ dabstick {
 	                   ./devices/rtlsdr-handler/rtl-dongleselect.h
 	SOURCES		+= ./devices/rtlsdr-handler/rtlsdr-handler.cpp \
 	                   ./devices/rtlsdr-handler/rtl-dongleselect.cpp
+}
+#
+#	airspy
+#
+airspy {
+	DEFINES		+= __HAVE_AIRSPY__
+	FORMS		+= ./devices/airspy-handler/airspy-widget.ui
+	INCLUDEPATH	+= ./devices/airspy-handler
+	INCLUDEPATH	+= ./devices/airspy-handler/libairspy
+	DEPENDPATH	+= ./devices/airspy-handler
+	DEPENDPATH	+= ./devices/airspy-handler/libairspy
+	HEADERS		+= ./devices/airspy-handler/airspy-handler.h 
+	SOURCES		+= ./devices/airspy-handler/airspy-handler.cpp 
 }
 #
 #	the SDRplay
