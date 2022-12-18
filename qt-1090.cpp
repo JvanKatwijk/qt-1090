@@ -38,6 +38,7 @@
 #include	"icao-cache.h"
 #include	"xclose.h"
 
+#include	"coordinates.h"
 #include	"device-handler.h"
 #ifdef	__HAVE_RTLSDR__
 #include	"rtlsdr-handler.h"
@@ -83,7 +84,6 @@ int	i;
 	this	-> viewer	= new spectrumViewer (plotgrid);
 	httpPort	= qt1090Settings -> value ("http_port", 8080). toInt ();
 	bitstoShow      = qt1090Settings -> value ("bitstoShow", 16). toInt ();
-
 #ifdef	__HAVE_RTLSDR__
 	deviceSelector	-> addItem ("rtlsdr");
 #endif
@@ -147,6 +147,9 @@ int	i;
 //
 	ttl_selector	-> setValue (INTERACTIVE_TTL);
 
+	if (qt1090Settings -> value ("autoBrowser", 0). toInt () != 0)
+	   autoBrowserSelector	-> setChecked (true);
+
 //	connect the device
 	connect (interactiveButton, SIGNAL (clicked ()),
 	         this, SLOT (handle_interactiveButton ()));
@@ -162,6 +165,10 @@ int	i;
 	         this, SLOT (handle_dumpButton ()));
 	connect (deviceSelector, SIGNAL (activated (const QString &)),
 	         this, SLOT (setDevice (const QString &)));
+	connect (set_coordinatesButton, SIGNAL (clicked ()),
+	         this, SLOT (handle_set_coordinatesButton ()));
+	connect (autoBrowserSelector, SIGNAL (stateChanged (int)),
+	         this, SLOT (handle_autoBrowser (int)));
 //	display the version
         QString v = "qt-1090 -" + QString (CURRENT_VERSION);
         QString versionText = "qt-1090 version: " + QString(CURRENT_VERSION);
@@ -171,13 +178,13 @@ int	i;
 
 }
 
-	qt1090::~qt1090	(void) {
+	qt1090::~qt1090	() {
 	delete[] magnitudeVector;	
 	delete	icao_cache;
 	delete	theDevice;
 }
 
-void	qt1090::finalize	(void) {
+void	qt1090::finalize	() {
 	net	= false;
 	if (httpServer != nullptr) {
 	   httpServer	-> stop ();
@@ -578,7 +585,7 @@ static int flipper	= 0;
 }
 //
 //	Timer driven
-void	qt1090::updateScreen (void) {
+void	qt1090::updateScreen () {
 	   planeList	= removeStaleAircrafts (planeList,
 	                                        interactive_ttl,
 	                                        dumpfilePointer);
@@ -603,7 +610,7 @@ void	qt1090::closeEvent (QCloseEvent *event) {
         }
 }
 
-void	qt1090::handle_interactiveButton (void) {
+void	qt1090::handle_interactiveButton () {
 	interactive = !interactive;
 	if (interactive)
 	   interactiveButton -> setText ("Streaming");
@@ -611,10 +618,20 @@ void	qt1090::handle_interactiveButton (void) {
 	   interactiveButton	-> setText ("plane list");
 }
 
-void	qt1090::handle_httpButton (void) {
+void	qt1090::handle_httpButton () {
 	net	= !net;
 	if (net) {
-	   httpServer	= new httpHandler (this, "./gmap.html");
+	   float local_lat =
+	            qt1090Settings -> value ("latitude", 52). toFloat ();
+	   float local_lon =
+	            qt1090Settings -> value ("longitude", 4). toFloat ();
+	   bool	 autoBrowser =
+	            qt1090Settings -> value ("autoBrowser", 0). toInt () != 0;
+	   httpServer	= new httpHandler (this,
+	                                   std::complex<float> (local_lat,
+	                                                        local_lon),
+	                                   QString::number (httpPort),
+	                                   autoBrowser);
 	   httpServer -> start ();
 	   QString text = "port ";
 	   text. append (QString:: number (httpPort));
@@ -637,7 +654,7 @@ void	qt1090::set_ttl	(int l) {
 	interactive_ttl	= l;
 }
 
-void	qt1090::handle_metricButton (void) {
+void	qt1090::handle_metricButton () {
 	metric = !metric;
 	metricButton	-> setText (metric ? "metric" : "not metric");
 }
@@ -813,5 +830,17 @@ void	qt1090::handle_dumpButton () {
 	dumpfilePointer	= fopen (file. toLatin1 (). data (), "w");
 	if (dumpfilePointer != nullptr)
 	   dumpButton	-> setText ("dumping");
+}
+
+
+void    qt1090::handle_set_coordinatesButton    () {
+coordinates theCoordinator (qt1090Settings);
+        (void)theCoordinator. QDialog::exec ();
+}
+
+void	qt1090::handle_autoBrowser	(int x)  {
+	(void)x;
+	qt1090Settings -> setValue ("autoBrowser", 
+	                             autoBrowserSelector -> isChecked () ? 1 : 0);
 }
 

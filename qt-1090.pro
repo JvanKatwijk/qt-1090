@@ -33,10 +33,12 @@ CONFIG	+= hackrf
 TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
 
 DEPENDPATH += . \
+	      ./map \
 	      ./devices \
 	      ./devices/file-handler
 	      
 INCLUDEPATH += . \
+	      ./map \
 	      ./devices \
 	      ./devices/file-handler
 
@@ -49,6 +51,8 @@ HEADERS += ./xclose.h \
            ./icao-cache.h \
            ./crc-handling.h \
            ./message-handling.h \
+	   ./map/converted_map.h \
+	   ./map/coordinates.h \
            ./device-handler.h \
            ./devices/file-handler/file-handler.h \
            ./spectrumviewer.h  \
@@ -63,6 +67,7 @@ SOURCES += ./xclose.cpp   \
            ./icao-cache.cpp   \
            ./crc-handling.cpp   \
            ./message-handling.cpp   \
+	   ./map/coordinates.cpp \
            ./device-handler.cpp   \
            ./devices/file-handler/file-handler.cpp   \
            ./spectrumviewer.cpp \
@@ -70,7 +75,7 @@ SOURCES += ./xclose.cpp   \
 #
 # for windows32 we use:
 win32 {
-DESTDIR	= ../../windows-qt1090
+DESTDIR	= /usr/shared/w32-programs/windows-qt1090
 exists ("./.git") {
    GITHASHSTRING = $$system(git rev-parse --short HEAD)
    !isEmpty(GITHASHSTRING) {
@@ -92,7 +97,7 @@ LIBS            += -lstdc++
 LIBS            += -lws2_32
 LIBS            += -lusb-1.0
 LIBS		+= -lqwt-qt5
-LIBS		+= -L .
+LIBS		+= -lfftw3f
 
 }
 #

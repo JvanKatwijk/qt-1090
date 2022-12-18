@@ -393,6 +393,20 @@
        </spacer>
       </item>
       <item>
+       <widget class="QCheckBox" name="autoBrowserSelector">
+        <property name="text">
+         <string>browser automatic</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="set_coordinatesButton">
+        <property name="text">
+         <string>home address</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="dumpButton">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The planes, the data of which is more or less complete, can be recorded in a file. Two data are recorded,&lt;/p&gt;&lt;p&gt;the time of entry in the system - with parameters position and height - and the time the system lost sight&lt;/p&gt;&lt;p&gt;on the plane - with the last known parameters position and height.&lt;/p&gt;&lt;p&gt;Touching the button causes a file selection menu to appear, after selecting a file the file is created and&lt;/p&gt;&lt;p&gt;data - as described above - will be written to the file until tge button is touched again.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

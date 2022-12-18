@@ -29,14 +29,17 @@
 #ifndef	__HTTP_HANDLER_H
 #define	__HTTP_HANDLER_H
 
+#include	<QString>
 #include	<thread>
 #include	<atomic>
 #include	<string>
+#include	<complex>
 class	qt1090;
 
 class	httpHandler {
 public:
-	httpHandler	(qt1090 *, std::string);
+	httpHandler	(qt1090 *, std::complex<float>,
+	                 const QString &, bool autoBrowser);
 	~httpHandler	();
 void	start		();
 void	stop		();
@@ -44,10 +47,20 @@ void	run		();
 
 private:
 	qt1090		*parent;
-	std::string	mapFile;
+	std::complex<float>	homeAddress;
+
+#ifdef  __MINGW32__
+        std::wstring    browserAddress;
+#else
+        std::string     browserAddress;
+#endif
+
+	QString		mapPort;
+	bool		autoBrowser;
 	std::atomic<bool>	running;
 	std::thread	threadHandle;
-	std::string     theMap		(std::string fileName);
+	std::string     theMap	(std::complex<float>);
+//	std::string     theMap	(const QString &fileName);
 };
 
 #endif

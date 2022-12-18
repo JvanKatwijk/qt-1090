@@ -40,6 +40,7 @@
 #include	"message-handling.h"
 #include	"ui_qt-1090.h"
 #include	"spectrumviewer.h"
+#include	<complex>
 
 class	deviceHandler;
 
@@ -107,6 +108,8 @@ private slots:
 	void	updateScreen		();
 	void	handle_dumpButton	();
 	void	setDevice		(const QString &);
+	void	handle_set_coordinatesButton	();
+	void	handle_autoBrowser	(int);
 };
 
 #endif

@@ -1,85 +1,54 @@
-**qt-1090**
+        **qt-1090**
 
 ----------------------------------------------------------------------------
 
-**qt-1090** is a variant of the Dump1090 program. The latter was
+**qt-1090** is a variant of the popular Dump1090 program. The latter was
 designed  as a command line utility for RTLSDR devices. 
-This version was created to allow the use of SDRplay devices,
-it supports SDRplay devices, RTLSDR devices and HACKRF One, and
-is equipped with a simple GUI.
+The qt-1090 version was created to allow the use of SDRplay devices,
+but it supports SDRplay devices, RTLSDR devices, HACKRF One, Lime devoces
+and the Adalm Pluto.
+It is equipped  with a simple GUI.
 
-![qt-1090 ](/qt-1090-B.png?raw=true)
+![qt-1090 ](/qt-1090-1.png?raw=true)
 The display shows the frequency spectrum of the region of 1090 MHz.
 
 The default choice is to show the list of visible planes on the command window,
 by starting the http server and a browser, the position of the planes
-can be made visible.
-
-![qt-1090 ](/qt-1090-2.png?raw=true)
+can be made visible as can be seen in the picture.
 
 The icons for the planes are made slightly larger, clicking with the mouse
 on a plane icon will show some details of the flight on the right hand
 side of the browser.
 
----------------------------------------------------------------------------
-Creating an executable
----------------------------------------------------------------------------
-For linux one has to create the executable
 
-Step 1 is of course downloading the sourcetree
+![qt-1090 ](/qt-1090-A.png?raw=true)
 
-* git clone https://githib.com/JvanKatwijk/qt-1090
-
-To compile, you should have C++ and Qt5 installed.
-The current version of qt-1090 uses the qhttpserver library,
-the sources of this library are included in the source tree.
-
-Step 2 is creating the qhttpserver library
-
-Creating a  qhttpserver library and installing (assuming the
-current directory is the qt-1090 directory):
-
-* cd qhttpserver
-* qmake-qt5
-* make
-* sudo make install
-
-Step 3 is configuring the executable 
-
-* cd ..			/* back in the qt-1090 directory
- 
-edit qt-1090.pro to select your device(s) by commenting out or uncommenting
-
-	CONFIG  += sdrplay-v2
-	CONFIG  += sdrplay-v3
-	CONFIG  += dabstick
-	CONFIG  += hackrf
-    CONFIG  += lime
-    CONFIG  += pluto
-
-Later versions will include driver support for the Adalm pluto and the
-lime device.
-
-Note that the software - as usual with my software - will dynamically load
-the device driver when a device is selected.
-
-Step 4 is running qmake/make
-
-* qmake-qt5
-* make
-
-the created qt-1090 executable is in ./linux-bin
+The basic idea in the design of the GUI is that for each session one selects
+the input device. The GUI therefore contains a device selector; once
+a device is selected and could be opened, the selector is not visible
+anymore.
 
 
----------------------------------------------------------------------------
-GUI
----------------------------------------------------------------------------
+The default mode is to display the list of planes currently being
+seen (either completely or partly), the button on the widget - whentouched -
+will change that in showing the list of messages that is being received.
 
-The GUI contains:
-* a. A display showing the spectrum of 1090 Mhz with a width of 2.4 Mhz
-* b. For the different message types the number of occurrences, detected in the input stream;
-* c. a list of numbers indicating statistics, such as the number of messages with a preamble passing the preamble test, and the number of messages passing the crc check;
-*d. a device selector. 
+The http server is now integrated in the software.
+Touching the http button will start the server.
+
+qt1090 has as option to automatically start the system's default browser,
+the checkbox on the bottom line of the main widget will activatee
+or deactivate that option.
+
+Similar to what I included in Qt-DAB, there is the possibility of
+setting a "home location",
+a combilation (latitude, longitude) that will be the center of the map 
+when a map is shown.
+
+The port used can be changed in the ".ini" file, a configiration file
+located in the user's home directory. Setting "http_port" variable
+in the ini file can be used to define another port than the default
+one "8080".
 
 The bottom line contains a button "dump", pushing this button causes
 some data to be written onto a file. This data described the entry and
@@ -97,9 +66,10 @@ exit points of planes in the system, data as given below
 	14900     51.964  4.753    entered at Fri May 25 16:50:33 2018
 	18100     51.953  4.749    left at Fri May 25 16:55:01 2018
 
----------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
 Changing the appearance
----------------------------------------------------------------------------
+--------------------------------------------------------------------------
 
 One may choose among three appearances of the control widget,
 Passing a '-A' or a '-B' parameter a stylesheet will be used to
@@ -109,19 +79,48 @@ color of the brush on the display).
 
 The settings will be saved.
 
-![qt-1090 ](/qt-1090-A.png?raw=true)
+![qt-1090 ](/qt-1090-B.png?raw=true)
 ![qt-1090 ](/qt-1090-C.png?raw=true)
 
-----------------------------------------------------------------------------
-Showing planes on google maps
-----------------------------------------------------------------------------
+---------------------------------------------------------------------------
+Creating an executable
+---------------------------------------------------------------------------
+For linux one has to create the executable
 
-On pressing the button to switch on http, a browser can display the planes
-on a map, listening to a designated  port.
-The HTTP server assumes that the file "gmap.html" is stored in the same
-directory where the qt-1090 program resides. Note that the browser should
-listen to the port specified in the field next to that button.
-The port can be set (changed) in the ini file, default is 8080.
+Step 1 is of course downloading the sourcetree
+
+* git clone https://githib.com/JvanKatwijk/qt-1090
+
+To compile, you should have C++ and Qt5 installed.
+
+Step 2 is configuring the executable 
+
+* cd qt-1090			/* into the qt-1090 directory
+ 
+edit qt-1090.pro to select your device(s) by commenting out or uncommenting
+
+	CONFIG  += sdrplay-v2
+	CONFIG  += sdrplay-v3
+	CONFIG  += dabstick
+	CONFIG  += hackrf
+    CONFIG  += lime
+    CONFIG  += pluto
+
+Note that the software - as usual with my software - will dynamically load
+the device driver when a device is selected.
+
+Step 3 is running qmake/make
+
+* qmake-qt5
+* make
+
+the created qt-1090 executable is in ./linux-bin
+
+---------------------------------------------------------------------------
+Windows
+---------------------------------------------------------------------------
+
+For Windows an installer is available
 
 ---------------------------------------------------------------------------
 Copyrights
