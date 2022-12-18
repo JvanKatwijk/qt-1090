@@ -140,6 +140,5 @@ released under the BSD three clause license.
 dump1090  as derived version is Copyright (c) 2014,2015 Oliver Jowett
 <oliver@mutability.co.uk>
 
-Copyright of the httplibrary Nikhil Marathe <nsm.nikhil@gmail.com>
 Copyright of the modifications is J van Katwijk, Lazy Chair computing
 
