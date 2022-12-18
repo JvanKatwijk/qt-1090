@@ -40,10 +40,10 @@ qt1090 has as option to automatically start the system's default browser,
 the checkbox on the bottom line of the main widget will activatee
 or deactivate that option.
 
-Similar to what I included in Qt-DAB, there is the possibility of
-setting a "home location",
-a combilation (latitude, longitude) that will be the center of the map 
-when a map is shown.
+The center of the map can be set by filling in a "home address",
+just give (an estimate of) your location in latitude and longitude
+(decimal values), and the software will center the map to that
+location.
 
 The port used can be changed in the ".ini" file, a configiration file
 located in the user's home directory. Setting "http_port" variable
