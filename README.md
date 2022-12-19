@@ -82,6 +82,16 @@ The settings will be saved.
 ![qt-1090 ](/qt-1090-B.png?raw=true)
 ![qt-1090 ](/qt-1090-C.png?raw=true)
 
+----------------------------------------------------------------------------
+On executables
+----------------------------------------------------------------------------
+
+The software is developed on a Linux system, and cross compiled for 
+Windows.
+Wgile it is relatively easy to build an executable, an executable version 
+for Linux (an AppImage) and  an installer for Windows are available
+in the  releases section
+
 ---------------------------------------------------------------------------
 Creating an executable
 ---------------------------------------------------------------------------

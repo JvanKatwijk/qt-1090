@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=qt-1090
+Exec=qt-1090
+Icon=qt-1090
+Type=Application
+Categories=AudioVideo;
+Comment=A simple adsb decoder
