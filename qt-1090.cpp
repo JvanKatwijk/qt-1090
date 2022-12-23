@@ -133,8 +133,8 @@ int	i;
 
 	screenTimer. setInterval (2000);
 	connect (&screenTimer, SIGNAL (timeout ()),
-                 this, SLOT (updateScreen ()));
-        screenTimer. start (2000);
+	         this, SLOT (updateScreen ()));
+	screenTimer. start (2000);
 
 /* Statistics */
 	stat_valid_preamble	= 0;
@@ -170,11 +170,11 @@ int	i;
 	connect (autoBrowserSelector, SIGNAL (stateChanged (int)),
 	         this, SLOT (handle_autoBrowser (int)));
 //	display the version
-        QString v = "qt-1090 -" + QString (CURRENT_VERSION);
-        QString versionText = "qt-1090 version: " + QString(CURRENT_VERSION);
-        versionText += " Build on: " + QString(__TIMESTAMP__) + QString (" ") + QString (GITHASH);
-        versionName     -> setText (v);
-        versionName     -> setToolTip (versionText);
+	QString v = "qt-1090 -" + QString (CURRENT_VERSION);
+	QString versionText = "qt-1090 version: " + QString(CURRENT_VERSION);
+	versionText += " Build on: " + QString(__TIMESTAMP__) + QString (" ") + QString (GITHASH);
+	versionName     -> setText (v);
+	versionName     -> setToolTip (versionText);
 
 }
 
@@ -296,11 +296,11 @@ uint32_t j;
 //	phase 6: 0/4\2 2/4\0 0 0 0 2/4\0/5\1 0 0 0 0 0 0 X2
 //	phase 7: 0/3 3\1/5\0 0 0 0 1/5\0/4\2 0 0 0 0 0 0 X3
 //
-        
+	
 //	quick check: we must have a rising edge 0->1 and a falling edge 12->13
 	   if (!(preamble [0]  < preamble [1] &&
 	         preamble [12] > preamble [13]) )
-              continue;
+	      continue;
 
 	   if (preamble [1] > preamble [2] &&                   // 1
 	       preamble [2] < preamble [3] &&
@@ -377,14 +377,14 @@ uint32_t j;
 
 //	Check that the "quiet" bits 6,7,15,16,17 are actually quiet
 	   if (preamble [5] >= high / 2 ||
-               preamble [6] >= high / 2 ||
-               preamble [7] >= high / 2 ||
-               preamble [8] >= high / 2 ||
-               preamble [14] >= high / 2 ||
-               preamble [15] >= high / 2 ||
-               preamble [16] >= high / 2 ||
-               preamble [17] >= high / 2 ||
-               preamble [18] >= high / 2) {
+	       preamble [6] >= high / 2 ||
+	       preamble [7] >= high / 2 ||
+	       preamble [8] >= high / 2 ||
+	       preamble [14] >= high / 2 ||
+	       preamble [15] >= high / 2 ||
+	       preamble [16] >= high / 2 ||
+	       preamble [17] >= high / 2 ||
+	       preamble [18] >= high / 2) {
 	      continue;
 	   }
 	
@@ -394,16 +394,16 @@ uint32_t j;
 	   for (try_phase = 4; try_phase <= 8; ++try_phase) {
 	   int msgType;
 	   uint16_t *pPtr;
-           int phase, i, bytelen;
+	   int phase, i, bytelen;
 
 	      pPtr = &m [j + 19] + (try_phase / 5);
 	      phase = try_phase % 5;
 
 	      bytelen = LONG_MSG_BITS / 8;
 	      for (i = 0; i < bytelen; ++i) {
-              uint8_t theByte = 0;
+	      uint8_t theByte = 0;
 
-                 switch (phase) {
+	         switch (phase) {
 	            case 0:
 	               theByte = 
 	                  (slice_phase0 (pPtr) > 0 ? 0x80 : 0) |
@@ -418,7 +418,7 @@ uint32_t j;
 	                phase = 1;
 	                pPtr += 19;
 	                break;
-                    
+	            
 	             case 1:
 	                theByte =
 	                   (slice_phase1 (pPtr) > 0 ? 0x80 : 0) |
@@ -487,7 +487,7 @@ uint32_t j;
 	               case 0: case 4: case 5: case 11:
 	                  bytelen = SHORT_MSG_BITS / 8;
 	                  break;
-                        
+	                
 	               case 16: case 17: case 18: case 20: case 21: case 24:
 	                  break;
 
@@ -549,7 +549,7 @@ uint32_t j;
 	         break;
 	      }
 	   }
-        }
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -597,17 +597,17 @@ void	qt1090::updateScreen () {
 
 #include <QCloseEvent>
 void	qt1090::closeEvent (QCloseEvent *event) {
-        QMessageBox::StandardButton resultButton =
-                        QMessageBox::question (this, "qt1090",
-                                               tr ("Are you sure?\n"),
-                                               QMessageBox::No | QMessageBox::Yes,
-                                               QMessageBox::Yes);
-        if (resultButton != QMessageBox::Yes) {
-           event -> ignore ();
-        } else {
-           finalize ();
-           event -> accept ();
-        }
+	QMessageBox::StandardButton resultButton =
+	                QMessageBox::question (this, "qt1090",
+	                                       tr ("Are you sure?\n"),
+	                                       QMessageBox::No | QMessageBox::Yes,
+	                                       QMessageBox::Yes);
+	if (resultButton != QMessageBox::Yes) {
+	   event -> ignore ();
+	} else {
+	   finalize ();
+	   event -> accept ();
+	}
 }
 
 void	qt1090::handle_interactiveButton () {
@@ -806,6 +806,7 @@ theDevice	= nullptr;
 	this	-> viewer	-> setBitDepth (theDevice -> nrBits ());
 	connect (theDevice, SIGNAL (dataAvailable ()),
 	         this, SLOT (processData ()));
+	fprintf (stderr, "we are connected\n");
 	pthread_create (&reader_thread,
 	                nullptr,
 	                readerThreadEntryPoint,
@@ -835,7 +836,7 @@ void	qt1090::handle_dumpButton () {
 
 void    qt1090::handle_set_coordinatesButton    () {
 coordinates theCoordinator (qt1090Settings);
-        (void)theCoordinator. QDialog::exec ();
+	(void)theCoordinator. QDialog::exec ();
 }
 
 void	qt1090::handle_autoBrowser	(int x)  {

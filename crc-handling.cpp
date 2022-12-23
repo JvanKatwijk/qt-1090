@@ -107,7 +107,7 @@ unsigned char aux [LONG_MSG_BITS / 8];
 	   int bitmask1 = maskTable [j % 8];
 
 //	Don't check the same pairs multiple times, so i starts from j+1
-           for (i = j + 1; i < bits; i++) {
+	   for (i = j + 1; i < bits; i++) {
 	      int byte2 = i / 8;
 //	      int bitmask2 = 1 << (7 - (i % 8));
 	      int bitmask2 = maskTable [i % 8];
