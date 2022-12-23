@@ -8,6 +8,7 @@ TEMPLATE	= app
 TARGET          = qt-1090
 QT		+= widgets network
 CONFIG		+= console
+QMAKE_CFLAGS	+= -std=c++14
 #QMAKE_CFLAGS	+= -O3 -ffast-math
 #QMAKE_CXXFLAGS	+= -O3 -ffast-math
 #QMAKE_LFLAGS	+= -O3

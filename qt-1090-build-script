@@ -2,11 +2,11 @@
      cp ./linux-bin/qt-1090 appdir/usr/bin/qt-1090
      mkdir -p appdir/usr/lib
      mkdir -p appdir/usr/share/applications
-     cp fmreceiver.desktop appdir/usr/share/applications
+     cp qt-1090.desktop appdir/usr/share/applications
      cp qt-1090.png appdir/qt-1090.png
      touch appdir/qt-1090.png
      mkdir -p ./appdir/usr/share/icons/hicolor/256x256/apps
-     cp fmreceiver.png appdir/usr/share/icons/hicolor/256x256/apps
+     cp qt-1090.png appdir/usr/share/icons/hicolor/256x256/apps
      ls -l appdir/usr/lib
      ls -l
      ls -l appdir
