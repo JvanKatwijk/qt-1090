@@ -148,6 +148,7 @@ restartRequest r (vfoFrequency);
         if (receiverRuns. load ())
            return;
 	messageHandler (&r);
+	fprintf (stderr, "Device is gestart\n");
 }
 
 void	sdrplayHandler_v3::stopDevice	() {
@@ -158,14 +159,8 @@ stopRequest r;
 }
 //
 int32_t	sdrplayHandler_v3::getSamples (std::complex<float> *V, int32_t size) { 
-std::complex<float> temp [size];
-int	i;
 
-	int amount      = _I_Buffer. getDataFromBuffer (temp, size);
-        for (i = 0; i < amount; i ++)
-           V [i] = std::complex<float> (real (temp [i]),
-                                        imag (temp [i]));
-        return amount;
+	return  _I_Buffer. getDataFromBuffer (V, size);
 }
 
 int32_t	sdrplayHandler_v3::Samples	() {
@@ -198,7 +193,7 @@ void    sdrplayHandler_v3::set_nrBits (int b) {
         denominator = bitsPerSample == 12 ? 2048 : 4096;
 }
 
-void	sdrplayHandler_v3::set_lnabounds(int low, int high) {
+void	sdrplayHandler_v3::set_lnabounds (int low, int high) {
 	lnaGainSetting	-> setRange (low, high);
 }
 
@@ -221,7 +216,6 @@ void    sdrplayHandler_v3::show_lnaGain (int g) {
 
 void	sdrplayHandler_v3::set_ifgainReduction	(int GRdB) {
 GRdBRequest r (GRdB);
-
 	if (!receiverRuns. load ())
            return;
         messageHandler (&r);
@@ -229,7 +223,6 @@ GRdBRequest r (GRdB);
 
 void	sdrplayHandler_v3::set_lnagainReduction (int lnaState) {
 lnaRequest r (lnaState);
-
 	if (!receiverRuns. load ())
            return;
         messageHandler (&r);
@@ -326,8 +319,9 @@ std::complex<float> localBuf [numSamples];
 	}
 
 	st -> _I_Buffer. putDataIntoBuffer (localBuf, numSamples);
-	if (st -> _I_Buffer. GetRingBufferReadAvailable () > 250000)
+	if (st -> _I_Buffer. GetRingBufferReadAvailable () > 250000) {
 	   st -> signalData ();
+	}
 }
 
 static

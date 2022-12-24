@@ -806,7 +806,7 @@ theDevice	= nullptr;
 	this	-> viewer	-> setBitDepth (theDevice -> nrBits ());
 	connect (theDevice, SIGNAL (dataAvailable ()),
 	         this, SLOT (processData ()));
-	fprintf (stderr, "we are connected\n");
+	
 	pthread_create (&reader_thread,
 	                nullptr,
 	                readerThreadEntryPoint,
