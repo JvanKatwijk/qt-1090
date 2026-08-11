@@ -95,7 +95,7 @@ mir_sdr_DeviceT devDesc [4];
 	this	-> sdrplaySettings	= sdrplaySettings;
 	this	-> freq		= freq;
 
-	this	-> myFrame		= new QFrame (NULL);
+	this	-> myFrame		= new QFrame (nullptr);
 	setupUi (this -> myFrame);
 	this	-> myFrame	-> show ();
 	antennaSelector         -> hide ();
@@ -206,7 +206,6 @@ ULONG APIkeyValue_length = 255;
 	}
 //
 //
-//      we know we are only in the frequency range 175 .. 230 Mhz,
 //      so we can rely on a single table for the lna reductions.
 	switch (hwVersion) {
 	   case 1:              // old RSP

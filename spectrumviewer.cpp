@@ -23,6 +23,7 @@
 
 #include	"spectrumviewer.h"
 #include	<QBrush>
+#include	<QPen>
 
 	spectrumViewer::spectrumViewer (QwtPlot	*plot) {
 QString	colorString	= "black";

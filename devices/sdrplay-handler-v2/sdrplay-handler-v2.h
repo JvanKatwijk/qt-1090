@@ -143,7 +143,6 @@ private:
         pfn_mir_sdr_rspDuo_BiasT
                                 my_mir_sdr_rspDuo_BiasT;
 
-
 	bool            loadFunctions   (void);
 	bool            libraryLoaded;
 	std::atomic<bool>       running;

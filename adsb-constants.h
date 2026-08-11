@@ -27,8 +27,7 @@
  *
  */
 
-#ifndef	__ADSB_CONSTANTS__
-#define	__ADSB_CONSTANTS__
+#pragma once
 
 #include	<stdio.h>
 #include	<string.h>
@@ -98,5 +97,5 @@ int	messageLenByType (int type) {
         else
            return SHORT_MSG_BITS;
 }
-#endif
 
+#define dynVec(t, v)    static_cast<t *>(alloca (v * sizeof (t)))

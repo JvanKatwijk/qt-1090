@@ -6,12 +6,14 @@
 
 TEMPLATE	= app
 TARGET          = qt-1090
-QT		+= widgets network
+QT		+= widgets network websockets
 CONFIG		+= console
 QMAKE_CFLAGS	+= -std=c++14
 #QMAKE_CFLAGS	+= -O3 -ffast-math
 #QMAKE_CXXFLAGS	+= -O3 -ffast-math
 #QMAKE_LFLAGS	+= -O3
+QMAKE_CXXFLAGS  += -Wvla
+
 QMAKE_CFLAGS	+= -g
 QMAKE_CXXFLAGS	+= -g
 QMAKE_LFLAGS	+= -g
@@ -22,13 +24,14 @@ QMAKE_LFLAGS	+= -g
 RC_ICONS        =  qt-1090.ico
 RESOURCES       += resources.qrc
 
-CONFIG	+= sdrplay-v2
+#CONFIG	+= sdrplay-v2
 CONFIG	+= sdrplay-v3
-CONFIG	+= dabstick
-CONFIG	+= airspy
-CONFIG	+= pluto
-CONFIG	+= lime
-CONFIG	+= hackrf
+#CONFIG	+= dabstick
+#CONFIG	+= airspy
+#CONFIG	+= pluto
+#CONFIG	+= lime
+#CONFIG	+= hackrf
+CONFIG	+= sdrconnect
 #CONFIG	+= rtl_tcp
 
 TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
@@ -54,7 +57,7 @@ HEADERS += ./xclose.h \
            ./message-handling.h \
 	   ./map/converted_map.h \
 	   ./map/coordinates.h \
-           ./device-handler.h \
+           ./devices/device-handler.h \
            ./devices/file-handler/file-handler.h \
            ./spectrumviewer.h  \
 	   ./http-handler.h
@@ -69,7 +72,7 @@ SOURCES += ./xclose.cpp   \
            ./crc-handling.cpp   \
            ./message-handling.cpp   \
 	   ./map/coordinates.cpp \
-           ./device-handler.cpp   \
+           ./devices/device-handler.cpp   \
            ./devices/file-handler/file-handler.cpp   \
            ./spectrumviewer.cpp \
 	   ./http-handler.cpp
@@ -158,14 +161,6 @@ sdrplay-v2 {
 	FORMS		+= ./devices/sdrplay-handler-v2/sdrplay-widget-v2.ui
 }
 #
-sdrplay-v3-xxx {
-	DEFINES		+= __HAVE_SDRPLAY_V3
-	INCLUDEPATH	+= ./devices/sdrplay-handler-v3
-	HEADERS		+= ./devices/sdrplay-handler-v3/sdrplay-handler-v3.h \
-	                   ./devices/sdrplay-handler-v3/sdrplay-commands.h
-	SOURCES		+= ./devices/sdrplay-handler-v3/sdrplay-handler-v3.cpp 
-	FORMS		+= ./devices/sdrplay-handler-v3/sdrplay-widget-v3.ui
-}
 #
 sdrplay-v3 {
 	DEFINES		+= __HAVE_SDRPLAY_V3
@@ -231,4 +226,20 @@ hackrf {
 	SOURCES		+= ./devices/rtltcp-handler/rtl_tcp-handler.cpp 
 	FORMS		+= ./devices/rtltcp-handler/rtl_tcp-widget.ui
 }
+#
+#	sdrconnect
+#
+sdrconnect {
+	DEFINES		+= __HAVE_SDRCONNECT__
+	DEPENDPATH	+= ./devices/sdrconnect
+	INCLUDEPATH	+= ./devices/sdrconnect
+	HEADERS		+= ./devices/sdrconnect/sdrconnect-handler.h \
+	                   ./devices/sdrconnect/packet-handler.h \
+	                   ./devices/sdrconnect/socket-handler.h 
+	SOURCES		+= ./devices/sdrconnect/sdrconnect-handler.cpp \
+	                   ./devices/sdrconnect/packet-handler.cpp \
+	                   ./devices/sdrconnect/socket-handler.cpp 
+	FORMS		+= ./devices/sdrconnect/sdrconnect-widget.ui
+}
+	       
 #

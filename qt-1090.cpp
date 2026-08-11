@@ -6,7 +6,7 @@
  *	
  *	The demodulation code is based on
  *	demod_2400.c: 2.4MHz Mode S demodulator.
- *	 Copyright (c) 2014,2015 Oliver Jowett <oliver@mutability.co.uk>
+ *	Copyright (c) 2014,2015 Oliver Jowett <oliver@mutability.co.uk>
  *
  *	qt-1090 Copyright (C) 2018
  *	Jan van Katwijk (J.vanKatwijk@gmail.com)
@@ -40,6 +40,9 @@
 
 #include	"coordinates.h"
 #include	"device-handler.h"
+#ifdef	__HAVE_SDRCONNECT__
+#include	"sdrconnect-handler.h"
+#endif
 #ifdef	__HAVE_RTLSDR__
 #include	"rtlsdr-handler.h"
 #endif
@@ -84,6 +87,9 @@ int	i;
 	this	-> viewer	= new spectrumViewer (plotgrid);
 	httpPort	= qt1090Settings -> value ("http_port", 8080). toInt ();
 	bitstoShow      = qt1090Settings -> value ("bitstoShow", 16). toInt ();
+#ifdef	__HAVE_SDRCONNECT__
+	deviceSelector	-> addItem ("sdrconnect");
+#endif
 #ifdef	__HAVE_RTLSDR__
 	deviceSelector	-> addItem ("rtlsdr");
 #endif
@@ -562,7 +568,8 @@ int16_t  res	= real (s) < 0 ? - real (s) : real (s);
 
 //	this slot is called upon the arrival of data
 void	qt1090::processData () {
-std::complex<float> lbuf [DATA_LEN / 2];
+auto lbuf	= dynVec (std::complex<float>, DATA_LEN / 2);
+//std::complex<float> lbuf [DATA_LEN / 2];
 static int flipper	= 0;
 	if (!running. load ())
 	   return;
@@ -576,7 +583,7 @@ static int flipper	= 0;
 	                               (int16_t) (jan_abs (lbuf [i]));
 	   detectModeS	(magnitudeVector, data_len / 2);
 	   flipper ++;
-	   if (flipper >= 4) {
+	   if (flipper >= 2) {
 	      viewer -> Display (lbuf, DATA_LEN / 2,
 	                          amplitudeSlider -> value ());
 	      flipper = 0;
@@ -764,6 +771,19 @@ theDevice	= nullptr;
 	}
 	else
 #endif
+#ifdef	__HAVE_SDRCONNECT__
+	if (device == "sdrconnect") {
+	   try {
+	      theDevice	= new sdrConnectHandler (qt1090Settings, 
+	                                                 this -> frequency);
+	    } catch (int e) {
+	      fprintf (stderr, "no connection to sdrconnect, try again\n");
+              return;
+           }
+        }
+        else
+#endif
+
 #ifdef	__HAVE_AIRSPY__
 	if (device == "airspy") {
 	   try {

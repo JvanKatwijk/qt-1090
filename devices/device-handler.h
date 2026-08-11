@@ -20,8 +20,7 @@
  *    along with qt-1090; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifndef	__DEVICE_HANDLER__
-#define	__DEVICE_HANDLER__
+#pragma once
 #
 /*
  *	We have to create a simple virtual class here, since we
@@ -46,5 +45,4 @@ virtual	int		nrBits		();
 signals:
 	void		dataAvailable	();
 };
-#endif
 

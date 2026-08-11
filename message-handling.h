@@ -25,8 +25,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef	__MESSAGE_HANDLING__
-#define	__MESSAGE_HANDLING__
+#pragma once
 
 #include	"adsb-constants.h"
 #include	"crc-handling.h"
@@ -99,6 +98,5 @@ int	decodeAC12Field			(uint8_t *msg, int *unit);
 int	decodeAC13Field			(uint8_t *msg, int *unit);
 };
 
-#endif
 
 
