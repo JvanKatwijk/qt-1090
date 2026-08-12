@@ -5,8 +5,8 @@
 **qt-1090** is a variant of the popular Dump1090 program. The latter was
 designed  as a command line utility for RTLSDR devices. 
 The qt-1090 version was created to allow the use of SDRplay devices,
-but it supports SDRplay devices, RTLSDR devices, HACKRF One, Lime devoces
-and the Adalm Pluto.
+but it supports SDRplay devices, RTLSDR devices, HACKRF One, Lime devoces,
+the Adalm Pluto and the sdrConnect framework.
 It is equipped  with a simple GUI.
 
 ![qt-1090 ](/qt-1090-1.png?raw=true)
@@ -67,22 +67,6 @@ exit points of planes in the system, data as given below
 	18100     51.953  4.749    left at Fri May 25 16:55:01 2018
 
 
---------------------------------------------------------------------------
-Changing the appearance
---------------------------------------------------------------------------
-
-One may choose among three appearances of the control widget,
-Passing a '-A' or a '-B' parameter a stylesheet will be used to
-color the elements in the control  widget.
-Passing a 'C' as parameter will show a widget without any color (other than the
-color of the brush on the display).
-
-The settings will be saved.
-
-![qt-1090 ](/qt-1090-B.png?raw=true)
-![qt-1090 ](/qt-1090-C.png?raw=true)
-
-----------------------------------------------------------------------------
 On executables
 ----------------------------------------------------------------------------
 
@@ -95,13 +79,16 @@ in the  releases section
 ---------------------------------------------------------------------------
 Creating an executable
 ---------------------------------------------------------------------------
+
+NOTE: the CMakeLists.txt file is NOT up to date
+
 For linux one has to create the executable
 
 Step 1 is of course downloading the sourcetree
 
 * git clone https://githib.com/JvanKatwijk/qt-1090
 
-To compile, you should have C++ and Qt5 installed.
+To compile, you should have C++ and Qt6 installed.
 
 Step 2 is configuring the executable 
 

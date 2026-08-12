@@ -1,7 +1,5 @@
 
 
-#ifndef	__XCLOSE__
-#define	__XCLOSE__
+#pragma once
 	void	xclose (int);
-#endif;
 

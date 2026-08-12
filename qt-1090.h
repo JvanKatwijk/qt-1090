@@ -25,8 +25,7 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef	__QT_1090__
-#define	__QT_1090__
+#pragma once
 
 #include	"adsb-constants.h"
 #include	<QMainWindow>
@@ -36,14 +35,12 @@
 #include	<QCloseEvent>
 #include	<QTimer>
 #include	<stdio.h>
-#include	"http-handler.h"
-#include	"message-handling.h"
 #include	"ui_qt-1090.h"
-#include	"spectrumviewer.h"
 #include	<complex>
 
 class	deviceHandler;
-
+class	httpHandler;
+class	spectrumViewer;
 
 class	qt1090: public QMainWindow, private Ui_mainwindow {
 Q_OBJECT
@@ -51,7 +48,7 @@ public:
 	qt1090		(QSettings *, int freq, bool network);
 	~qt1090		(void);
 private:
-	void		finalize	(void);
+	void		finalize	();
 	void		closeEvent	(QCloseEvent *event);
 	int		decodeBits	(uint8_t *bits, uint16_t *m);
 	void		detectModeS	(uint16_t *m, uint32_t mlen);
@@ -59,12 +56,14 @@ private:
 	int		table [32];
 	httpHandler	*httpServer;
 	QTimer		screenTimer;
+	QTimer		theTimer;	// for closing the http handler
+	bool		stillWaiting;
+	std::atomic<bool> running;
 public slots:
 	void		processData	();
 private:
 	spectrumViewer	*viewer;
 	pthread_t	reader_thread;
-	std::atomic<bool>	running;;
 	int		frequency;
 	bool		network;
 	deviceHandler	*theDevice;
@@ -110,7 +109,10 @@ private slots:
 	void	setDevice		(const QString &);
 	void	handle_set_coordinatesButton	();
 	void	handle_autoBrowser	(int);
+	void	waitingToDelete		();
+public slots:
+	void	http_terminate		();
+	void	cleanUp_mapHandler	();
 };
 
-#endif
 

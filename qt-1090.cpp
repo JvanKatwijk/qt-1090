@@ -38,8 +38,11 @@
 #include	"icao-cache.h"
 #include	"xclose.h"
 
+#include	"http-handler.h"
+#include	"spectrumviewer.h"
 #include	"coordinates.h"
 #include	"device-handler.h"
+#include	"message-handling.h"
 #ifdef	__HAVE_SDRCONNECT__
 #include	"sdrconnect-handler.h"
 #endif
@@ -69,6 +72,7 @@
 #endif
 #include	"file-handler.h"
 
+pthread_t	reader_thread;
 static
 void	*readerThreadEntryPoint (void *arg) {
 deviceHandler	*theDevice = static_cast <deviceHandler *>(arg);
@@ -115,7 +119,6 @@ int	i;
 	deviceSelector	-> addItem ("rtl_tcp");
 #endif
 //#include	"file-handler.h"
-
 	for (i = 0; i < 31; i ++)
 	   table [i] = 0;
 	handle_errors	= NO_ERRORFIX;
@@ -138,8 +141,8 @@ int	i;
 	interactive_last_update = 0;
 
 	screenTimer. setInterval (2000);
-	connect (&screenTimer, SIGNAL (timeout ()),
-	         this, SLOT (updateScreen ()));
+	connect (&screenTimer, &QTimer::timeout,
+	         this, &qt1090::updateScreen);
 	screenTimer. start (2000);
 
 /* Statistics */
@@ -157,24 +160,28 @@ int	i;
 	   autoBrowserSelector	-> setChecked (true);
 
 //	connect the device
-	connect (interactiveButton, SIGNAL (clicked ()),
-	         this, SLOT (handle_interactiveButton ()));
-	connect (errorhandlingCombo, SIGNAL (activated (const QString &)),
-	         this, SLOT (handle_errorhandlingCombo (const QString &)));
-	connect (httpButton, SIGNAL (clicked ()),
-	         this, SLOT (handle_httpButton ()));
-	connect (ttl_selector, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_ttl (int)));
-	connect (metricButton, SIGNAL (clicked ()),
-	         this, SLOT (handle_metricButton ()));
-	connect (dumpButton, SIGNAL (clicked ()),
-	         this, SLOT (handle_dumpButton ()));
-	connect (deviceSelector, SIGNAL (activated (const QString &)),
-	         this, SLOT (setDevice (const QString &)));
-	connect (set_coordinatesButton, SIGNAL (clicked ()),
-	         this, SLOT (handle_set_coordinatesButton ()));
-	connect (autoBrowserSelector, SIGNAL (stateChanged (int)),
-	         this, SLOT (handle_autoBrowser (int)));
+	connect (interactiveButton, &QPushButton::clicked,
+	         this, &qt1090::handle_interactiveButton);
+	connect (errorhandlingCombo, &QComboBox::textActivated,
+	         this, &qt1090::handle_errorhandlingCombo);
+	connect (httpButton, &QPushButton::clicked,
+	         this, &qt1090::handle_httpButton);
+	connect (ttl_selector, qOverload<int>(&QSpinBox::valueChanged),
+	         this, &qt1090::set_ttl);
+	connect (metricButton, &QPushButton::clicked,
+	         this, &qt1090::handle_metricButton);
+	connect (dumpButton, &QPushButton::clicked,
+	         this, &qt1090::handle_dumpButton);
+	connect (deviceSelector, &QComboBox::textActivated,
+	         this, &qt1090::setDevice);
+	connect (set_coordinatesButton, &QPushButton::clicked,
+	         this, &qt1090::handle_set_coordinatesButton);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect (autoBrowserSelector, &QCheckBox::checkStateChanged,
+#else
+	connect (autoBrowserSelector, &QCheckBox::stateChanged,
+#endif
+	         this, &qt1090::handle_autoBrowser);
 //	display the version
 	QString v = "qt-1090 -" + QString (CURRENT_VERSION);
 	QString versionText = "qt-1090 version: " + QString(CURRENT_VERSION);
@@ -193,7 +200,7 @@ int	i;
 void	qt1090::finalize	() {
 	net	= false;
 	if (httpServer != nullptr) {
-	   httpServer	-> stop ();
+//	   httpServer	-> stop ();
 	   delete httpServer;
 	   fprintf (stderr, "httpServer is now quiet\n");
 	   httpPortLabel	-> setText ("   ");
@@ -625,36 +632,66 @@ void	qt1090::handle_interactiveButton () {
 	   interactiveButton	-> setText ("plane list");
 }
 
+static
+int	delay_teller = 0;
 void	qt1090::handle_httpButton () {
-	net	= !net;
-	if (net) {
+	if (httpServer == nullptr) {
 	   float local_lat =
 	            qt1090Settings -> value ("latitude", 52). toFloat ();
 	   float local_lon =
 	            qt1090Settings -> value ("longitude", 4). toFloat ();
 	   bool	 autoBrowser =
 	            qt1090Settings -> value ("autoBrowser", 0). toInt () != 0;
-	   httpServer	= new httpHandler (this,
+	   try {
+	      httpServer	= new httpHandler (this,
 	                                   std::complex<float> (local_lat,
 	                                                        local_lon),
-	                                   QString::number (httpPort),
+	                                   httpPort,
 	                                   autoBrowser);
-	   httpServer -> start ();
-	   QString text = "port ";
-	   text. append (QString:: number (httpPort));
-	   stat_http_requests	= 0;
-	   httpPortLabel -> setText (text);
-	   httpButton	-> setText ("http on");
+	   
+	      QString text = "port ";
+	      text. append (QString:: number (httpPort));
+	      stat_http_requests	= 0;
+	      httpPortLabel -> setText (text);
+	      httpButton	-> setText ("http on");
+	   } catch (...) {
+	      httpPortLabel -> setText ("http failed");
+	   }
 	}
-	else 
+	else  
 	if (httpServer != nullptr) {
-	   httpServer	-> stop ();
-	   httpPortLabel	-> setText ("   ");
-	   httpButton	-> setText ("http off");
-	   stat_http_requests	= 0;
-	   delete httpServer;
-	   httpServer	= nullptr;
+	   httpServer -> closeMap ();
+	   delay_teller = 0;
+	   stillWaiting	= true;
+	   connect (&theTimer, &QTimer::timeout,
+	            this, &qt1090::waitingToDelete);
+	   theTimer. start (1000);
 	}
+}
+
+void	qt1090::waitingToDelete () {
+        delay_teller ++;
+        if ((delay_teller < 10) && stillWaiting) {
+           theTimer. start (1000);
+           return;
+        }
+        disconnect (&theTimer, &QTimer::timeout,
+                    this, &qt1090::waitingToDelete);
+        cleanUp_mapHandler ();
+}
+
+void	qt1090::cleanUp_mapHandler	() {
+        disconnect (httpServer, &httpHandler::mapClose_processed,
+                    this, &qt1090::http_terminate);
+        if (httpServer != nullptr) {
+	   delete httpServer;
+           httpServer    = nullptr;
+        }
+        httpButton -> setText ("http");
+}
+
+void    qt1090::http_terminate  () {
+        stillWaiting = false;
 }
 
 void	qt1090::set_ttl	(int l) {
@@ -820,12 +857,12 @@ theDevice	= nullptr;
 	   return;
 //
 //	we have a device, 
-	disconnect (deviceSelector, SIGNAL (activated (const QString &)),
-	            this, SLOT (setDevice (const QString &)));
+	disconnect (deviceSelector, &QComboBox::textActivated,
+	            this, &qt1090::setDevice);
 	deviceSelector	-> hide ();
 	this	-> viewer	-> setBitDepth (theDevice -> nrBits ());
-	connect (theDevice, SIGNAL (dataAvailable ()),
-	         this, SLOT (processData ()));
+	connect (theDevice, &deviceHandler::dataAvailable,
+	         this, &qt1090::processData);
 	
 	pthread_create (&reader_thread,
 	                nullptr,

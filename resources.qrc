@@ -6,6 +6,14 @@
         <file>qt-1090.ico</file>
         <file>AUTHORS</file>
         <file>COPYING</file>
+	<file>res/qt-map.html</file>
+	<file>./res/skins/EasyCode.qss</file>
+        <file>./res/skins/Darkeum.qss</file>
+        <file>./res/skins/Adaptic.qss</file>
+        <file>./res/skins/globstyle.qss</file>
+        <file>./res/skins/Combinear.qss</file>
+        <file>./res/skins/Diffnes.qss</file>
+
     </qresource>
 </RCC>
 

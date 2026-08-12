@@ -6,7 +6,7 @@
 
 TEMPLATE	= app
 TARGET          = qt-1090
-QT		+= widgets network websockets
+QT		+= widgets network 
 CONFIG		+= console
 QMAKE_CFLAGS	+= -std=c++14
 #QMAKE_CFLAGS	+= -O3 -ffast-math
@@ -121,8 +121,9 @@ isEmpty(GITHASHSTRING) {
 DESTDIR		= ./linux-bin
 LIBS            += -L/usr/lib64
 LIBS            += -L/lib64
-INCLUDEPATH     += /usr/include/qt5/qwt
-LIBS            += -lqwt-qt5 -lusb-1.0 -ldl -lfftw3f
+#adapt for either Qt5 or 6
+#INCLUDEPATH     += /usr/include/qt5/qwt
+LIBS            += -lqwt-qt6 -lusb-1.0 -ldl -lfftw3f
 }
 
 #	the devices:
@@ -231,6 +232,7 @@ hackrf {
 #
 sdrconnect {
 	DEFINES		+= __HAVE_SDRCONNECT__
+	QT		+= websockets
 	DEPENDPATH	+= ./devices/sdrconnect
 	INCLUDEPATH	+= ./devices/sdrconnect
 	HEADERS		+= ./devices/sdrconnect/sdrconnect-handler.h \

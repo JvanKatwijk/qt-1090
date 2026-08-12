@@ -64,7 +64,6 @@ int	portNumber	= portLabel	-> value ();
 	         this, &sdrConnectHandler::rateError);
 	connect (theDealer, &packetHandler::send_status,
 	         this, &sdrConnectHandler::show_dropCount);
-	fprintf (stderr, "we hebben een packethandler gelanceerd\n");
 }
 
 	sdrConnectHandler::~sdrConnectHandler		() {

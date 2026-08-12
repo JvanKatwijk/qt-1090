@@ -64,7 +64,7 @@ class	icaoCache;
 #define UNIT_METERS 1
 
 #define INTERACTIVE_ROWS 15               /* Rows on screen */
-#define INTERACTIVE_TTL 60                /* TTL before being removed */
+#define INTERACTIVE_TTL 200                /* TTL before being removed */
 
 #define NOTUSED(V) ((void) V)
 
@@ -75,11 +75,11 @@ class	icaoCache;
 #define	STRONG_ERRORFIX	2
 
 static inline
-long long mstime (void) {
+long long mstime () {
 struct timeval tv;
 long long mst;
 
-#if	__MINGW32__
+#ifdef	__MINGW32__
         mingw_gettimeofday (&tv, NULL);
 #else
         gettimeofday (&tv, NULL);

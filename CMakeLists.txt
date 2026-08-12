@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 2.8.11 )
+cmake_minimum_required( VERSION 3.21 )
 set (objectName qt-1090)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
 set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g")
@@ -55,15 +55,24 @@ if(DEFINED RTLTCP)
    set(RTLTCP true)
 endif ()
 
+if(DEFINED SDRCONNECT)
+   set(SDRCONNECT true)
+endif ()
+
 #########################################################################
         find_package (PkgConfig)
 	find_package (LSBId)
 
-        find_package (Qt5Core REQUIRED)
-        find_package (Qt5Widgets REQUIRED)
-        find_package (Qt5Network REQUIRED)
+	find_package (Qt6Core REQUIRED)
+        find_package (Qt6Widgets REQUIRED)
+        find_package (Qt6Network REQUIRED)
+#	find_package (Qt6websockets REQUIRED)
         include_directories (
-          ${Qt5Network_INCLUDE_DIRS}
+          ${Qt6Network_INCLUDE_DIRS}
+#	  ${Qt6websockets_INCLUDE_DIRS}
+	  ${QT6Widgets_INCLUDES}
+	  ${QT_QTCORE_INCLUDE_DIR}
+	  ${QT_QTGUI_INCLUDE_DIR}
         )
 
 	find_package(Qwt)
@@ -116,30 +125,30 @@ endif ()
 #	   include_directories (${SDRPLAYLIB_INCLUDE_DIR})
 	   set (${objectName}_UIS
 	        ${${objectName}_UIS}
-	        ./devices/sdrplay-handler/sdrplay-widget.ui
+	        ./devices/sdrplay-handler-v2/sdrplay-widget-v2.ui
 	   )
 
 	   set (${objectName}_MOCS
 	        ${${objectName}_MOCS}
-	        ./devices/sdrplay-handler/sdrplay-handler.h
+	        ./devices/sdrplay-handler-v2/sdrplay-handler-v2.h
 	   )
 
 	   include_directories (
-	     ./devices/sdrplay-handler
+	     ./devices/sdrplay-handler-v2
 	   )
 
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
-	        ./devices/sdrplay-handler/sdrplay-handler.h
-	        ./devices/sdrplay-handler/mirsdrapi-rsp.h
+	        ./devices/sdrplay-handler-v2/sdrplay-handler-v2.h
+	        ./devices/sdrplay-handler-v2/mirsdrapi-rsp.h
            )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
-	        ./devices/sdrplay-handler/sdrplay-handler.cpp
+	        ./devices/sdrplay-handler-v2/sdrplay-handler-v2.cpp
 	   )
 
-	 add_definitions (-D__HAVE_SDRPLAY__)
+	 add_definitions (-D__HAVE_SDRPLAY_V2)
 	endif (SDRPLAY)
 
 	if (RTLTCP)
@@ -206,6 +215,42 @@ endif ()
 
 	   add_definitions (-D__HAVE_RTLSDR__)
 	endif()
+
+	if (SDRCONNECT)
+	   include_directories (
+	        ./devices/rtlsdr-handler/
+	   )
+
+	   set (${objectName}_UIS
+	        ${${objectName}_UIS}
+	        ./devices/sdrconnect/sdrconnect-widget.ui
+	   )
+
+	   set (${objectName}_MOCS
+	        ${${objectName}_MOCS}
+	        ./devices/sdrconnect/sdrconnect-handler.h
+	        ./devices/sdrconnect/packet-handler.h
+	        ./devices/sdrconnect/socket-handler.h
+	   )
+
+	   set (${objectName}_HDRS
+	        ${${objectName}_HDRS}
+	        ./devices/sdrconnect/sdrconnect-handler.h
+	        ./devices/sdrconnect/packet-handler.h
+	        ./devices/sdrconnect/socket-handler.h
+	   )
+
+	   set (${objectName}_SRCS
+	        ${${objectName}_SRCS}
+	        ./devices/sdrconnect/sdrconnect-handler.cpp
+	        ./devices/sdrconnect/packet-handler.cpp
+	        ./devices/sdrconnect/socket-handler.cpp
+	   )
+
+	   add_definitions (-D__HAVE_SDRCONNECT__)
+	endif()
+
+
 ######################################################################
 	find_library (PTHREADS pthread)
 	if (NOT(PTHREADS))
@@ -223,6 +268,7 @@ endif ()
 	)
 #
 	include_directories (
+	   ./devices/
 	   ./devices/file-handler
         )
 
@@ -236,10 +282,8 @@ endif ()
 	     ./icao-cache.h
 	     ./crc-handling.h
 	     ./message-handling.h
-	     ./responder.h
-	     ./device-handler.h
+	     ./devices/device-handler.h
 	     ./devices/file-handler/file-handler.h
-	     ./syncviewer.h
 	)
 
 	set (${objectName}_SRCS
@@ -251,27 +295,19 @@ endif ()
 	     ./icao-cache.cpp
 	     ./crc-handling.cpp
 	     ./message-handling.cpp
-	     ./responder.cpp
-	     ./device-handler.cpp
+	     ./devices/device-handler.cpp
 	     ./devices/file-handler/file-handler.cpp
-	     ./syncviewer.cpp
 	)
 
 #	QT5_WRAP_UI (UIS ${${objectName}_UIS})
 
-        include_directories (
-                  ${QT5Widgets_INCLUDES}
-                  ${QT_QTCORE_INCLUDE_DIR}
-                  ${QT_QTGUI_INCLUDE_DIR}
-        )
 
-        QT5_WRAP_CPP (MOCS ${${objectName}_MOCS}
+        QT6_WRAP_CPP (MOCS ${${objectName}_MOCS}
                      ./qt-1090.h
-	             ./device-handler.h
-	             ./responder.h
+	             ./devices/device-handler.h
 	)
 
-	QT5_WRAP_UI (UIS ${${objectName}_UIS}
+	QT6_WRAP_UI (UIS ${${objectName}_UIS}
                      ./qt-1090.ui)
 
 	add_executable (${objectName}
@@ -283,10 +319,10 @@ endif ()
 	)
 
 	target_link_libraries (${objectName}
-	                       Qt5::Widgets
-                               Qt5::Network
+	                       Qt6::Widgets
+                               Qt6::Network
                                ${extraLibs}
-	                       -lm -ldl -lrtlsdr -lqhttpserver
+	                       -lm -ldl 
 	)
 
 	INSTALL (TARGETS ${objectName} DESTINATION .)

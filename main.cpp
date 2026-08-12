@@ -32,7 +32,6 @@
 #include	<QDebug>
 #include        <unistd.h>
 #include	<getopt.h>
-#include        "adsb-constants.h"
 #include	"qt-1090.h"
 
 #define DEFAULT_INI     ".qt-1090.ini"
@@ -41,15 +40,6 @@
 #define	GITHASH	"      "
 #endif
 
-static const QString styleSheet_1 =
-//      #include "./stylesheets/Adaptic.qss"
-        #include "./stylesheets/Combinear.qss"
-;
-
-static const QString styleSheet_2 =
-	#include "./stylesheets/Adaptic.qss"
-//	#include "./stylesheets/Combinear.qss"
-;
 
 QString fullPathfor (QString v, QString aa) {
 QString fileName;
@@ -75,7 +65,7 @@ void    	setTranslator	(QString Language);
 
 int     main (int argc, char **argv) {
 QString initFileName	= fullPathfor (QString (DEFAULT_INI), ".ini");
-qt1090  *MyRadioInterface;
+//qt1090  *MyRadioInterface;
 QSettings       *dumpSettings;           // ini file
 int     j;
 char	*fileName	= nullptr;
@@ -90,7 +80,6 @@ bool	network		= false;
 	QCoreApplication::setApplicationVersion (QString (CURRENT_VERSION) + " Git: " + GITHASH);
 
 //	Parse the command line options 
-	int	sheet	= 0;
 	while ((opt = getopt (argc, argv, "f:F:nABC")) != -1) {
 	   switch (opt) {	// there aren't many
 	      case 'f':
@@ -99,15 +88,6 @@ bool	network		= false;
 	         break;
 	      case 'n':
 	         network	= true;
-	         break;
-	      case 'A':
-	         sheet		= 1;
-	         break;
-	      case 'B':
-	         sheet		= 2;
-	         break;
-	      case 'C':
-	         sheet		= 3;
 	         break;
 	      default:
 	         break;
@@ -119,28 +99,26 @@ bool	network		= false;
  *      Before we connect control to the gui, we have to
  *      instantiate
  */
-#if QT_VERSION >= 0x050600
-	QGuiApplication::setAttribute (Qt::AA_EnableHighDpiScaling);
-#endif
 	QApplication a (argc, argv);
-	if (sheet != 0)
-	   dumpSettings  -> setValue ("style-sheet", sheet);
-	else
-	   sheet  = dumpSettings -> value ("style-sheet", 1). toInt ();
-	if ((sheet == 1) || (sheet == 2))
-	   a.setStyleSheet (sheet == 1 ? styleSheet_1 : styleSheet_2);
+	fprintf (stderr, "application a now exists\n");
+
+	QFile file (":res/skins/globstyle.qss");
+	if (file. open (QFile::ReadOnly | QFile::Text)) {
+	   a. setStyleSheet (file. readAll ());
+	   file. close ();
+	}
 
 //	setting the language
 //	QString locale = QLocale::system (). name ();
 //	qDebug() << "main:" <<  "Detected system language" << locale;
 //	setTranslator (locale);
 
-//	a. setWindowIcon (QIcon (":/dab-radio.ico"));
+	a. setWindowIcon (QIcon (":/dab-radio.ico"));
 
-	MyRadioInterface = new qt1090 (dumpSettings, freq, network);
-	MyRadioInterface -> show ();
+	qt1090 MyRadioInterface (dumpSettings, freq, network);
+	MyRadioInterface.  show ();
 
-        a. exec ();
+	a. exec ();
 /*
  *      done:
  */
