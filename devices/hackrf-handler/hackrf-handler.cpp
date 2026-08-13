@@ -1,6 +1,6 @@
 #
 /*
- *    Copyright (C) 2014 .. 2017
+ *    Copyright (C) 2020
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
@@ -34,7 +34,7 @@
 int	err;
 int	res;
 	hackrfSettings			= s;
-	this	-> myFrame		= new QFrame (NULL);
+	this	-> myFrame		= new QFrame (nullptr);
 	setupUi (this -> myFrame);
 	this	-> myFrame	-> show ();
 	this	-> inputRate		= 2400000;
@@ -47,7 +47,7 @@ int	res;
         Handle          = dlopen (libraryString, RTLD_NOW);
 #endif
 
-	if (Handle == NULL) {
+	if (Handle == nullptr) {
 	   fprintf (stderr, "failed to open %s\n", libraryString);
 	   delete myFrame;
 	   throw (20);
@@ -128,10 +128,10 @@ int	res;
 	setLNAGain	(lnagainSlider	-> value ());
 	setVGAGain	(vgagainSlider	-> value ());
 //	and be prepared for future changes in the settings
-	connect (lnagainSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (setLNAGain (int)));
-	connect (vgagainSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (setVGAGain (int)));
+	connect (lnagainSlider, &QSlider::valueChanged,
+	         this, &hackrfHandler::setLNAGain);
+	connect (vgagainSlider, &QSlider::valueChanged,
+	         this, &hackrfHandler::setVGAGain);
 
 	hackrf_device_list_t *deviceList = this -> hackrf_device_list ();
 	if (deviceList != NULL) {

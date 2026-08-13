@@ -14,8 +14,7 @@
  *	jan van Katwijk
  *	Lazy Chair Computing
  */
-#ifndef __AIRSPY_HANDLER__
-#define	__AIRSPY_HANDLER__
+#pragma once
 
 #include	<QObject>
 #include	<QSettings>
@@ -31,9 +30,6 @@
 #else
 #include	"libairspy/airspy.h"
 #endif
-//#include	<QLibrary>;
-
-
 
 extern "C"  {
  typedef int (*pfn_airspy_init)();
@@ -176,4 +172,3 @@ const	char *		getSerial();
 	int		open();
 };
 
-#endif

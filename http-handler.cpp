@@ -213,7 +213,7 @@ int	teller		= 0;
 int	params		= 0;
 
 // read map file from resource file
-	QFile file ("res/qt-map.html");
+	QFile file (":res/qt-map.html");
 	if (file. open (QFile::ReadOnly)) {
 	   QByteArray record_data (1, 0);
 	   QDataStream in (&file);

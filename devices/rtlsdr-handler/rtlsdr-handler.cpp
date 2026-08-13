@@ -204,16 +204,16 @@ int	deviceIndex;
         set_ppmCorrection       (ppm_correction -> value ());
 
 //      and attach the buttons/sliders to the actions
-        connect (combo_gain, SIGNAL (activated (const QString &)),
-                 this, SLOT (set_ExternalGain (const QString &)));
-        connect (combo_autogain, SIGNAL (activated (const QString &)),
-                 this, SLOT (set_autogain (const QString &)));
-        connect (ppm_correction, SIGNAL (valueChanged (int)),
-                 this, SLOT (set_ppmCorrection  (int)));
+        connect (combo_gain, &QComboBox::textActivated,
+                 this, &rtlsdrHandler::set_ExternalGain);
+        connect (combo_autogain, &QComboBox::textActivated,
+                 this, &rtlsdrHandler::set_autogain);
+        connect (ppm_correction, qOverload<int>(&QSpinBox::valueChanged),
+                 this, &rtlsdrHandler::set_ppmCorrection);
 }
 
-	rtlsdrHandler::~rtlsdrHandler	(void) {
-	if (Handle == NULL) {
+	rtlsdrHandler::~rtlsdrHandler	() {
+	if (Handle == nullptr) {
 	   delete myFrame;
 	   return;	
 	}
@@ -238,7 +238,7 @@ int	deviceIndex;
 	delete	myFrame;
 }
 
-void	rtlsdrHandler::startDevice (void) {
+void	rtlsdrHandler::startDevice () {
 	if (workerHandle != NULL)
 	   return;
 
@@ -255,14 +255,14 @@ void	rtlsdrHandler::startDevice (void) {
 	                      combo_gain -> currentText (). toInt ());
 }
 
-void	rtlsdrHandler::stopDevice	(void) {
-	if (workerHandle == NULL)
+void	rtlsdrHandler::stopDevice	() {
+	if (workerHandle == nullptr)
            return;
 	this -> rtlsdr_cancel_async (theDevice);
 	while (!workerHandle -> isFinished ())
 	   usleep (1000);
 	delete    workerHandle;
-	workerHandle = NULL;
+	workerHandle = nullptr;
 	myFrame	-> hide ();
 }
 
@@ -271,11 +271,11 @@ int	rtlsdrHandler::getSamples (std::complex<float> *buffer, int amount) {
 	return amount;
 }
 
-int	rtlsdrHandler::Samples (void) {
+int	rtlsdrHandler::Samples () {
 	return _I_Buffer -> GetRingBufferReadAvailable ();
 }
 
-void	rtlsdrHandler::signalData	(void) {
+void	rtlsdrHandler::signalData	() {
 	emit dataAvailable ();
 }
 //
@@ -295,7 +295,7 @@ void    rtlsdrHandler::set_ppmCorrection        (int32_t ppm) {
         this -> rtlsdr_set_freq_correction (theDevice, ppm);
 }
 
-bool	rtlsdrHandler::load_rtlFunctions (void) {
+bool	rtlsdrHandler::load_rtlFunctions () {
 //
 //	link the required procedures
 	rtlsdr_open	= (pfnrtlsdr_open)

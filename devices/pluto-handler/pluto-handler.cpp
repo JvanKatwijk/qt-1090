@@ -30,8 +30,6 @@
 #include	<QFileDialog>
 #include	"pluto-handler.h"
 //#include	"ad9361.h"
-//      Description for the fir-filter is here:
-#include        "fmFilter.h"
 
 /* static scratch mem for strings */
 static char tmpstr[64];
@@ -349,12 +347,16 @@ int	ret;
 	}
 	
 //	and be prepared for future changes in the settings
-	connect (gainControl, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_gainControl (int)));
-	connect (agcControl, SIGNAL (stateChanged (int)),
-	         this, SLOT (set_agcControl (int)));
-	connect (debugButton, SIGNAL (clicked ()),
-	         this, SLOT (toggle_debugButton ()));
+	connect (gainControl, qOverload<int>(&QSpinBox::valueChanged),
+	         this, &plutoHandler::set_gainControl);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+           connect (agcControl, &QCheckBox::checkStateChanged,
+#else 
+           connect (agcControl, &QCheckBox::stateChanged,
+#endif
+	         this, &plutoHandler::set_agcControl);
+	connect (debugButton, &QPushButton::clicked,
+	         this, &plutoHandler::toggle_debugButton);
 
 	running. store (false);
 
@@ -410,12 +412,19 @@ struct iio_channel *chn;
 	         fprintf (stderr, "could not change gain control to manual");
 	      return;
 	   }
-	   
-	   disconnect (agcControl, SIGNAL (stateChanged (int)),
-	         this, SLOT (set_agcControl (int)));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+           disconnect (agcControl, &QCheckBox::checkStateChanged,
+#else 
+           disconnect (agcControl, &QCheckBox::stateChanged,
+#endif
+	         this, &plutoHandler::set_agcControl);
 	   agcControl -> setChecked (false);
-	   connect (agcControl, SIGNAL (stateChanged (int)),
-	         this, SLOT (set_agcControl (int)));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+           connect (agcControl, &QCheckBox::checkStateChanged,
+#else 
+           connect (agcControl, &QCheckBox::stateChanged,
+#endif
+	         this, &plutoHandler::set_agcControl);
 	}
 
 	ret = iio_channel_attr_write_longlong (chn, "hardwaregain", newGain);

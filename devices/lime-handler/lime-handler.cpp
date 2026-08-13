@@ -1,6 +1,6 @@
 #
 /*
- *    Copyright (C) 2014 .. 2019
+ *    Copyright (C) 2020
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
@@ -122,8 +122,8 @@ lms_info_str_t limedevices [10];
         if (k != -1) 
            antennaList -> setCurrentIndex (k);
 	
-	connect (antennaList, SIGNAL (activated (int)),
-	         this, SLOT (setAntenna (int)));
+	connect (antennaList, &QComboBox::activated,
+	         this, &limeHandler::setAntenna);
 
 //	default antenna setting
 	res		= LMS_SetAntenna (theDevice, LMS_CH_RX, 0, 
@@ -154,10 +154,8 @@ lms_info_str_t limedevices [10];
 	limeSettings	-> endGroup();
 	gainSelector -> setValue (k);
 	setGain (k);
-	connect (gainSelector, SIGNAL (valueChanged (int)),
-	         this, SLOT (setGain (int)));
-	connect (dumpButton, SIGNAL (clicked ()),
-	         this, SLOT (set_xmlDump ()));
+	connect (gainSelector, qOverload<int>(&QSpinBox::valueChanged),
+	         this, &limeHandler::setGain);
 	running. store (false);
 }
 

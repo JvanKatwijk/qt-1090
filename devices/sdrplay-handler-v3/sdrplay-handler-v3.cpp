@@ -88,18 +88,26 @@
            biasT_selector -> setChecked (true);
 	
 //	and be prepared for future changes in the settings
-	connect (GRdBSelector, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_ifgainReduction (int)));
-	connect (lnaGainSetting, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_lnagainReduction (int)));
-	connect (agcControl, SIGNAL (stateChanged (int)),
-	         this, SLOT (set_agcControl (int)));
-	connect (ppmControl, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_ppmControl (int)));
-	connect (antennaSelector, SIGNAL (activated (const QString &)),
-	         this, SLOT (set_selectAntenna (const QString &)));
-	connect (biasT_selector, SIGNAL (stateChanged (int)),
-	         this, SLOT (set_biasT (int)));
+	connect (GRdBSelector, qOverload<int>(&QSpinBox::valueChanged),
+	         this, &sdrplayHandler_v3::set_ifgainReduction);
+	connect (lnaGainSetting, qOverload<int>(&QSpinBox::valueChanged),
+	         this, &sdrplayHandler_v3::set_lnagainReduction);
+	connect (ppmControl, qOverload<int>(&QSpinBox::valueChanged),
+	         this, &sdrplayHandler_v3::set_ppmControl);
+	connect (antennaSelector, &QComboBox::textActivated,
+	         this, &sdrplayHandler_v3::set_selectAntenna);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect (biasT_selector, &QCheckBox::checkStateChanged,
+#else 
+	connect (biasT_selector, &QCheckBox::stateChanged,
+#endif
+	         this, &sdrplayHandler_v3::set_biasT);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect (agcControl, &QCheckBox::checkStateChanged,
+#else 
+	connect (agcControl, &QCheckBox::stateChanged,
+#endif
+	         this, &sdrplayHandler_v3::set_agcControl);
 
 	vfoFrequency	= MHz (1090);
 	theGain		= -1;
@@ -381,10 +389,10 @@ uint32_t                ndev;
 
 	chosenDevice		= nullptr;
 
-	connect (this, SIGNAL (set_serial_signal (const QString &)),
-	         this, SLOT (set_serial (const QString &)));
-	connect (this, SIGNAL (set_apiVersion_signal (float)),
-	         this, SLOT (set_apiVersion (float)));
+	connect (this, &sdrplayHandler_v3::set_serial_signal,
+	         this, &sdrplayHandler_v3::set_serial);
+	connect (this, &sdrplayHandler_v3::set_apiVersion_signal,
+	         this, &sdrplayHandler_v3::set_apiVersion);
 
 	denominator		= 2048;		// default
 	bitsPerSample		= 12;		// default

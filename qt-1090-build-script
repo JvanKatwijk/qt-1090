@@ -1,4 +1,11 @@
-     mkdir -p appdir/usr/bin
+!/bin/bash
+
+#export LD_LIBRARY_PATH=/home/jan/Qt/6.10.2/gcc_64/lib:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=/home/jan/qwt-6.3.0/lib
+#export PATH=/home/jan/Qt/6.10.2/gcc_64/bin:$PATH
+
+
+ mkdir -p appdir/usr/bin
      cp ./linux-bin/qt-1090 appdir/usr/bin/qt-1090
      mkdir -p appdir/usr/lib
      mkdir -p appdir/usr/share/applications

@@ -26,11 +26,11 @@ RESOURCES       += resources.qrc
 
 #CONFIG	+= sdrplay-v2
 CONFIG	+= sdrplay-v3
-#CONFIG	+= dabstick
-#CONFIG	+= airspy
-#CONFIG	+= pluto
-#CONFIG	+= lime
-#CONFIG	+= hackrf
+CONFIG	+= dabstick
+CONFIG	+= airspy
+CONFIG	+= pluto
+CONFIG	+= lime
+CONFIG	+= hackrf
 CONFIG	+= sdrconnect
 #CONFIG	+= rtl_tcp
 
@@ -122,7 +122,7 @@ DESTDIR		= ./linux-bin
 LIBS            += -L/usr/lib64
 LIBS            += -L/lib64
 #adapt for either Qt5 or 6
-#INCLUDEPATH     += /usr/include/qt5/qwt
+INCLUDEPATH     += /usr/include/qt5/qwt
 LIBS            += -lqwt-qt6 -lusb-1.0 -ldl -lfftw3f
 }
 

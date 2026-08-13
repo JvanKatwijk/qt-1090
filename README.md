@@ -1,5 +1,12 @@
         **qt-1090**
 
+---------------------------------------------------------------------------
+NEW: entry for sdrconnect
+----------------------------------------------------------------------------
+
+A new version of qt-1090 contains improved http handling and an
+entry to use the program as "backend" for sdrconnect.
+
 ----------------------------------------------------------------------------
 
 **qt-1090** is a variant of the popular Dump1090 program. The latter was

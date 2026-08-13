@@ -1,3 +1,25 @@
+#
+/*
+ *    Copyright (C) 2020
+ *    Jan van Katwijk (J.vanKatwijk@gmail.com)
+ *    Lazy Chair Computing
+ *
+ *    This file is part of the qt-1090 program
+ *
+ *    qt-1090 is free software; you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation; either version 2 of the License, or
+ *    (at your option) any later version.
+ *
+ *    qt-1090 is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with qt-1090; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #include	"Rsp-device.h"
 
@@ -22,16 +44,16 @@ sdrplay_api_ErrT        err;
 	this	-> GRdB		= GRdB;
 	this	-> biasT	= biasT;
 
-	connect (this, SIGNAL (set_lnabounds_signal (int, int)),
-                 parent, SLOT (set_lnabounds (int, int)));
-        connect (this, SIGNAL (set_deviceName_signal (const QString &)),
-                 parent, SLOT (set_deviceName (const QString &)));
-        connect (this,	SIGNAL (set_antennaSelect_signal (int)),
-	         parent, SLOT (set_antennaSelect (int)));
-        connect (this, SIGNAL (set_nrBits_signal (int)),
-	         parent, SLOT (set_nrBits (int)));
-	connect (this, SIGNAL (show_lnaGain (int)),
-	         parent, SLOT (show_lnaGain (int)));
+	connect (this, &Rsp_device::set_lnabounds_signal,
+                 parent, &sdrplayHandler_v3::set_lnabounds);
+        connect (this, &Rsp_device::set_deviceName_signal,
+                 parent, &sdrplayHandler_v3::set_deviceName);
+        connect (this,	&Rsp_device::set_antennaSelect_signal,
+	         parent, &sdrplayHandler_v3::set_antennaSelect);
+        connect (this, &Rsp_device::set_nrBits_signal,
+	         parent, &sdrplayHandler_v3::set_nrBits);
+	connect (this, &Rsp_device::show_lnaGain,
+	         parent, &sdrplayHandler_v3::show_lnaGain);
 
 	err = parent -> sdrplay_api_GetDeviceParams (chosenDevice -> dev,
 	                                             &deviceParams);

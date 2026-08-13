@@ -175,22 +175,34 @@ uint32_t samplerateCount;
 	set_vga_gain	(vgaSlider	-> value ());
 	set_lna_gain	(lnaSlider	-> value ());
 	set_mixer_gain	(mixerSlider	-> value ());
-	connect (linearitySlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_linearity (int)));
-	connect (sensitivitySlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_sensitivity (int)));
-	connect (lnaSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_lna_gain (int)));
-	connect (vgaSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_vga_gain (int)));
-	connect (mixerSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_mixer_gain (int)));
-	connect (lnaButton, SIGNAL (stateChanged (int)),
-	         this, SLOT (set_lna_agc (int)));
-	connect (mixerButton, SIGNAL (stateChanged (int)),
-	         this, SLOT (set_mixer_agc (int)));
-	connect (biasButton, SIGNAL (stateChanged (int)),
-	         this, SLOT (set_rf_bias (int)));
+	connect (linearitySlider, &QSlider::valueChanged,
+	         this, &airspyHandler::set_linearity);
+	connect (sensitivitySlider, &QSlider::valueChanged,
+	         this, &airspyHandler::set_sensitivity);
+	connect (lnaSlider, &QSlider::valueChanged,
+	         this, &airspyHandler::set_lna_gain);
+	connect (vgaSlider, &QSlider::valueChanged,
+	         this, &airspyHandler::set_vga_gain);
+	connect (mixerSlider, &QSlider::valueChanged,
+	         this, &airspyHandler::set_mixer_gain);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+	connect (lnaButton, &QCheckBox::checkStateChanged,
+#else 
+	connect (lnaButton, &QCheckBox::stateChanged,
+#endif
+	         this, &airspyHandler::set_lna_agc);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+           connect (mixerButton, &QCheckBox::checkStateChanged,
+#else 
+           connect (mixerButton, &QCheckBox::stateChanged,
+#endif
+	         this, &airspyHandler::set_mixer_agc);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+           connect (biasButton, &QCheckBox::checkStateChanged,
+#else 
+           connect (biasButton, &QCheckBox::stateChanged,
+#endif
+	         this, &airspyHandler::set_rf_bias);
 	connect (tabWidget, SIGNAL (currentChanged (int)),
 	         this, SLOT (show_tab (int)));
 //
