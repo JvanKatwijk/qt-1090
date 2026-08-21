@@ -29,7 +29,7 @@
 #include	"ringbuffer.h"
 #include	"rtl-sdr.h"
 #include        "ui_rtlsdr-widget.h"
-
+#include	<QLibrary>
 class	dll_driver;
 //
 //	create typedefs for the library functions
@@ -80,7 +80,7 @@ public:
 
 private:
 	dll_driver	*workerHandle;
-	HINSTANCE	Handle;
+	QLibrary	*pHandle;
 	bool		libraryLoaded;
 	QSettings	*rtlsdrSettings;
 	QFrame		*myFrame;

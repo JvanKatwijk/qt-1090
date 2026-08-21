@@ -680,7 +680,7 @@ ULONG APIkeyValue_length = 255;
 	Handle	= LoadLibrary (libname);
 	if (Handle == nullptr) {
 	   if (RegOpenKey (HKEY_LOCAL_MACHINE,
-	                   TEXT("Software\\MiricsSDR\\API"),
+	                   TEXT ("Software\\SDRplay\\Service\\API"),
 	                   &APIkey) != ERROR_SUCCESS) {
               fprintf (stderr,
 	           "failed to locate API registry entry, error = %d\n",

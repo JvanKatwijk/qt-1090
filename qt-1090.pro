@@ -79,7 +79,7 @@ SOURCES += ./xclose.cpp   \
 #
 # for windows32 we use:
 win32 {
-DESTDIR	= /usr/shared/w32-programs/windows-qt1090
+DESTDIR	= ./windows/
 exists ("./.git") {
    GITHASHSTRING = $$system(git rev-parse --short HEAD)
    !isEmpty(GITHASHSTRING) {
@@ -90,17 +90,16 @@ exists ("./.git") {
 isEmpty(GITHASHSTRING) {
     DEFINES += GITHASH=\\\"------\\\"
 }
-
-INCLUDEPATH += /usr/i686-w64-mingw32/sys-root/mingw/include
-INCLUDEPATH     += /mingw32/include
-INCLUDEPATH     += /mingw32/include/qwt
- INCLUDEPATH += /usr/local/include /usr/include/qt4/qwt /usr/include/qt5/qwt /usr/include/qt4/qwt /usr/include/qwt /usr/local/qwt-6.1.4-svn/
-LIBS            += -L/usr/i686-w64-mingw32/sys-root/mingw/lib
+	DEFINES	+= __BITS64__
+	INCLUDEPATH     += /usr/x86_64-w64-mingw32/sysroot/mingw/include
+	INCLUDEPATH     += /usr/x86_64-w64-mingw32/sysroot/mingw/include/qt6/qwt
+ 	INCLUDEPATH	+= /usr/local/include t /usr/include/qt5/qwt /usr/include/qt4/qwt /usr/include/qwt
+LIBS            += -L/usr/x86_64-w64-mingw32/sys-root/mingw/lib
 LIBS            += -lwinmm
 LIBS            += -lstdc++
 LIBS            += -lws2_32
 LIBS            += -lusb-1.0
-LIBS		+= -lqwt-qt5
+LIBS		+= -lqwt-qt6
 LIBS		+= -lfftw3f
 
 }

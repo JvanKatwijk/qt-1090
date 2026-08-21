@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "qt-1090"
-#define MyAppVersion "0.8"
+#define MyAppVersion "0.9"
 #define MyAppPublisher "Lazy Chair Computing"
 #define MyAppURL "https://github.com/JvanKatwijk/qt-1090"
 #define MyAppExeName "qt-1090.exe";
@@ -21,8 +21,8 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DisableProgramGroupPage=yes
-LicenseFile=E:\sdr-j-development\windows-qt1090\COPYRIGHT.this_software
-InfoBeforeFile=E:\sdr-j-development\windows-qt1090\preamble.txt
+LicenseFile=D:\w64-library\COPYRIGHT.this_software
+InfoBeforeFile=D:\w64-library\preamble.txt
 OutputBaseFilename=setup-qt1090
 Compression=lzma
 SolidCompression=yes
@@ -34,9 +34,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "E:\sdr-j-development\windows-qt1090\qt-1090.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\sdr-j-development\windows-qt1090\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "E:\sdr-j-development\SDRplay_RSP_API-Windows-2.13.1.exe"; DestDir: "{app}"; AfterInstall : install_sdrplayApi
+Source: "D:\w64-library\qt-1090.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\w64-library\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+;Source: "E:\sdr-j-development\SDRplay_RSP_API-Windows-2.13.1.exe"; DestDir: "{app}"; AfterInstall : install_sdrplayApi
 
 [Icons]
 Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
