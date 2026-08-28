@@ -16,36 +16,37 @@ but it supports SDRplay devices, RTLSDR devices, HACKRF One, Lime devoces,
 the Adalm Pluto and the sdrConnect framework.
 It is equipped  with a simple GUI.
 
-![qt-1090 ](/qt-1090-1.png?raw=true)
+![qt-1090 ](/qt-1090-mainwindow.png?raw=true)
+
 The display shows the frequency spectrum of the region of 1090 MHz.
 
-The default choice is to show the list of visible planes on the command window,
-by starting the http server and a browser, the position of the planes
-can be made visible as can be seen in the picture.
+The top line of the GUI shows some selectors
 
-The icons for the planes are made slightly larger, clicking with the mouse
-on a plane icon will show some details of the flight on the right hand
-side of the browser.
+ * the selector with text **streaming** selects the way the output is presented on the command window. In **streaming mode** the decoded incoming messages are shown, in **plane list** mode, details of the recognized places are shown. 
+
+ *  **http output**, when touched shows a webbrowser with the planes on it. It is evident that some form of home position is known;
+
+ *  the selector with text **no correction** can be used to selected between no correction, one bit correction or two bit correction;
+
+ * the selector with text ** not metric** is used to select between metric and not metric data.
+
+ * On start up the last selector on the first line is labeled **device** and is used to select one of the configured input devices. Once a device is selected, the selector dispappears from the gui.
 
 
-![qt-1090 ](/qt-1090-A.png?raw=true)
+![qt-1090 ](/qt-1090-web-1.png?raw=true)
 
-The basic idea in the design of the GUI is that for each session one selects
-the input device. The GUI therefore contains a device selector; once
-a device is selected and could be opened, the selector is not visible
-anymore.
+The web browser shows the planes that are detected, clicking on a place shows at the tight hand side some information on the selected plane.
 
+![qt-1090 ](/qt-1090-web-2.png?raw=true)
 
 The default mode is to display the list of planes currently being
-seen (either completely or partly), the button on the widget - whentouched -
-will change that in showing the list of messages that is being received.
+seen (either completely or partly).
 
-The http server is now integrated in the software.
-Touching the http button will start the server.
+![qt-1090 ](/qt-1090-stream.png?raw=true)
 
-qt1090 has as option to automatically start the system's default browser,
-the checkbox on the bottom line of the main widget will activatee
-or deactivate that option.
+As said, alternatively, descriptions of the planes seen pass by
+
+![qt-1090 ](/qt-1090-stream-2.png?raw=true)
 
 The center of the map can be set by filling in a "home address",
 just give (an estimate of) your location in latitude and longitude
@@ -79,7 +80,7 @@ On executables
 
 The software is developed on a Linux system, and cross compiled for 
 Windows.
-Wgile it is relatively easy to build an executable, an executable version 
+While it is relatively easy to build an executable, an executable version 
 for Linux (an AppImage) and  an installer for Windows are available
 in the  releases section
 
@@ -107,8 +108,8 @@ edit qt-1090.pro to select your device(s) by commenting out or uncommenting
 	CONFIG  += sdrplay-v3
 	CONFIG  += dabstick
 	CONFIG  += hackrf
-    CONFIG  += lime
-    CONFIG  += pluto
+	CONFIG  += lime
+	CONFIG  += pluto
 
 Note that the software - as usual with my software - will dynamically load
 the device driver when a device is selected.
